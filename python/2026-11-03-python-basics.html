@@ -1,0 +1,970 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>파이썬 기초 놀이터</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column of "lab benches" — each topic = a bench with a live toy, a code card with 사람 말 해석, then a final quiz. Colors borrowed from Python's own blue & yellow. */
+:root{
+  --bg:#EDF1F7; --paper:#FFFFFF; --ink:#15203A; --muted:#5B6782; --line:#D5DCE8;
+  --blue:#2D58C8; --blue-soft:#DCE5FA; --yellow:#F3B82E; --yellow-soft:#FFF1CC;
+  --good:#1E8A57; --good-soft:#D8F1E4; --bad:#C2413A; --bad-soft:#FADDDA;
+  --code-bg:#17213A; --code-fg:#E6ECFA; --code-cm:#8FA0C4; --code-kw:#FFD36B; --code-str:#9FE3B8; --code-num:#9EC1FF;
+  --quiz-bg:#15203A; --quiz-fg:#FFFFFF;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1524; --paper:#18213A; --ink:#E7ECF7; --muted:#9AA6C2; --line:#2A3654;
+  --blue:#7EA2FF; --blue-soft:#22305A; --yellow:#F5C452; --yellow-soft:#3A3220;
+  --good:#5ED49A; --good-soft:#163A2B; --bad:#FF8A80; --bad-soft:#41201F;
+  --code-bg:#0B1020; --quiz-bg:#232E4D; --quiz-fg:#E7ECF7; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1524; --paper:#18213A; --ink:#E7ECF7; --muted:#9AA6C2; --line:#2A3654;
+  --blue:#7EA2FF; --blue-soft:#22305A; --yellow:#F5C452; --yellow-soft:#3A3220;
+  --good:#5ED49A; --good-soft:#163A2B; --bad:#FF8A80; --bad-soft:#41201F;
+  --code-bg:#0B1020; --quiz-bg:#232E4D; --quiz-fg:#E7ECF7; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:860px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;line-height:1.2;margin:0}
+p{margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.9em}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+/* header */
+header.top{padding-block:40px 24px;display:grid;gap:14px}
+.kicker{font-size:13px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:500}
+header.top h1{font-size:clamp(40px,8vw,68px);color:var(--ink)}
+header.top h1 span{color:var(--blue)}
+header.top h1 em{font-style:normal;background:linear-gradient(transparent 60%,var(--yellow) 60%);padding:0 4px}
+.lede{max-width:60ch;color:var(--muted)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+nav.toc a{color:var(--ink);text-decoration:none;font-size:14px;padding:6px 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--paper)}
+nav.toc a:hover{border-color:var(--blue);color:var(--blue)}
+
+/* bench */
+section.bench{margin-top:44px;display:grid;gap:18px}
+.bench-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.chap{font-family:var(--f-mono);font-size:13px;color:var(--paper);background:var(--blue);padding:3px 9px;border-radius:6px}
+.bench-head h2{font-size:clamp(28px,5vw,38px)}
+.say{max-width:64ch}
+.say b{background:var(--yellow-soft);padding:0 3px;border-radius:3px;font-weight:700}
+.toy{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:14px;min-width:0}
+.toy-label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.btn{border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:10px;font-size:14px;font-weight:500}
+.btn:hover{background:var(--blue-soft)}
+.btn.primary{background:var(--blue);color:var(--paper);border-color:var(--blue)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{font-size:14px;color:var(--muted)}
+.msg{font-size:14px;padding:10px 12px;border-radius:10px;background:var(--bg);min-height:44px}
+.msg.ok{background:var(--good-soft);color:var(--good)}
+.msg.err{background:var(--bad-soft);color:var(--bad)}
+
+/* code + 사람말 */
+.code{border-radius:14px;overflow:hidden;border:1.5px solid var(--line)}
+.code-row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.code-row + .code-row .c, .code-row + .code-row .h{border-top:1px solid rgba(127,140,170,.18)}
+.c{background:var(--code-bg);color:var(--code-fg);font-family:var(--f-mono);font-size:13.5px;padding:7px 14px;white-space:pre;overflow-x:auto;min-width:0}
+.h{background:var(--paper);padding:7px 14px;font-size:14px;color:var(--ink);min-width:0}
+.h:empty::before{content:"";}
+.code-cap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.code-cap div{padding:6px 14px}
+.code-cap div:first-child{background:var(--code-bg);color:var(--code-cm)}
+.code-cap div:last-child{background:var(--yellow-soft);color:var(--ink)}
+.kw{color:var(--code-kw)} .st{color:var(--code-str)} .nu{color:var(--code-num)} .cm{color:var(--code-cm)}
+@media (max-width:640px){
+  .code-row,.code-cap{grid-template-columns:1fr}
+  .code-cap div:last-child{display:none}
+  .h{padding-top:4px;padding-bottom:10px;font-size:13.5px}
+  .h:not(:empty)::before{content:"→ ";color:var(--blue);font-weight:700}
+  .code-row + .code-row .h{border-top:none}
+}
+
+/* 1. type vs structure */
+.dfgrid{overflow-x:auto}
+table.df{border-collapse:separate;border-spacing:0;width:100%;min-width:520px;font-variant-numeric:tabular-nums}
+table.df th,table.df td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line);font-size:14px}
+table.df thead th{background:var(--blue-soft);font-weight:700}
+table.df thead th:first-child{border-top-left-radius:10px} table.df thead th:last-child{border-top-right-radius:10px}
+table.df td.cell{cursor:pointer;transition:background .15s}
+table.df td.cell:hover{background:var(--yellow-soft)}
+table.df td.cell.sel{background:var(--yellow);color:#15203A;font-weight:700}
+table.df td.idx{color:var(--muted);font-family:var(--f-mono)}
+table.df tr.dt td{font-family:var(--f-mono);font-size:12px;color:var(--blue);border-bottom:none}
+.frame{border:3px dashed var(--blue);border-radius:14px;padding:10px;position:relative}
+.frame-tag{position:absolute;top:-13px;right:14px;background:var(--blue);color:var(--paper);font-size:12px;padding:2px 10px;border-radius:999px}
+.typecard{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}
+.typecard .big{font-family:var(--f-mono);font-size:26px;font-weight:600;background:var(--yellow-soft);padding:6px 14px;border-radius:10px;grid-row:span 2}
+.legend2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.legend2 > div{padding:12px 14px;border-radius:12px;background:var(--bg)}
+.legend2 strong{display:block;font-family:var(--f-display);font-size:20px;font-weight:400}
+
+/* 2. containers */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:1.5px solid var(--line);background:var(--bg);color:var(--ink);padding:7px 14px;border-radius:10px;font-family:var(--f-mono);font-size:14px}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.stage{min-height:130px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:16px;border-radius:12px;background:var(--bg);position:relative}
+.box{min-width:74px;padding:10px 12px 8px;border-radius:10px;background:var(--paper);border:2px solid var(--blue);text-align:center;font-family:var(--f-mono);font-size:14px;display:grid;gap:2px;animation:pop .3s ease}
+.box small{font-size:11px;color:var(--muted)}
+.box.locked{border-color:var(--muted);background:repeating-linear-gradient(-45deg,var(--paper),var(--paper) 6px,var(--bg) 6px,var(--bg) 12px)}
+.box.key{border-color:var(--yellow)}
+.box .k{background:var(--yellow);color:#15203A;border-radius:6px;padding:0 6px;font-size:12px}
+.box.hit{background:var(--yellow-soft);transform:translateY(-6px)}
+.box.flash{background:var(--good-soft);border-color:var(--good)}
+.box.bye{animation:bye .7s ease forwards;border-color:var(--bad)}
+.bag{border:2px dashed var(--muted);border-radius:50% 50% 40% 40%/30% 30% 70% 70%;padding:28px 24px 20px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-width:220px}
+.shake{animation:shake .4s}
+@keyframes pop{from{transform:scale(.6);opacity:.3}to{transform:none;opacity:1}}
+@keyframes bye{0%{transform:none;opacity:1}60%{transform:translateY(-10px) scale(1.05)}100%{transform:translateY(-24px) scale(.5);opacity:0}}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.facts{display:flex;flex-wrap:wrap;gap:6px}
+.fact{font-size:13px;padding:3px 10px;border-radius:999px;border:1.5px solid var(--line)}
+.fact.y{border-color:var(--good);color:var(--good)} .fact.n{border-color:var(--bad);color:var(--bad)}
+
+/* 3. pandas vs numpy */
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.split > div{min-width:0}
+.cols{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.col{flex:1;min-width:58px;border-radius:8px;overflow:hidden;border:1.5px solid var(--line);font-size:12px;text-align:center}
+.col .hd{padding:5px 2px;font-weight:700;background:var(--bg)}
+.col .v{padding:4px 2px;font-family:var(--f-mono)}
+.col .ty{padding:4px 2px;font-family:var(--f-mono);font-size:11px;color:#15203A}
+.arr{display:flex;gap:6px;flex-wrap:wrap}
+.arr .v{font-family:var(--f-mono);padding:8px 12px;border-radius:8px;background:var(--blue-soft);border:1.5px solid var(--blue)}
+.arr-ty{margin-top:8px;font-family:var(--f-mono);font-size:12px;background:var(--blue);color:var(--paper);border-radius:8px;padding:4px 10px;display:inline-block}
+
+/* 4. race */
+.lane{display:grid;grid-template-columns:110px 1fr 86px;gap:10px;align-items:center}
+.track{height:34px;border-radius:10px;background:var(--bg);overflow:hidden;position:relative}
+.fill{height:100%;width:0;border-radius:10px}
+.fill.loop{background:repeating-linear-gradient(90deg,var(--yellow) 0 6px,var(--yellow-soft) 6px 8px)}
+.fill.vec{background:var(--blue)}
+.lane .t{font-family:var(--f-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.lane .n{font-size:14px;font-weight:700}
+.bigstat{font-family:var(--f-display);font-size:44px;color:var(--blue);line-height:1}
+@media (max-width:520px){.lane{grid-template-columns:72px 1fr 70px}}
+
+/* 5. flow */
+.slider{display:grid;gap:6px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.scoreval{font-family:var(--f-display);font-size:40px;line-height:1}
+.chain{display:grid;gap:6px}
+.step{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);font-size:14px;transition:all .2s}
+.step .cond{font-family:var(--f-mono);font-size:13px}
+.step .st{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:var(--f-body)}
+.step.false{opacity:.75} .step.false .st{background:var(--bad-soft);color:var(--bad)}
+.step.true{border-color:var(--good);background:var(--good-soft)} .step.true .st{background:var(--good);color:var(--paper)}
+.step.skip{opacity:.35;border-style:dashed} .step.skip .st{background:var(--bg);color:var(--muted)}
+.out{font-family:var(--f-mono);background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 14px;font-size:14px;white-space:pre-wrap;min-height:44px}
+@media (max-width:520px){.step{grid-template-columns:1fr auto}.step .cond{grid-column:1/-1}}
+
+.tiles{display:flex;gap:8px;flex-wrap:wrap}
+.tile{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-mono);font-size:18px;border:2px solid var(--line);background:var(--paper);position:relative;transition:all .2s}
+.tile.on{border-color:var(--blue);background:var(--blue-soft)}
+.tile.cur{border-color:var(--yellow);background:var(--yellow);color:#15203A;transform:translateY(-4px)}
+.tile.pass{border-color:var(--good);background:var(--good-soft)}
+.tile.fail{border-color:var(--bad);background:var(--bad-soft)}
+.tile.skipt{opacity:.3;text-decoration:line-through}
+.tile.stop{opacity:.25;border-style:dashed}
+.counter{font-family:var(--f-display);font-size:30px}
+.inputs{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.inputs label{display:flex;gap:6px;align-items:center;font-family:var(--f-mono);font-size:14px}
+.inputs input[type=number]{width:64px;padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:inherit}
+
+/* summary table */
+.sum{overflow-x:auto}
+.sum table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+.sum th,.sum td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.sum thead th{font-family:var(--f-display);font-weight:400;font-size:18px}
+.sum td:first-child{color:var(--muted);font-weight:700;white-space:nowrap}
+
+/* quiz */
+.quiz{background:var(--quiz-bg);color:var(--quiz-fg);border-radius:20px;padding:24px;display:grid;gap:16px}
+.quiz h2{color:var(--quiz-fg)}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{width:26px;height:8px;border-radius:999px;background:rgba(255,255,255,.18)}
+.quiz .dot{background:rgba(255,255,255,.2)}
+.dot.now{background:var(--yellow)} .dot.r{background:var(--good)} .dot.w{background:var(--bad)}
+.qtext{font-size:19px;font-weight:500;line-height:1.5}
+.qcode{font-family:var(--f-mono);font-size:14px;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:12px 14px;white-space:pre;overflow-x:auto;border:1px solid rgba(255,255,255,.15)}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:var(--quiz-fg);font-size:15px;display:flex;gap:10px;align-items:baseline}
+.opt:hover:not(:disabled){border-color:var(--yellow)}
+.opt .l{font-family:var(--f-mono);color:var(--yellow);font-weight:600}
+.opt.right{background:var(--good);border-color:var(--good);color:#fff}
+.opt.right .l{color:#fff}
+.opt.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.wrong .l{color:#fff}
+.opt:disabled{cursor:default}
+.explain{background:rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;font-size:15px}
+.explain b{color:var(--yellow)}
+.quiz .btn{background:var(--yellow);border-color:var(--yellow);color:#15203A;font-weight:700}
+.final{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0}
+.final .bigstat{color:var(--yellow);font-size:64px}
+
+
+.vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.vs > *{min-width:0}
+.vs-col{display:grid;gap:10px;align-content:start;padding:14px;border-radius:12px;background:var(--bg)}
+.vs-title{font-family:var(--f-display);font-size:22px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.vs-code{border:none}
+.vs-say{font-size:14px}
+.pill{font-family:var(--f-body);font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+.p-blue{background:var(--blue);color:var(--paper)} .p-yellow{background:var(--yellow);color:#15203A}
+.p-good{background:var(--good);color:var(--paper)} .p-skip{background:var(--paper);color:var(--muted);border:1.5px dashed var(--muted)}
+.trace{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px}
+.trace li{display:flex;gap:8px;align-items:center}
+.trap{display:grid;gap:10px;padding:14px;border-radius:12px;border:2px solid var(--bad);background:var(--bad-soft)}
+.overwrite{display:grid;gap:6px;align-content:start}
+.ow{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--paper);border:1.5px solid var(--line);text-decoration:line-through;color:var(--muted)}
+.ow .x{font-size:12px;text-decoration:none;color:var(--bad);font-weight:700}
+.ow.last{text-decoration:none;color:var(--ink);border-color:var(--bad)}
+.ow.last .x{background:var(--bad);color:var(--paper);padding:1px 8px;border-radius:999px}
+.gotchas{display:grid;gap:10px}
+.g-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.g-head h3{font-size:24px}
+.g-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--bad);color:var(--paper)}
+.g-list{display:grid;gap:10px}
+.g-item{border:1.5px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden}
+.g-item summary{cursor:pointer;padding:12px 16px;font-weight:700;display:flex;gap:10px;align-items:baseline;list-style:none}
+.g-item summary::-webkit-details-marker{display:none}
+.g-item summary::after{content:"+";margin-left:auto;font-family:var(--f-mono);color:var(--muted)}
+.g-item[open] summary::after{content:"−"}
+.g-item summary .gq{font-family:var(--f-mono);font-size:12px;color:var(--bad);font-weight:600;flex:none}
+.g-body{padding:0 16px 14px;display:grid;gap:10px}
+.g-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.g-pair > div{min-width:0;border-radius:10px;overflow:hidden}
+.g-pair .lab{font-size:12px;font-weight:700;padding:4px 10px}
+.g-wrong .lab{background:var(--bad-soft);color:var(--bad)}
+.g-right .lab{background:var(--good-soft);color:var(--good)}
+.g-pair pre{margin:0;padding:10px 12px;background:var(--code-bg);color:var(--code-fg);font-family:var(--f-mono);font-size:13px;white-space:pre;overflow-x:auto}
+.g-why{font-size:14.5px}
+.g-why b{background:var(--yellow-soft);padding:0 3px;border-radius:3px}
+.pipe{display:grid;gap:12px}
+.pipe-row{display:grid;gap:8px;padding:14px;border-radius:12px;background:var(--bg);min-width:0}
+.pipe-tag{justify-self:start}
+.pipe-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-family:var(--f-mono);font-size:13px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper)}
+.chip.val{border-color:var(--blue);background:var(--blue-soft)}
+.chip.fn{border-style:dashed;border-color:var(--muted)}
+.chip.txt{border-color:var(--good);background:var(--good-soft)}
+.chip.glue{border-color:var(--yellow);background:var(--yellow-soft)}
+.arw{color:var(--muted);font-weight:700}
+.eqline{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:15px;padding:14px;border-radius:12px;background:var(--yellow-soft)}
+.eqline .eq{font-family:var(--f-display);font-size:30px;color:var(--blue)}
+.fsb{font-family:var(--f-mono)}
+footer{margin-top:40px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="kicker">Data Science Lv1 · Python 문법 + 1.01 NumPy 벡터화</div>
+  <h1><span>파이썬</span> 기초<br><em>손으로 만져보기</em></h1>
+  <p class="lede">수업 슬라이드와 실습 노트북을 그대로 옮긴 놀이터예요. 버튼을 눌러보고, 코드 옆에 붙은 "사람 말 해석"을 읽고, 마지막에 퀴즈로 확인하세요.</p>
+  <nav class="toc" aria-label="목차">
+    <a href="#s1">값 vs 그릇</a><a href="#sF">f-string vs str()</a><a href="#s2">그릇 4종</a><a href="#s3">pandas · NumPy</a><a href="#s4">벡터화 경주</a><a href="#s5">if 갈림길</a><a href="#s6">반복문</a><a href="#vsBox">elif vs 여러 if</a><a href="#s1" style="display:none"></a><a href="#quiz">퀴즈 17문제</a>
+  </nav>
+</header>
+
+<!-- 1 -->
+<section class="bench" id="s1">
+  <div class="bench-head"><span class="chap">1</span><h2>자료형은 값, 자료구조는 그릇</h2></div>
+  <p class="say">한 칸에 들어간 <b>값 하나</b>의 종류가 <b>자료형(data type)</b>이고, 그 값들을 모아 담는 <b>통</b>이 <b>자료구조(data structure)</b>예요. 표의 칸을 눌러보세요.</p>
+  <div class="toy">
+    <div class="toy-label">칸을 눌러 자료형 확인</div>
+    <div class="frame"><span class="frame-tag">자료구조 = DataFrame</span>
+      <div class="dfgrid"><table class="df" id="dfTable"></table></div>
+    </div>
+    <div class="typecard" id="typeCard"></div>
+    <div class="legend2">
+      <div><strong>자료형 (값 하나)</strong>int 정수 · float 실수 · str 문자열 · bool 참/거짓</div>
+      <div><strong>자료구조 (값 여러 개)</strong>list · tuple · dict · set · Series · DataFrame · ndarray</div>
+    </div>
+  </div>
+  <div class="gotchas" data-g="s1"></div>
+</section>
+
+<!-- 1.5 fstring -->
+<section class="bench" id="sF">
+  <div class="bench-head"><span class="chap">1+</span><h2>f-string과 str(), 왜 결과가 같을까?</h2></div>
+  <p class="say">숫자를 문장 안에 넣으려면 먼저 <b>글자로 바꿔야</b> 해요. <span class="mono">str(변수)</span>는 그 변환을 <b>직접</b> 하는 거고, <span class="mono">f"...{변수}..."</span>는 중괄호 자리에서 파이썬이 <b>알아서</b> 같은 변환을 해줘요. 글자로 바꾸는 규칙(값이 자기를 글자로 보여주는 방법)이 하나라서, 결과도 같아요.</p>
+
+  <div class="toy">
+    <div class="toy-label">값을 골라 두 길을 비교</div>
+    <div class="row" id="fsPick"></div>
+    <div class="pipe">
+      <div class="pipe-row">
+        <div class="pipe-tag p-blue pill">str() + 붙이기</div>
+        <div class="pipe-flow"><span class="chip val" id="fsV1"></span><span class="arw">→</span><span class="chip fn">str( )</span><span class="arw">→</span><span class="chip txt" id="fsS1"></span><span class="arw">→</span><span class="chip glue">"합격자 수: " + ▢ + "명"</span></div>
+        <div class="qcode" id="fsC1"></div>
+      </div>
+      <div class="pipe-row">
+        <div class="pipe-tag p-yellow pill">f-string</div>
+        <div class="pipe-flow"><span class="chip val" id="fsV2"></span><span class="arw">→</span><span class="chip fn">{ } 자리에서 자동 변환</span><span class="arw">→</span><span class="chip txt" id="fsS2"></span><span class="arw">→</span><span class="chip glue">f"합격자 수: {▢}명"</span></div>
+        <div class="qcode" id="fsC2"></div>
+      </div>
+    </div>
+    <div class="msg ok" id="fsSame"></div>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">한 줄 원리</div>
+    <div class="eqline"><span class="mono">f"합격자 수: {n}명"</span><span class="eq">=</span><span class="mono">"합격자 수: " + str(n) + "명"</span></div>
+    <p class="say">f-string은 사실 위 오른쪽 코드를 <b>짧게 쓰는 방법</b>이에요. <span class="mono">{ }</span> 안의 값을 글자로 바꾸고(str이 하는 일), 앞뒤 글자와 이어 붙여요(+가 하는 일). 두 단계를 한 번에 해주는 거예요.</p>
+    <div class="sum"><table>
+      <thead><tr><th></th><th>str(변수) + 붙이기</th><th>f-string</th></tr></thead>
+      <tbody>
+        <tr><td>변환</td><td>내가 직접 str()로 감쌌야 함</td><td>{ } 안에 넣기만 하면 자동</td></tr>
+        <tr><td>빼먹으면</td><td><span class="mono">"수: " + 3</span> → TypeError</td><td>에러 없음</td></tr>
+        <tr><td>계산 넣기</td><td><span class="mono">str(5 * n)</span></td><td><span class="mono">{5 * n}</span> (구구단 슬라이드)</td></tr>
+        <tr><td>자릿수 맞추기</td><td>따로 round() 등 필요</td><td><span class="mono">{x:.6f}</span> 소수점 6자리 (노트북 시간 출력)</td></tr>
+        <tr><td>추천</td><td>값 하나만 글자로 바꿀 때</td><td>문장 안에 값을 끼울 때 (거의 항상)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">자릿수 서식 맛보기 (f-string만 가능)</div>
+    <div class="inputs"><label for="fmtSel">loop_duration =</label><span class="mono">0.12109947204589844</span>
+      <select id="fmtSel" style="padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font-family:var(--f-mono)">
+        <option value="raw">{loop_duration}</option><option value="6" selected>{loop_duration:.6f}</option><option value="2">{loop_duration:.2f}</option><option value="0">{loop_duration:.0f}</option>
+      </select></div>
+    <div class="out" id="fmtOut"></div>
+    <p class="note">콜론 뒤 <span class="mono">.6f</span> = "소수점 아래 6자리까지, 실수(f)로". 숫자 값은 그대로고 <b>보여주는 모양만</b> 바뀌어요.</p>
+  </div>
+
+  <div class="code" id="codeF"></div>
+  <div class="gotchas" data-g="sF"></div>
+</section>
+
+<!-- 2 -->
+<section class="bench" id="s2">
+  <div class="bench-head"><span class="chap">2</span><h2>파이썬 기본 그릇 4종</h2></div>
+  <p class="say">네 그릇은 <b>순서가 있나 · 고칠 수 있나 · 중복이 되나</b> 세 가지로 구별돼요. 탭을 바꿔가며 버튼으로 실험해 보세요.</p>
+  <div class="toy">
+    <div class="tabs" role="tablist" id="ctTabs"></div>
+    <div class="facts" id="ctFacts"></div>
+    <div class="stage" id="ctStage" aria-live="polite"></div>
+    <div class="row" id="ctBtns"></div>
+    <div class="msg" id="ctMsg">버튼을 눌러보세요.</div>
+  </div>
+  <div class="code" id="code2"></div>
+  <div class="gotchas" data-g="s2"></div>
+</section>
+
+<!-- 3 -->
+<section class="bench" id="s3">
+  <div class="bench-head"><span class="chap">3</span><h2>pandas는 열마다, NumPy는 통째로</h2></div>
+  <p class="say">DataFrame은 <b>열마다 다른 dtype</b>을 가질 수 있어요. NumPy 배열(ndarray)은 <b>배열 전체가 dtype 하나</b>예요. 그래서 NumPy는 숫자 계산에 강해요.</p>
+  <div class="toy split">
+    <div>
+      <div class="toy-label">pandas DataFrame · 열별 dtype</div>
+      <div class="cols" id="pdCols" style="margin-top:10px"></div>
+    </div>
+    <div>
+      <div class="toy-label">NumPy ndarray · hours</div>
+      <div class="arr" id="npArr" style="margin-top:10px"></div>
+      <div class="arr-ty">dtype: float64 (전부 같음)</div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="npPlus">hours + 1</button><button class="btn" id="npReset">되돌리기</button></div>
+      <p class="note" style="margin-top:6px">반복문 없이 모든 칸에 한 번에 +1이 돼요.</p>
+    </div>
+  </div>
+  <div class="code" id="code3"></div>
+  <div class="gotchas" data-g="s3"></div>
+</section>
+
+<!-- 4 -->
+<section class="bench" id="s4">
+  <div class="bench-head"><span class="chap">4</span><h2>벡터화 경주: 100만 개에 ×2</h2></div>
+  <p class="say">1부터 1,000,000까지 숫자를 두 배로 만드는 일. <b>for 반복문</b>은 하나씩 꺼내 계산하고, <b>NumPy 벡터화</b>는 배열 전체에 한 번에 적용해요. 수업 노트북에서 실제로 잰 시간으로 재생합니다.</p>
+  <div class="toy">
+    <div class="lane"><span class="n">for 반복문</span><div class="track"><div class="fill loop" id="fLoop"></div></div><span class="t" id="tLoop">0.000000초</span></div>
+    <div class="lane"><span class="n">벡터화</span><div class="track"><div class="fill vec" id="fVec"></div></div><span class="t" id="tVec">0.000000초</span></div>
+    <div class="row" style="justify-content:space-between">
+      <button class="btn primary" id="raceBtn">경주 시작</button>
+      <div style="text-align:right"><div class="bigstat" id="raceX">?배</div><div class="note">벡터화가 빠른 정도 (0.121099 ÷ 0.002072)</div></div>
+    </div>
+    <p class="note">화면에서는 1초를 약 25초로 늘려 보여줘요. 측정값은 컴퓨터마다 달라지지만 수십 배 차이는 비슷하게 나요.</p>
+  </div>
+  <div class="code" id="code4"></div>
+  <div class="gotchas" data-g="s4"></div>
+</section>
+
+<!-- 5 -->
+<section class="bench" id="s5">
+  <div class="bench-head"><span class="chap">5</span><h2>if · elif · else 갈림길</h2></div>
+  <p class="say">조건을 <b>위에서부터</b> 검사하고, <b>처음 참</b>이 나오면 그 블록만 실행하고 끝. 나머지는 쳐다보지도 않아요. 점수를 움직여 보세요.</p>
+  <div class="toy">
+    <div class="slider">
+      <div class="row" style="justify-content:space-between"><span class="toy-label">score</span><span class="scoreval" id="scoreVal">88</span></div>
+      <input type="range" id="scoreIn" min="0" max="100" value="88" aria-label="점수">
+    </div>
+    <div class="row"><button class="btn" id="modeElif" aria-pressed="true">if–elif 모드</button><button class="btn" id="modeIfs" aria-pressed="false">여러 if 모드</button></div>
+    <div class="chain" id="chain"></div>
+    <div class="out" id="gradeOut"></div>
+    <p class="note" id="modeNote"></p>
+  </div>
+  <div class="code" id="code5"></div>
+
+  <div class="toy" id="vsBox">
+    <div class="toy-label">if–elif vs 여러 if, 뭐가 달라?</div>
+    <p class="say">둘 다 조건을 위에서 아래로 읽어요. 차이는 <b>참을 만난 다음</b>에 있어요. <b>if–elif</b>는 참 하나를 찾으면 거기서 내리고, <b>여러 if</b>는 참이든 거짓이든 끝까지 하나하나 다 검사해요.</p>
+    <div class="vs">
+      <div class="vs-col">
+        <div class="vs-title">if – elif <span class="pill p-blue">한 세트</span></div>
+        <div class="qcode vs-code">score = 95
+
+if score >= 90:
+    print("A")
+elif score >= 80:
+    print("B")</div>
+        <ol class="trace">
+          <li><span class="pill p-good">참</span> 90 이상? 맞아 → A 출력</li>
+          <li><span class="pill p-skip">패스</span> 80 이상? 이미 답 찾았으니 안 봄</li>
+        </ol>
+        <div class="out">A</div>
+        <p class="vs-say">엘리베이터예요. 원하는 층(처음 참)에 도착하면 내리고, 위층은 안 가요.</p>
+      </div>
+      <div class="vs-col">
+        <div class="vs-title">if + if <span class="pill p-yellow">따로따로 두 세트</span></div>
+        <div class="qcode vs-code">score = 95
+
+if score >= 90:
+    print("A")
+if score >= 80:
+    print("B")</div>
+        <ol class="trace">
+          <li><span class="pill p-good">참</span> 90 이상? 맞아 → A 출력</li>
+          <li><span class="pill p-good">참</span> 80 이상? 이것도 맞아 → B 출력</li>
+        </ol>
+        <div class="out">A
+B</div>
+        <p class="vs-say">체크리스트예요. 항목마다 따로 확인해서 해당하는 건 전부 실행해요.</p>
+      </div>
+    </div>
+
+    <div class="trap">
+      <div class="toy-label">함정: 학점을 여러 if로 짜면?</div>
+      <div class="vs">
+        <div class="qcode vs-code">score = 95
+
+if score >= 90: grade = "A"
+if score >= 80: grade = "B"
+if score >= 70: grade = "C"
+if score >= 60: grade = "D"
+
+print(grade)   # D  (?!)</div>
+        <div class="overwrite" aria-label="grade 값이 덮어써지는 과정">
+          <div class="ow"><span class="mono">grade = "A"</span><span class="x">덮어씀</span></div>
+          <div class="ow"><span class="mono">grade = "B"</span><span class="x">덮어씀</span></div>
+          <div class="ow"><span class="mono">grade = "C"</span><span class="x">덮어씀</span></div>
+          <div class="ow last"><span class="mono">grade = "D"</span><span class="x">최종!</span></div>
+          <p class="note">95점은 네 조건 모두 참이라 grade에 A→B→C→D가 차례로 들어가요. 마지막 값만 남아서 95점이 D가 돼요. 그래서 학점은 elif로 써야 해요.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sum"><table>
+      <thead><tr><th></th><th>if – elif – else</th><th>if 여러 개</th></tr></thead>
+      <tbody>
+        <tr><td>검사 방식</td><td>앞 조건이 거짓일 때만 다음 조건 검사</td><td>모든 조건을 각각 검사</td></tr>
+        <tr><td>실행되는 블록</td><td>딱 하나 (아무것도 참이 아니면 else)</td><td>참인 것 전부 (0개일 수도)</td></tr>
+        <tr><td>조건 순서</td><td>매우 중요 (큰 기준부터)</td><td>결과가 바뀌는 경우가 적음</td></tr>
+        <tr><td>이럴 때 써요</td><td>학점, 요금 구간처럼 <b>하나만 골라야</b> 할 때</td><td>쿠폰·알림처럼 <b>여러 개가 동시에</b> 해당될 수 있을 때</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">위의 점수 슬라이더에서 "여러 if 모드"를 눌러 다른 점수로도 비교해 보세요.</p>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">실습: 배송비 계산 (초과 vs 이상)</div>
+    <div class="slider">
+      <div class="row" style="justify-content:space-between"><span>상품 가격</span><span class="scoreval mono" style="font-size:28px" id="priceVal">20,000원</span></div>
+      <input type="range" id="priceIn" min="10000" max="30000" step="1000" value="20000" aria-label="상품 가격">
+    </div>
+    <div class="row"><button class="btn" id="opGt" aria-pressed="true">price &gt; 20000 (초과)</button><button class="btn" id="opGe" aria-pressed="false">price &gt;= 20000 (이상)</button></div>
+    <div class="out" id="shipOut"></div>
+    <p class="note">딱 20,000원일 때 두 연산자의 결과가 달라지는 걸 확인해 보세요.</p>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">실습: 수료 판단 (and / or)</div>
+    <div class="inputs">
+      <label for="attIn">출석률 <input type="number" id="attIn" value="90" min="0" max="100">%</label>
+      <label for="subIn">과제 <input type="number" id="subIn" value="2" min="0" max="10">회</label>
+      <button class="btn" id="opAnd" aria-pressed="true">and</button><button class="btn" id="opOr" aria-pressed="false">or</button>
+    </div>
+    <div class="out" id="passOut"></div>
+  </div>
+  <div class="gotchas" data-g="s5"></div>
+</section>
+
+<!-- 6 -->
+<section class="bench" id="s6">
+  <div class="bench-head"><span class="chap">6</span><h2>반복문: for · range · while · break</h2></div>
+  <p class="say"><b>for</b>는 목록에서 하나씩 꺼내 처리하고, <b>while</b>은 조건이 참인 동안 계속 돌아요.</p>
+
+  <div class="toy">
+    <div class="toy-label">for + if: 합격자 세기 (한 단계씩)</div>
+    <div class="tiles" id="loopTiles"></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="row"><button class="btn primary" id="loopStep">다음 반복 ▶</button><button class="btn" id="loopReset">처음부터</button></div>
+      <div>pass_count = <span class="counter" id="loopCount">0</span></div>
+    </div>
+    <div class="msg" id="loopMsg">score 변수에 리스트 값이 하나씩 들어가요. 버튼을 눌러보세요.</div>
+  </div>
+  <div class="code" id="code6a"></div>
+
+  <div class="toy">
+    <div class="toy-label">range(시작, 끝, 간격) 실험실</div>
+    <div class="inputs">
+      <label for="rStart">시작 <input type="number" id="rStart" value="1"></label>
+      <label for="rStop">끝 <input type="number" id="rStop" value="10"></label>
+      <label for="rStep">간격 <input type="number" id="rStep" value="1"></label>
+    </div>
+    <div class="mono" id="rExpr" style="font-size:15px"></div>
+    <div class="tiles" id="rTiles"></div>
+    <p class="note" id="rNote"></p>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">break vs continue</div>
+    <div class="row"><button class="btn" id="bcBreak" aria-pressed="true">break</button><button class="btn" id="bcCont" aria-pressed="false">continue</button>
+      <span class="inputs"><label for="bcN">number == <input type="number" id="bcN" value="3" min="1" max="5"></label></span></div>
+    <div class="tiles" id="bcTiles"></div>
+    <div class="out" id="bcOut"></div>
+  </div>
+
+  <div class="toy">
+    <div class="toy-label">while: 정답 나올 때까지</div>
+    <div class="inputs"><label for="wIn" style="font-family:var(--f-body)">지금 배우는 프로그래밍 언어는? <input type="text" id="wIn" style="width:140px;padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:inherit"></label><button class="btn primary" id="wBtn">입력</button></div>
+    <div class="out" id="wOut">answer = ""  (조건 answer != "파이썬" → True, 반복 시작)</div>
+  </div>
+  <div class="code" id="code6b"></div>
+  <div class="gotchas" data-g="s6"></div>
+</section>
+
+<!-- summary -->
+<section class="bench" id="s7">
+  <div class="bench-head"><span class="chap">✓</span><h2>한 장 요약</h2></div>
+  <div class="toy sum">
+    <table>
+      <thead><tr><th></th><th>파이썬 내장</th><th>NumPy</th><th>pandas</th></tr></thead>
+      <tbody>
+        <tr><td>그릇</td><td><code>list, tuple, dict, set</code></td><td><code>ndarray</code></td><td><code>Series, DataFrame</code></td></tr>
+        <tr><td>특징</td><td>순서, 키–값, 집합 등 다양</td><td>dtype 하나인 다차원 배열</td><td>인덱스 붙은 1차원 / 행·열 표</td></tr>
+        <tr><td>잘하는 일</td><td>일반 데이터 저장·관리</td><td>많은 숫자에 같은 계산</td><td>표 정리·탐색·결측값·그룹 집계</td></tr>
+        <tr><td>한마디로</td><td>만능 수납함</td><td>계산기 공장</td><td>엑셀 표</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- quiz -->
+<section class="bench" id="quiz">
+  <div class="quiz">
+    <div class="row" style="justify-content:space-between"><h2 style="font-size:32px">퀴즈 17문제</h2><span class="mono" id="qNum"></span></div>
+    <div class="dots" id="qDots"></div>
+    <div id="qBody" aria-live="polite"></div>
+  </div>
+</section>
+
+<footer>수업 자료: DS Lv1 Python 문법 슬라이드 · 1.01_Numpy_Array_VectorizedOperations.ipynb</footer>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function hl(line){
+  let s=esc(line);
+  const ci=s.indexOf("#");
+  let cm="";
+  if(ci>=0 && !/["'][^"']*#/.test(s.slice(0,ci+1))){cm='<span class="cm">'+s.slice(ci)+'</span>';s=s.slice(0,ci);}
+  s=s.replace(/("[^"]*"|'[^']*')/g,'<span class="st">$1</span>')
+     .replace(/\b(import|as|for|in|if|elif|else|while|break|continue|print|True|False|range)\b/g,'<span class="kw">$1</span>')
+     .replace(/(?<![\w"])(\d+\.?\d*)(?![\w"])/g,'<span class="nu">$1</span>');
+  return s+cm;
+}
+function codeBlock(el,rows){
+  let h='<div class="code-cap"><div>코드</div><div>사람 말로 해석</div></div>';
+  rows.forEach(([c,t])=>{h+=`<div class="code-row"><div class="c">${hl(c)||" "}</div><div class="h">${t||""}</div></div>`});
+  $(el).innerHTML=h;
+}
+
+/* 1 */
+const data=[["S001",12.5,4,"높음",true],["S002",8.0,2,"보통",false],["S003",15.0,5,"높음",true]];
+const cols=["회원 ID","학습 시간","제출 횟수","만족도","수료 여부"];
+const pyT=["str","float","int","str","bool"], pdT=["string","float64","int64","string","bool"];
+const tName={str:"문자열 — 글자들",float:"실수 — 소수점 있는 숫자",int:"정수 — 소수점 없는 숫자",bool:"참/거짓 — True 아니면 False"};
+const fmt=(v,j)=>j===1?v.toFixed(1):(typeof v==="boolean"?(v?"True":"False"):v);
+(function(){
+  let h="<thead><tr><th>index</th>"+cols.map(c=>`<th>${c}</th>`).join("")+"</tr></thead><tbody>";
+  data.forEach((r,i)=>{h+=`<tr><td class="idx">${i}</td>`+r.map((v,j)=>`<td class="cell" tabindex="0" data-i="${i}" data-j="${j}">${fmt(v,j)}</td>`).join("")+"</tr>"});
+  h+='<tr class="dt"><td>dtype</td>'+pdT.map(t=>`<td>${t}</td>`).join("")+"</tr></tbody>";
+  $("#dfTable").innerHTML=h;
+  const pick=td=>{document.querySelectorAll("td.sel").forEach(x=>x.classList.remove("sel"));td.classList.add("sel");
+    const i=+td.dataset.i,j=+td.dataset.j,v=data[i][j],t=pyT[j];
+    $("#typeCard").innerHTML=`<div class="big">${t}</div><div><b>${cols[j]}</b> 열의 <span class="mono">${fmt(v,j)}</span>는 <b>${tName[t]}</b></div><div class="note">pandas에서는 이 열 전체가 <span class="mono">${pdT[j]}</span> dtype · 표 전체는 DataFrame이라는 그릇</div>`};
+  document.querySelectorAll("td.cell").forEach(td=>{td.onclick=()=>pick(td);td.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(td)}}});
+  pick(document.querySelector('td.cell[data-i="2"][data-j="2"]'));
+})();
+
+/* 2 containers */
+const CT={
+  list:{name:"list",facts:[["순서 O",1],["수정 O",1],["중복 O",1]],desc:"대괄호 [ ]. 칸마다 번호(index)가 붙은 사물함."},
+  tuple:{name:"tuple",facts:[["순서 O",1],["수정 X",0],["중복 O",1]],desc:"소괄호 ( ). 봉인된 사물함. 만든 뒤엔 못 바꿔요."},
+  dict:{name:"dict",facts:[["키로 접근",1],["수정 O",1],["키 중복 X",0]],desc:"중괄호 { 키: 값 }. 이름표 붙은 서랍."},
+  set:{name:"set",facts:[["순서 보장 X",0],["중복 X",0],["추가·삭제 O",1]],desc:"중괄호 { }. 주머니. 같은 건 하나만 남아요."}
+};
+let ct="list",st={};
+function resetCT(){st={list:["S001",12.5,4,"높음",true],tuple:["S001",12.5,4,"높음",true],dict:{"회원 ID":"S001","학습 시간":12.5,"제출 횟수":4,"만족도":"높음"},set:["높음","보통"]}}
+resetCT();
+const show=v=>typeof v==="string"?`"${v}"`:(typeof v==="boolean"?(v?"True":"False"):v);
+function drawCT(){
+  $("#ctTabs").innerHTML=Object.keys(CT).map(k=>`<button class="tab" role="tab" aria-selected="${k===ct}" data-k="${k}">${k}</button>`).join("");
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ct=b.dataset.k;resetCT();drawCT();$("#ctMsg").className="msg";$("#ctMsg").textContent=CT[ct].desc;});
+  $("#ctFacts").innerHTML=CT[ct].facts.map(([t,y])=>`<span class="fact ${y?"y":"n"}">${t}</span>`).join("");
+  const S=$("#ctStage");
+  if(ct==="list"||ct==="tuple") S.innerHTML=st[ct].map((v,i)=>`<div class="box ${ct==="tuple"?"locked":""}" data-i="${i}">${show(v)}<small>[${i}]</small></div>`).join("");
+  else if(ct==="dict") S.innerHTML=Object.entries(st.dict).map(([k,v])=>`<div class="box key" data-k="${k}"><span class="k">${k}</span>${show(v)}</div>`).join("");
+  else S.innerHTML=`<div class="bag" id="bag">${st.set.map(v=>`<div class="box">${show(v)}</div>`).join("")}</div>`;
+  const B={
+    list:[["append(\"높음\")",()=>{st.list.push("높음");drawCT();ok('맨 뒤에 "높음" 추가. 같은 값이 또 있어도 괜찮아요 (중복 O).')}],
+          ["[0] = \"S999\"",()=>{st.list[0]="S999";drawCT();flash(0);ok('0번 칸을 "S999"로 교체 (수정 O).')}],
+          ["pop()",()=>{if(!st.list.length)return;const v=st.list.pop();drawCT();ok(`맨 뒤 ${show(v)}를 꺼내서 제거.`)}],
+          ["[1:3] 슬라이싱",()=>{drawCT();[1,2].forEach(hit);ok("1번부터 3번 '직전'까지 → [12.5, 4]")}]],
+    tuple:[["[0] = \"S999\"",()=>{const S=$("#ctStage");S.classList.remove("shake");void S.offsetWidth;S.classList.add("shake");err("TypeError: 'tuple' object does not support item assignment → 튜플은 못 바꿔요!")}],
+           ["[1] 꺼내 보기",()=>{drawCT();hit(1);ok("읽기는 얼마든지 OK → 12.5")}],
+           ["append(...)",()=>{const S=$("#ctStage");S.classList.remove("shake");void S.offsetWidth;S.classList.add("shake");err("AttributeError: 튜플엔 append가 없어요. 추가도 불가.")}]],
+    dict:[["[\"학습 시간\"] 찾기",()=>{drawCT();document.querySelector('[data-k="학습 시간"]').classList.add("hit");ok('키 "학습 시간"으로 바로 찾음 → 12.5')}],
+          ["[\"수료 여부\"] = True",()=>{st.dict["수료 여부"]=true;drawCT();ok("새 키를 넣으면 서랍이 하나 생겨요.")}],
+          ["[\"만족도\"] = \"보통\"",()=>{st.dict["만족도"]="보통";drawCT();document.querySelector('[data-k="만족도"]').classList.add("flash");ok("같은 키에 다시 넣으면 새 서랍이 아니라 값이 덮어써져요 (키 중복 X).")}]],
+    set:[["add(\"높음\")",()=>{const bag=$("#bag");const d=document.createElement("div");d.className="box bye";d.textContent='"높음"';bag.appendChild(d);setTimeout(()=>d.remove(),720);err('"높음"은 이미 있어서 사라졌어요. 집합은 중복을 안 받아요.')}],
+         ["add(\"낮음\")",()=>{if(!st.set.includes("낮음"))st.set.push("낮음");drawCT();ok('새 값 "낮음"은 들어가요.')}],
+         ["[0] 꺼내기",()=>{err("TypeError: 'set' object is not subscriptable → 순서가 없어서 번호로 못 꺼내요.")}]]
+  }[ct];
+  $("#ctBtns").innerHTML=B.map((b,i)=>`<button class="btn mono" data-b="${i}">${esc(b[0])}</button>`).join("")+'<button class="btn" id="ctR">초기화</button>';
+  document.querySelectorAll("#ctBtns [data-b]").forEach(x=>x.onclick=B[+x.dataset.b][1]);
+  $("#ctR").onclick=()=>{resetCT();drawCT();$("#ctMsg").className="msg";$("#ctMsg").textContent=CT[ct].desc};
+}
+const ok=t=>{$("#ctMsg").className="msg ok";$("#ctMsg").textContent=t};
+const err=t=>{$("#ctMsg").className="msg err";$("#ctMsg").textContent=t};
+const hit=i=>{const b=document.querySelector(`#ctStage .box[data-i="${i}"]`);b&&b.classList.add("hit")};
+const flash=i=>{const b=document.querySelector(`#ctStage .box[data-i="${i}"]`);b&&b.classList.add("flash")};
+drawCT();$("#ctMsg").textContent=CT.list.desc;
+codeBlock("#code2",[
+ ['student = {"회원 ID": "S001", "학습 시간": 12.5}','회원 한 명을 이름표 서랍(dict)에 담아요'],
+ ['print(student["학습 시간"])','"학습 시간" 서랍을 열어 보여줘 → 12.5'],
+ ['students = [ {...}, {...}, {...} ]','서랍 세 개를 줄지어 리스트에 담아요 (회원 3명)'],
+ ['print(students[0]["회원 ID"])','0번째 사람의 "회원 ID" → S001'],
+ ['student_tuple = ("S001", 12.5, 4, "높음", True)','한 사람 정보를 순서대로 봉인 (못 바꿈)'],
+ ['satisfaction_set = {"높음", "보통", "높음"}','만족도 종류만 중복 없이 → {"높음", "보통"}'],
+]);
+
+/* 3 */
+(function(){
+  const colors=["var(--yellow-soft)","var(--blue-soft)","var(--good-soft)","var(--yellow-soft)","var(--bad-soft)"];
+  $("#pdCols").innerHTML=cols.map((c,j)=>`<div class="col"><div class="hd">${c}</div>${data.map(r=>`<div class="v">${fmt(r[j],j)}</div>`).join("")}<div class="ty" style="background:${colors[j]};color:var(--ink)">${pdT[j]}</div></div>`).join("");
+  let hours=[12.5,8.0,15.0];
+  const draw=(fl)=>{$("#npArr").innerHTML=hours.map(h=>`<span class="v ${fl?"":""}" style="${fl?"background:var(--yellow);color:#15203A":""}">${Number.isInteger(h)?h+".":h}</span>`).join("")};
+  draw();
+  $("#npPlus").onclick=()=>{hours=hours.map(h=>h+1);draw(true)};
+  $("#npReset").onclick=()=>{hours=[12.5,8.0,15.0];draw()};
+})();
+codeBlock("#code3",[
+ ['df = pd.DataFrame(students).astype({...})','회원 리스트를 엑셀 같은 표로 바꾸고, 열마다 자료형을 정해줘요'],
+ ['print(df.dtypes)','각 열이 어떤 자료형인지 보여줘'],
+ ['hours = np.array([12.5, 8.0, 15.0], dtype="float64")','학습 시간 3개를 실수(float64) 하나로 통일한 배열에 담아요'],
+ ['print(type(hours))','그릇 종류는? → numpy.ndarray'],
+ ['print(hours.dtype)','안에 든 값 종류는? → float64'],
+ ['print(hours + 1)','전부 한꺼번에 +1 → [13.5  9.  16. ]'],
+]);
+
+/* 4 race */
+let racing=false;
+$("#raceBtn").onclick=()=>{
+  if(racing)return;racing=true;
+  const L=0.121099,V=0.002072,scale=25,t0=performance.now();
+  $("#raceX").textContent="?배";
+  const tick=now=>{
+    const real=(now-t0)/1000/scale;
+    const l=Math.min(real/L,1),v=Math.min(real/V,1);
+    $("#fLoop").style.width=l*100+"%";$("#fVec").style.width=v*100+"%";
+    $("#tLoop").textContent=(Math.min(real,L)).toFixed(6)+"초";
+    $("#tVec").textContent=(Math.min(real,V)).toFixed(6)+"초";
+    if(l<1)requestAnimationFrame(tick);else{racing=false;$("#raceX").textContent=(L/V).toFixed(2)+"배";$("#raceBtn").textContent="다시 달리기"}
+  };
+  $("#fLoop").style.width=0;$("#fVec").style.width=0;requestAnimationFrame(tick);
+};
+codeBlock("#code4",[
+ ['data_list = list(range(1, 1000001))','1부터 100만까지 숫자를 일반 리스트에'],
+ ['data_array = np.array(data_list)','같은 숫자를 NumPy 배열로도 하나 만들어요'],
+ ['for x in data_list:','리스트에서 하나씩 꺼내서'],
+ ['    result_list.append(x * 2)','두 배 한 다음 결과 리스트에 붙이기 (100만 번!)'],
+ ['result_array = data_array * 2','배열 전체에 "×2" 한 줄로 끝 (벡터화)'],
+ ['loop_duration / vectorized_duration','몇 배 빠른지 나눠보기 → 58.44배'],
+ ['data_array.shape   # (1000000,)','모양: 1줄짜리, 칸 100만 개'],
+ ['data_array.ndim    # 1','차원 수: 1차원'],
+ ['data_array.dtype   # int64','안의 값은 전부 정수(int64)'],
+]);
+
+/* 5 grade */
+let mode="elif";
+const grades=[[90,"A"],[80,"B"],[70,"C"],[60,"D"]];
+function drawGrade(){
+  const s=+$("#scoreIn").value;$("#scoreVal").textContent=s;
+  let found=false,out=[],h="";
+  grades.forEach(([g,l],i)=>{
+    const kw=i===0||mode==="ifs"?"if":"elif",t=s>=g;
+    let cls,lab;
+    if(mode==="elif"&&found){cls="skip";lab="검사 안 함"}
+    else if(t){cls="true";lab="참 → 실행";out.push(l);if(mode==="elif")found=true}
+    else{cls="false";lab="거짓"}
+    h+=`<div class="step ${cls}"><span class="cond">${kw} score &gt;= ${g}:</span><span>grade = "${l}"</span><span class="st">${lab}</span></div>`;
+  });
+  if(mode==="elif"){
+    const cls=found?"skip":"true";
+    h+=`<div class="step ${cls}"><span class="cond">else:</span><span>grade = "F"</span><span class="st">${found?"검사 안 함":"나머지 전부 → 실행"}</span></div>`;
+    if(!found)out.push("F");
+  }
+  $("#chain").innerHTML=h;
+  $("#gradeOut").textContent=mode==="elif"?`학점: ${out[0]}`:(out.length?out.join("\n"):"(아무것도 출력 안 됨)");
+  $("#modeNote").textContent=mode==="elif"?"if–elif–else: 여러 경우 중 딱 하나만 고름. 그래서 조건 순서가 중요해요.":"여러 if: 각각 따로 검사해서 참인 건 전부 실행. 95점이면 A도 B도 C도 D도 찍혀요.";
+}
+$("#scoreIn").oninput=drawGrade;
+$("#modeElif").onclick=()=>{mode="elif";$("#modeElif").setAttribute("aria-pressed","true");$("#modeIfs").setAttribute("aria-pressed","false");drawGrade()};
+$("#modeIfs").onclick=()=>{mode="ifs";$("#modeIfs").setAttribute("aria-pressed","true");$("#modeElif").setAttribute("aria-pressed","false");drawGrade()};
+drawGrade();
+codeBlock("#code5",[
+ ['score = int(input("점수를 입력하세요: "))','점수를 입력받아 정수로 바꿔요 (input은 원래 글자)'],
+ ['if score >= 90:','90점 이상이야?'],
+ ['    grade = "A"','맞으면 A. 들여쓰기 = 이 조건에 속한 코드'],
+ ['elif score >= 80:','아니면, 80점 이상이야?'],
+ ['    grade = "B"','맞으면 B'],
+ ['else:','위에 전부 아니면 (조건식 안 붙임)'],
+ ['    grade = "F"','F'],
+ ['print(f"학점: {grade}")','들여쓰기 밖이라 항상 실행돼요'],
+]);
+let op=">";
+function drawShip(){
+  const p=+$("#priceIn").value;$("#priceVal").textContent=p.toLocaleString()+"원";
+  const free=op===">"?p>20000:p>=20000, sc=free?0:3000;
+  $("#shipOut").textContent=`price ${op} 20000 → ${free?"True":"False"}\n배송비: ${sc}원\n총 결제 금액: ${p+sc}원`;
+}
+$("#priceIn").oninput=drawShip;
+$("#opGt").onclick=()=>{op=">";$("#opGt").setAttribute("aria-pressed","true");$("#opGe").setAttribute("aria-pressed","false");drawShip()};
+$("#opGe").onclick=()=>{op=">=";$("#opGe").setAttribute("aria-pressed","true");$("#opGt").setAttribute("aria-pressed","false");drawShip()};
+drawShip();
+let lop="and";
+function drawPass(){
+  const a=+$("#attIn").value,s=+$("#subIn").value,A=a>=80,S=s>=3,r=lop==="and"?A&&S:A||S;
+  $("#passOut").textContent=`attendance >= 80 → ${A?"True":"False"}\nsubmissions >= 3 → ${S?"True":"False"}\n${A?"True":"False"} ${lop} ${S?"True":"False"} → ${r?"True":"False"}\n${r?"수료 가능합니다.":"수료 기준을 충족하지 못했습니다."}`;
+}
+["attIn","subIn"].forEach(i=>$("#"+i).oninput=drawPass);
+$("#opAnd").onclick=()=>{lop="and";$("#opAnd").setAttribute("aria-pressed","true");$("#opOr").setAttribute("aria-pressed","false");drawPass()};
+$("#opOr").onclick=()=>{lop="or";$("#opOr").setAttribute("aria-pressed","true");$("#opAnd").setAttribute("aria-pressed","false");drawPass()};
+drawPass();
+
+/* 6 loops */
+const scores=[85,50,70,40,95];let li=-1,pc=0;
+function drawLoop(){
+  $("#loopTiles").innerHTML=scores.map((s,i)=>{let c="tile";if(i<li)c+=s>=60?" pass":" fail";if(i===li)c+=" cur";return `<div class="${c}">${s}</div>`}).join("");
+  $("#loopCount").textContent=pc;
+}
+$("#loopStep").onclick=()=>{
+  if(li>=scores.length-1){$("#loopMsg").textContent=`리스트 끝! print → 합격자 수: ${pc}명`;$("#loopMsg").className="msg ok";li=scores.length;drawLoop();return}
+  li++;const s=scores[li],p=s>=60;if(p)pc++;
+  drawLoop();
+  $("#loopMsg").className="msg";$("#loopMsg").textContent=`${li+1}번째 반복: score = ${s} → ${s} >= 60 은 ${p?"True → pass_count += 1":"False → 아무것도 안 함"}`;
+};
+$("#loopReset").onclick=()=>{li=-1;pc=0;drawLoop();$("#loopMsg").className="msg";$("#loopMsg").textContent="score 변수에 리스트 값이 하나씩 들어가요. 버튼을 눌러보세요."};
+drawLoop();
+codeBlock("#code6a",[
+ ['scores = [85, 50, 70, 40, 95]','점수 5개가 든 리스트'],
+ ['pass_count = 0','합격자 수 카운터를 0에서 시작'],
+ ['for score in scores:','점수를 하나씩 꺼내서 score에 넣고 반복'],
+ ['    if score >= 60:','이번 점수가 60 이상이면'],
+ ['        pass_count += 1','카운터 1 올리기 (pass_count = pass_count + 1)'],
+ ['print(f"합격자 수: {pass_count}명")','반복이 다 끝난 뒤 한 번 출력 → 3명'],
+]);
+function drawRange(){
+  const a=+$("#rStart").value,b=+$("#rStop").value,c=+$("#rStep").value;
+  $("#rExpr").textContent=`range(${a}, ${b}, ${c})`;
+  if(!c){$("#rTiles").innerHTML="";$("#rNote").textContent="간격이 0이면 ValueError! 한 걸음도 못 가요.";return}
+  const v=[];for(let x=a;c>0?x<b:x>b;x+=c){v.push(x);if(v.length>40)break}
+  $("#rTiles").innerHTML=v.map(x=>`<div class="tile on">${x}</div>`).join("")+`<div class="tile stop" title="끝값은 포함 안 함">${b}</div>`;
+  $("#rNote").textContent=v.length?`${v.length}번 반복. 점선 칸(${b})은 끝값이라 포함되지 않아요.`:"조건에 맞는 숫자가 없어서 0번 반복해요.";
+}
+["rStart","rStop","rStep"].forEach(i=>$("#"+i).oninput=drawRange);drawRange();
+let bc="break";
+function drawBC(){
+  const n=+$("#bcN").value;let stop=false,out=[];
+  $("#bcTiles").innerHTML=[1,2,3,4,5].map(x=>{
+    if(stop)return `<div class="tile stop">${x}</div>`;
+    if(x===n){if(bc==="break"){stop=true;return `<div class="tile fail">${x}</div>`}return `<div class="tile skipt">${x}</div>`}
+    out.push(x);return `<div class="tile on">${x}</div>`}).join("");
+  $("#bcOut").textContent=`for number in range(1, 6):\n    if number == ${n}: ${bc}\n    print(number)\n\n출력 → ${out.join(", ")||"(없음)"}\n${bc==="break"?`${n}을 만나자마자 반복 전체 종료`:`${n}만 건너뛰고 다음 반복 계속`}`;
+}
+$("#bcN").oninput=drawBC;
+$("#bcBreak").onclick=()=>{bc="break";$("#bcBreak").setAttribute("aria-pressed","true");$("#bcCont").setAttribute("aria-pressed","false");drawBC()};
+$("#bcCont").onclick=()=>{bc="continue";$("#bcCont").setAttribute("aria-pressed","true");$("#bcBreak").setAttribute("aria-pressed","false");drawBC()};
+drawBC();
+let wlog=['answer = ""  (조건 answer != "파이썬" → True, 반복 시작)'],wdone=false;
+$("#wBtn").onclick=()=>{
+  if(wdone){wlog=['answer = ""  (조건 answer != "파이썬" → True, 반복 시작)'];wdone=false;$("#wBtn").textContent="입력";$("#wOut").textContent=wlog[0];return}
+  const a=$("#wIn").value.trim();$("#wIn").value="";
+  if(a==="파이썬"){wlog.push(`입력: ${a} → 조건 False → 반복 종료\n정답입니다!`);wdone=true;$("#wBtn").textContent="다시 하기"}
+  else wlog.push(`입력: ${a||"(빈칸)"} → "${a}" != "파이썬" 은 True → 다시 물어봐요`);
+  $("#wOut").textContent=wlog.join("\n");
+};
+$("#wIn").onkeydown=e=>{if(e.key==="Enter")$("#wBtn").click()};
+codeBlock("#code6b",[
+ ['for number in range(1, 10):','1부터 9까지 (10은 빼고) 숫자를 하나씩'],
+ ['    print(f"5 × {number} = {5 * number}")','5단 한 줄씩 출력 → 9번 반복'],
+ ['answer = ""','일단 빈 답으로 시작'],
+ ['while answer != "파이썬":','답이 "파이썬"이 아닌 동안 계속'],
+ ['    answer = input("지금 배우는 언어는? ")','다시 물어보기'],
+ ['for dan in range(2, 5):','바깥 반복: 2단, 3단, 4단'],
+ ['    for number in range(1, 10):','안쪽 반복: 각 단마다 1~9 → 총 3×9 = 27번'],
+]);
+
+/* f-string */
+(function(){
+  const V=[["3","int","3"],["12.5","float","12.5"],["True","bool","True"],['"높음"',"str","높음"],['[85, 50]',"list","[85, 50]"]];
+  let k=0;
+  const draw=()=>{
+    const [lit,t,s]=V[k];
+    $("#fsPick").innerHTML=V.map((v,i)=>`<button class="btn mono" aria-pressed="${i===k}" data-i="${i}">${esc(v[0])} <span class="note">${v[1]}</span></button>`).join("");
+    document.querySelectorAll("#fsPick button").forEach(b=>b.onclick=()=>{k=+b.dataset.i;draw()});
+    $("#fsV1").textContent=$("#fsV2").textContent=`${lit}  (${t})`;
+    $("#fsS1").textContent=$("#fsS2").textContent=`'${s}'  (str)`;
+    $("#fsC1").textContent=`n = ${lit}\nprint("합격자 수: " + str(n) + "명")\n→ 합격자 수: ${s}명`;
+    $("#fsC2").textContent=`n = ${lit}\nprint(f"합격자 수: {n}명")\n→ 합격자 수: ${s}명`;
+    $("#fsSame").textContent=`두 결과 모두 '합격자 수: ${s}명'. ${t} 값이 같은 규칙으로 '${s}'라는 글자가 됐기 때문이에요.`+(t==="str"?" (이미 글자라서 그대로예요.)":"");
+  };
+  draw();
+  const x=0.12109947204589844;
+  const f=()=>{const v=$("#fmtSel").value;const r=v==="raw"?String(x):x.toFixed(+v);const spec=v==="raw"?"":`:.${v}f`;$("#fmtOut").textContent=`print(f"루프를 사용한 연산 시간: {loop_duration${spec}}초")\n→ 루프를 사용한 연산 시간: ${r}초`};
+  $("#fmtSel").onchange=f;f();
+})();
+codeBlock("#codeF",[
+ ['pass_count = 3','숫자 3 (int)'],
+ ['"합격자 수: " + pass_count','글자 + 숫자는 못 붙여요 → TypeError'],
+ ['"합격자 수: " + str(pass_count) + "명"','3을 글자 "3"으로 바꾸고 나서 이어 붙이기'],
+ ['f"합격자 수: {pass_count}명"','앞에 f를 붙이면 { } 자리에 값이 글자로 들어가요 (같은 결과)'],
+ ['f"5 × {number} = {5 * number}"','{ } 안에서 계산도 하고 그 결과를 글자로'],
+ ['f"{loop_duration:.6f}초"','소수점 아래 6자리까지만 보여줘'],
+ ['str(12.5) == f"{12.5}"   # True','둘이 만든 글자는 똑같아요'],
+]);
+
+/* gotchas */
+const G={
+ sF:[
+  ["f를 빼먹으면?",'print("합격자 수: {pass_count}명")','print(f"합격자 수: {pass_count}명")\n# 합격자 수: 3명',"f가 없으면 중괄호가 그냥 글자라서 <b>{pass_count}가 그대로 찍혀요</b>. 에러도 안 나서 더 못 찾아요."],
+  ["+ 로 숫자를 바로 붙이면?",'"배송비: " + 3000 + "원"','"배송비: " + str(3000) + "원"\nf"배송비: {3000}원"',"+는 <b>같은 종류끼리만</b> 작동해요. 글자+글자는 이어 붙이기, 숫자+숫자는 더하기, 섭으면 TypeError."],
+  ["str(3) + \"3\" 은 6?",'str(3) + "3"   # 6?','str(3) + "3"   # "33" (글자 이어붙임)\nint("3") + 3   # 6',"글자로 바꾸면 더하기가 아니라 <b>이어 붙이기</b>가 돼요. 계산하려면 int()로 되돌려요."],
+  ["print(a, b) 와 무엇이 다르지?",'print("점수:", 90)   # 에러?','print("점수:", 90)     # 점수: 90 (자동 변환 + 띄어쓰기)\nprint("점수:" + 90)  # TypeError',"print에 <b>쉼표</b>로 넘기면 print가 알아서 각각 str()해서 띄어 찍어줘요. 같은 원리예요."],
+  ["따옴표 안에 따옴표",'f"이름: {student["회원 ID"]}"   # 에러 날 수 있음','f"이름: {student[\'회원 ID\']}"\n# 바깥은 " 안쪽은 \' 로 다르게',"바깥 따옴표와 안쪽 따옴표를 <b>다른 종류</b>로 쓰면 안전해요 (최신 파이썬은 같아도 되지만 Colab 버전에 따라 에러)."]
+ ],
+ s1:[
+  ["12.5 와 \"12.5\" 는 같은 값?",'x = "12.5"\nx + 1   # 13.5?','x = "12.5"\nx + 1   # TypeError!\nfloat(x) + 1   # 13.5',"따옴표가 붙으면 숫자처럼 생겨도 <b>str(문자열)</b>이에요. 계산하려면 float()나 int()로 바꿔야 해요."],
+  ["8.0 은 정수일까?",'type(8.0)   # int?','type(8.0)   # float\ntype(8)     # int',"값이 같아 보여도 <b>소수점이 찍히면 float</b>이에요. 그래서 '학습 시간' 열의 8.0도 float이에요."],
+  ["True 와 \"True\"",'is_done = "True"\nif is_done == True: ...  # 참?','"True" == True   # False\nTrue == True     # True',"따옴표 없는 <b>True/False</b>만 bool이에요. 첫 글자도 꼭 대문자(true는 에러)."],
+  ["자료형 이름이 왜 두 가지?",'# float 이랑 float64는 다른 것?','파이썬: float, int, str\npandas/NumPy: float64, int64, string',"뜻은 같고 부르는 이름만 달라요. 뒤의 <b>64는 메모리 크기(64비트)</b>를 뜻해요."]
+ ],
+ s2:[
+  ["첫 번째는 [1]?",'fruits = ["apple","banana","cherry"]\nfruits[1]   # apple?','fruits[0]   # "apple"\nfruits[1]   # "banana"\nfruits[-1]  # "cherry" (맨 뒤)',"인덱스는 <b>0부터</b> 세요. -1은 뒤에서 첫 번째."],
+  ["슬라이싱 끝은 포함?",'[10,20,30,40][1:3]   # [20,30,40]?','[10,20,30,40][1:3]   # [20, 30]',"<b>[시작:끝]에서 끝은 빼요</b>. range()와 같은 규칙이에요."],
+  ["{ } 는 빈 집합?",'empty = {}\ntype(empty)   # set?','type({})      # dict!\ntype(set())   # set',"중괄호는 dict와 set이 같이 써요. <b>빈 중괄호는 dict</b>, 빈 집합은 set()으로 만들어요."],
+  ["원소 하나짜리 튜플",'t = (5)\ntype(t)   # tuple?','type((5))    # int (그냥 괄호)\ntype((5,))   # tuple',"튜플을 만드는 건 괄호가 아니라 <b>쉼표</b>예요. 하나짜리는 (5,) 처럼 쉼표를 붙여요."],
+  ["remove vs pop",'nums = [10, 20, 30]\nnums.remove(0)   # 0번 칸 삭제?','nums.remove(20)  # 값 20을 찾아 삭제\nnums.pop(0)      # 0번 위치를 꺼내 삭제\nnums.pop()       # 맨 뒤 삭제',"<b>remove는 값</b>으로, <b>pop은 위치(번호)</b>로 지워요."],
+  ["dict에 같은 키를 두 번?",'d = {"a": 1, "a": 2}\n# 칸 2개?','d = {"a": 1, "a": 2}\nd   # {"a": 2}',"키는 중복이 안 돼서 <b>뒤의 값으로 덮어써져요</b>. 값(value)은 중복돼도 괜찮아요."],
+  ["dict는 순서가 있나 없나?",'student[0]   # 첫 번째 항목?','student[0]          # KeyError\nstudent["회원 ID"]  # "S001"',"넣은 순서는 기억하지만, <b>번호가 아니라 키로만</b> 꺼내요. set은 순서 자체를 보장 안 해요."]
+ ],
+ s3:[
+  ["type() 이랑 .dtype 차이",'type(hours)   # float64?','type(hours)   # numpy.ndarray (그릇)\nhours.dtype   # float64 (안의 값)',"<b>type()은 그릇 종류</b>, <b>.dtype은 안에 든 값 종류</b>예요."],
+  ["NumPy에 여러 타입을 섞으면?",'np.array([1, "a", 2.5])\n# 각자 타입 유지?','np.array([1, "a", 2.5])\n# ["1", "a", "2.5"] 전부 문자열!',"ndarray는 dtype이 하나라서 <b>제일 넓은 타입으로 강제 통일</b>돼요. [1, 2.5]는 전부 float이 돼요."],
+  ["shape (1000000,) 의 쉼표",'(1000000,)   # 오타?','(1000000,)    # 1차원, 칸 100만 개\n(3, 5)        # 2차원, 3행 5열',"원소 하나짜리 튜플이라 쉼표가 붙어요. <b>숫자 개수 = 차원 수(ndim)</b>."],
+  ["shape 이랑 size 차이",'# 둘 다 개수?','arr.shape  # (3, 5) 모양\narr.size   # 15 전체 칸 수\narr.ndim   # 2 차원',"shape는 <b>모양</b>, size는 <b>전체 개수</b>, ndim은 <b>몇 차원</b>."],
+  ["object 이랑 string dtype",'# 문자열 열은 다 string?','pd.DataFrame(students).dtypes\n# 회원 ID  object  ← 기본값\n.astype({"회원 ID": "string"})',"pandas는 글자 열을 기본으로 <b>object</b>(뭐든 담는 통)로 읽어요. 문자열 전용으로 하려면 노트북처럼 astype으로 지정해요."],
+  ["int64 와 Int64 (대문자)",'# 오타 아니야?','int64   # 빈칸(NaN) 못 담음\nInt64   # 빈칸(<NA>) 담을 수 있음',"대문자 <b>Int64는 결측값을 허용하는 pandas 전용 정수형</b>이에요."]
+ ],
+ s4:[
+  ["리스트에 ×2 하면?",'[1, 2, 3] * 2   # [2, 4, 6]?','[1, 2, 3] * 2           # [1, 2, 3, 1, 2, 3]\nnp.array([1,2,3]) * 2   # [2, 4, 6]',"가장 많이 헷갈려요! 리스트에서 *는 <b>이어 붙이기(반복)</b>, 배열에서 *는 <b>칸마다 곱하기</b>."],
+  ["리스트에 +1 하면?",'[12.5, 8.0] + 1   # [13.5, 9.0]?','[12.5, 8.0] + 1    # TypeError\n[12.5] + [8.0]     # [12.5, 8.0] 이어붙임\nhours + 1          # 배열은 칸마다 +1',"리스트의 +는 리스트끼리 붙이기만 돼요. <b>칸마다 계산은 NumPy 배열</b>의 일이에요."],
+  ["내 결과는 58배가 아닌데?",'# 내가 틀렸나?','# 실행할 때마다, 컴퓨터마다 달라요\n# 30배든 100배든 "훨씬 빠름"이 포인트',"time.time() 측정은 그때그때 달라져요. 숫자보다 <b>수십 배 차이가 난다는 사실</b>이 중요해요."]
+ ],
+ s5:[
+  ["= 와 ==",'if score = 60:\n    print("합격")','if score == 60:   # 같니? (비교)\nscore = 60        # 넣어라 (대입)',"<b>= 하나는 값 넣기</b>, <b>== 두 개는 같은지 물어보기</b>. 조건에는 ==."],
+  ["input() 은 숫자를 줄까?",'score = input("점수: ")\nif score >= 60:   # TypeError','score = int(input("점수: "))\nif score >= 60:   # OK',"input()은 무엇을 치든 <b>항상 문자열</b>을 줘요. 그래서 슬라이드에 int(input(...))이 붙어 있는 거예요."],
+  ["콜론과 들여쓰기",'if score >= 60\nprint("합격")','if score >= 60:\n    print("합격")   # 공백 4칸',"조건 끝에 <b>:</b>, 속한 코드는 <b>들여쓰기</b>. 들여쓰기가 끝나면 조건 밖 코드예요."],
+  ["else 뒤에 조건?",'else score < 60:\n    print("불합격")','else:\n    print("불합격")\n# 조건이 필요하면 elif',"else는 '나머지 전부'라서 <b>조건을 안 써요</b>."],
+  ["> 와 >=",'# "20000원 이상 무료"\nif price > 20000:','if price >= 20000:   # 이상 (포함)\nif price > 20000:    # 초과 (미포함)',"<b>이상·이하는 = 가 붙어요</b>. 딱 경계값(20000)에서만 결과가 달라져요."],
+  ["or 뒤에 값만 쓰면?",'if grade == "A" or "B":\n    # A나 B일 때만?','if grade == "A" or grade == "B":\n# 또는\nif grade in ["A", "B"]:',"or 오른쪽의 'B'는 비교 없이 혼자 있어서 그 자체로 참으로 취급돼요. 그래서 조건이 <b>항상 True</b>가 돼요. 양쪽에 비교를 다 써야 해요."],
+  ["elif 조건 순서를 거꾸로?",'if score >= 60: grade = "D"\nelif score >= 90: grade = "A"','if score >= 90: grade = "A"\nelif score >= 60: grade = "D"',"윗줄이 먼저 참이 되면 아래는 안 봐요. 95점도 D가 돼요. <b>까다로운 조건(큰 값)부터</b> 써요."]
+ ],
+ s6:[
+  ["range(5) 는 1~5?",'for i in range(5):\n    print(i)   # 1 2 3 4 5?','range(5)      # 0 1 2 3 4 (5번)\nrange(1, 6)   # 1 2 3 4 5',"시작을 빼면 <b>0부터</b>, 끝값은 <b>포함 안 함</b>. 반복 횟수는 끝 − 시작."],
+  ["while 무한 반복",'count = 1\nwhile count <= 3:\n    print(count)   # 안 끝남!','count = 1\nwhile count <= 3:\n    print(count)\n    count += 1   # 꼭 바꿔주기',"조건 안의 변수를 <b>반복 안에서 바꿔주지 않으면</b> 영원히 참이라 멈추지 않아요. Colab은 정지 버튼으로 멈춰요."],
+  ["카운터를 반복 안에 두면?",'for score in scores:\n    pass_count = 0\n    if score >= 60:\n        pass_count += 1','pass_count = 0   # 반복 밖에서 한 번\nfor score in scores:\n    if score >= 60:\n        pass_count += 1',"반복 안에서 0으로 만들면 <b>매 회차 리셋</b>돼서 최대 1까지밖에 안 올라가요."],
+  ["print 들여쓰기 위치",'for score in scores:\n    ...\n    print(pass_count)   # 5번 출력','for score in scores:\n    ...\nprint(pass_count)       # 끝나고 1번',"들여쓰면 <b>반복할 때마다</b>, 내어쓰면 <b>반복이 다 끝난 뒤 한 번</b> 실행돼요."],
+  ["break 와 continue",'# 둘 다 "건너뛰기"?','break     # 반복 전체 끝 (탈출)\ncontinue  # 이번 회차만 건너뛰고 계속',"break는 <b>아예 나가기</b>, continue는 <b>다음 회차로</b>. 중첩 반복에서 break는 자기가 속한 안쪽 반복만 끝내요."],
+  ["중첩 반복 변수 이름",'for i in range(2, 5):\n    for i in range(1, 10):   # 같은 i','for dan in range(2, 5):\n    for number in range(1, 10):',"같은 이름을 쓰면 안쪽이 바깥 값을 덮어써서 헷갈려요. <b>서로 다른 이름</b>을 써요."]
+ ]
+};
+document.querySelectorAll(".gotchas").forEach(box=>{
+  const L=G[box.dataset.g];
+  box.innerHTML=`<div class="g-head"><span class="g-badge">헷갈림 주의</span><h3>여기서 많이 틀려요 · ${L.length}개</h3></div><div class="g-list">`+L.map(([t,w,r,y],i)=>`<details class="g-item"${i===0?" open":""}><summary><span class="gq">Q${i+1}</span><span>${esc(t)}</span></summary><div class="g-body"><div class="g-pair"><div class="g-wrong"><div class="lab">착각</div><pre>${esc(w)}</pre></div><div class="g-right"><div class="lab">진짜</div><pre>${esc(r)}</pre></div></div><p class="g-why">${y}</p></div></details>`).join("")+"</div>";
+});
+
+/* quiz */
+const Q=[
+ {q:"학습 시간 칸의 12.5. 이 값 하나의 파이썬 자료형은?",o:["int","float","str","DataFrame"],a:1,e:"소수점이 있는 숫자는 <b>float</b>(실수). DataFrame은 값이 아니라 그릇(자료구조)이에요."},
+ {q:"다음 중 '자료구조'가 아닌 것은?",o:["list","ndarray","bool","Series"],a:2,e:"<b>bool</b>은 True/False 값 하나의 종류, 즉 자료형이에요."},
+ {q:"만든 다음에 값을 바꿀 수 없는 그릇은?",o:["list","tuple","dict","set"],a:1,e:"<b>tuple</b>은 불변(immutable). 좌표나 날짜처럼 바뀌면 안 되는 묶음에 써요."},
+ {q:"결과는?",c:'s = {"높음", "보통", "높음"}\nprint(len(s))',o:["3","2","1","에러"],a:1,e:"set은 <b>중복을 지워요</b>. 남는 건 \"높음\", \"보통\" 2개."},
+ {q:"DataFrame과 ndarray의 dtype 차이로 맞는 것은?",o:["둘 다 열마다 다를 수 있다","DataFrame은 열마다 다를 수 있고, ndarray는 보통 전체가 하나","ndarray만 열마다 다를 수 있다","둘 다 dtype이 없다"],a:1,e:"pandas는 <b>열 단위</b> dtype, NumPy는 <b>배열 전체가 하나의 dtype</b>."},
+ {q:"벡터화 연산이 반복문보다 빠른 핵심 이유는?",o:["코드가 짧아서","배열 전체에 계산을 한 번에 적용하고, 값이 연속된 메모리에 같은 타입으로 저장돼서","인터넷이 빨라서","print를 안 해서"],a:1,e:"같은 dtype 값들이 <b>연속된 메모리 블록</b>에 있어서 한꺼번에 처리할 수 있어요. 노트북에선 약 58배."},
+ {q:"score = 95일 때 출력은?",c:'if score >= 90:\n    print("A")\nelif score >= 80:\n    print("B")',o:["A","B","A 그리고 B","아무것도 안 나옴"],a:0,e:"if–elif는 <b>처음 참인 것 하나만</b> 실행. elif로 바꾸지 않고 if 두 개였다면 A, B 둘 다 나와요."},
+ {q:"score = 95일 때 출력은?",c:'if score >= 90: grade = "A"\nif score >= 80: grade = "B"\nif score >= 70: grade = "C"\nprint(grade)',o:["A","C","A B C","에러"],a:1,e:"if 여러 개는 <b>전부 검사</b>해서 참이면 실행해요. grade가 A→B→C로 덮어써져 마지막 <b>C</b>만 남아요."},
+ {q:"결과는?",c:'print([1, 2, 3] * 2)',o:["[2, 4, 6]","[1, 2, 3, 1, 2, 3]","12","에러"],a:1,e:"리스트의 *는 <b>반복해서 이어 붙이기</b>. 칸마다 곱하려면 NumPy 배열이 필요해요."},
+ {q:"type({}) 의 결과는?",o:["set","dict","list","tuple"],a:1,e:"빈 중괄호는 <b>dict</b>. 빈 집합은 set()으로 만들어요."},
+ {q:"사용자가 70을 입력하면?",c:'score = input("점수: ")\nif score >= 60:\n    print("합격")',o:["합격","아무것도 안 나옴","TypeError","70"],a:2,e:"input()은 항상 <b>문자열 \"70\"</b>을 줘요. 문자열과 숫자는 크기 비교가 안 돼서 에러. int()로 감싸야 해요."},
+ {q:"range(5)가 만드는 숫자는?",o:["1, 2, 3, 4, 5","0, 1, 2, 3, 4","0, 1, 2, 3, 4, 5","5"],a:1,e:"시작값을 생략하면 <b>0부터</b>, 끝값 5는 빼요."},
+ {q:"두 줄의 출력은?",c:'n = 3\nprint("합격: " + str(n) + "명")\nprint(f"합격: {n}명")',o:["둘 다 합격: 3명","첫 줄만 에러","둘째 줄만 에러","둘 다 에러"],a:0,e:"f-string은 <b>{ } 자리에서 str()과 같은 변환을 자동으로</b> 해줘요. 그래서 결과가 같아요."},
+ {q:"출력은?",c:'n = 3\nprint("합격: {n}명")',o:["합격: 3명","합격: {n}명","TypeError","합격: n명"],a:1,e:"앞에 <b>f가 없어서</b> 중괄호도 그냥 글자예요. 에러 없이 {n}이 그대로 찍혀요."},
+ {q:"price = 20000 일 때 배송비는?",c:'if price > 20000:\n    shipping_cost = 0\nelse:\n    shipping_cost = 3000',o:["0원","3000원","에러","20000원"],a:1,e:"<b>&gt;</b>는 '초과'. 20000은 20000보다 크지 않으니 False → else → 3000원. &gt;= 로 바꾸면 0원."},
+ {q:"range(2, 7, 2)가 만드는 숫자는?",o:["2, 4, 6","2, 4, 6, 8","2, 3, 4, 5, 6","2, 7"],a:0,e:"2에서 시작, 2씩 뛰고, <b>끝값 7은 포함 안 함</b> → 2, 4, 6."},
+ {q:"출력되는 숫자는?",c:'for n in range(1, 6):\n    if n == 3:\n        continue\n    print(n)',o:["1 2","1 2 4 5","3","1 2 3 4 5"],a:1,e:"<b>continue</b>는 이번 회차만 건너뛰기. break였다면 1 2에서 멈춰요."},
+];
+let qi=0,qs=0,res=[];
+function drawQ(){
+  $("#qDots").innerHTML=Q.map((_,i)=>`<span class="dot ${i===qi?"now":""} ${res[i]===1?"r":res[i]===0?"w":""}"></span>`).join("");
+  if(qi>=Q.length){
+    $("#qNum").textContent="";
+    const msg=qs===Q.length?"완벽해요! 오늘 TIL에 자신 있게 적어도 돼요.":qs>=7?"거의 다 왔어요. 틀린 문제만 위에서 다시 만져보세요.":"괜찮아요. 위 놀이터를 한 번 더 눌러보고 다시 도전!";
+    $("#qBody").innerHTML=`<div class="final"><div class="bigstat">${qs} / ${Q.length}</div><p>${msg}</p><button class="btn" id="qAgain">다시 풀기</button></div>`;
+    $("#qAgain").onclick=()=>{qi=0;qs=0;res=[];drawQ()};return;
+  }
+  const q=Q[qi];$("#qNum").textContent=`${qi+1} / ${Q.length}`;
+  $("#qBody").innerHTML=`<div style="display:grid;gap:14px"><p class="qtext">${q.q}</p>${q.c?`<div class="qcode">${esc(q.c)}</div>`:""}<div class="opts">${q.o.map((o,i)=>`<button class="opt" data-i="${i}"><span class="l">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`).join("")}</div><div id="qEx"></div></div>`;
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i,r=i===q.a;res[qi]=r?1:0;if(r)qs++;
+    document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===q.a)x.classList.add("right")});
+    if(!r)b.classList.add("wrong");
+    $("#qEx").innerHTML=`<div class="explain">${r?"정답!":"아쉬워요."} ${q.e}</div><div class="row" style="margin-top:12px"><button class="btn" id="qNext">${qi===Q.length-1?"결과 보기":"다음 문제 →"}</button></div>`;
+    $("#qDots").children[qi].className="dot "+(r?"r":"w");
+    $("#qNext").onclick=()=>{qi++;drawQ()};$("#qNext").focus();
+  });
+}
+drawQ();
+</script>
+
+</body></html>
