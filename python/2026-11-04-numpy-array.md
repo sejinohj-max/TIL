@@ -2,7 +2,7 @@
 
 ## 오늘 배운 것
 
-👉 [NumPy 배열 노트 (학습 아티팩트)](../artifacts/numpy-array-note.html)
+👉 [NumPy 배열 노트 (학습 아티팩트)](https://sejinohj-max.github.io/TIL/artifacts/python/numpy-array-note.html)
 
 - **ndarray**: 같은 타입만 담고, 여러 축으로 쌓고, 반복문 없이 통째로 계산(벡터화)하는 배열
 - **shape / ndim / dtype**: 대괄호 겹 수 = 차원, shape는 바깥 → 안쪽 순서
