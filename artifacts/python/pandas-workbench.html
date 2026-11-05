@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>판다스 작업대</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 실험 노트 — 모눈종이 위에 섹션이 세로로 쌓이고, 판다스(파랑) vs SQL(주황) 색으로 언어를 구분 */
+:root{
+  --bg:#EEF2F1; --paper:#FFFFFF; --ink:#172329; --muted:#5A6B70; --line:#D3DDDB; --grid:rgba(30,107,138,.07);
+  --pd:#1E6B8A; --pd-soft:#DDEDF3; --sql:#B45A16; --sql-soft:#F7E6D6;
+  --hl:#F5D547; --hl-soft:#FBF0B8; --good:#2E7D4F; --good-soft:#DCEFE3; --bad:#B23A3A; --bad-soft:#F6DEDE;
+  --code-bg:#1B2A30; --code-fg:#E4EEF0;
+  --f-display:"Do Hyeon","Noto Sans KR",system-ui,sans-serif;
+  --f-body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111A1D; --paper:#18242A; --ink:#E6EEF0; --muted:#94A7AC; --line:#2C3C42; --grid:rgba(120,190,215,.06);
+  --pd:#6EB8D6; --pd-soft:#1C3844; --sql:#E8955A; --sql-soft:#3D2A1C;
+  --hl:#E7C83A; --hl-soft:#4A4220; --good:#6CC892; --good-soft:#1D3828; --bad:#EE8A8A; --bad-soft:#432526;
+  --code-bg:#0C1416; --code-fg:#DCE8EA; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111A1D; --paper:#18242A; --ink:#E6EEF0; --muted:#94A7AC; --line:#2C3C42; --grid:rgba(120,190,215,.06);
+  --pd:#6EB8D6; --pd-soft:#1C3844; --sql:#E8955A; --sql-soft:#3D2A1C;
+  --hl:#E7C83A; --hl-soft:#4A4220; --good:#6CC892; --good-soft:#1D3828; --bad:#EE8A8A; --bad-soft:#432526;
+  --code-bg:#0C1416; --code-fg:#DCE8EA; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(2.2rem,6vw,3.4rem)} h2{font-size:1.85rem} h3{font-size:1.3rem}
+p{margin:0;max-width:68ch}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+.inline{background:var(--pd-soft);color:var(--pd);padding:1px 6px;border-radius:5px}
+.inline.s{background:var(--sql-soft);color:var(--sql)}
+.hero{display:flex;flex-direction:column;gap:14px;padding-top:12px}
+.eyebrow{font-size:.8rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-weight:700}
+.hero h1 .dot{color:var(--pd)}
+.mark{background:linear-gradient(transparent 55%,var(--hl-soft) 55%)}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px}
+nav.toc a{color:var(--ink);text-decoration:none;border:1px solid var(--line);background:var(--paper);padding:4px 12px;border-radius:99px;font-size:.88rem}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--pd);color:var(--pd);outline:none}
+section.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:clamp(18px,3vw,30px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.step{font-family:var(--f-mono);font-size:.8rem;color:var(--pd);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.box{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.box b{font-size:1.02rem}
+.analogy{display:flex;gap:14px;align-items:flex-start;background:var(--hl-soft);border-radius:10px;padding:14px 16px}
+.analogy .big{font-family:var(--f-display);font-size:1.6rem;line-height:1}
+.pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.92rem}
+.pipe span{background:var(--pd-soft);color:var(--pd);padding:4px 10px;border-radius:6px;font-weight:500}
+.pipe span.on{background:var(--pd);color:var(--paper)}
+.pipe i{color:var(--muted);font-style:normal}
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;max-width:100%}
+table.df{border-collapse:collapse;font-family:var(--f-mono);font-size:.82rem;font-variant-numeric:tabular-nums;min-width:100%}
+table.df th,table.df td{padding:6px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.df td.txt,table.df th.txt{text-align:left}
+table.df thead th{background:var(--bg);font-weight:600;cursor:default}
+table.df th.idx,table.df td.idx{color:var(--muted);font-weight:600;text-align:left;background:var(--bg);border-right:1px solid var(--line)}
+table.df .nan{color:var(--bad);font-style:italic}
+table.df tr.hr td{background:var(--hl-soft)}
+table.df td.hc,table.df th.hc{background:var(--pd-soft)}
+table.df td.hcell{background:var(--hl);color:#172329;font-weight:600}
+table.df tr.dim td{opacity:.32}
+table.df thead.click th:not(.idx){cursor:pointer}
+table.df thead.click th:not(.idx):hover{color:var(--pd);text-decoration:underline}
+.readout{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.95rem}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.82rem;font-weight:700}
+.pill.pd{background:var(--pd-soft);color:var(--pd)} .pill.sql{background:var(--sql-soft);color:var(--sql)}
+.pill.same{background:var(--good-soft);color:var(--good)} .pill.diff{background:var(--bad-soft);color:var(--bad)}
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.term{border-left:3px solid var(--pd);padding:4px 12px}
+.term b{display:block}
+.term small{color:var(--muted)}
+/* chips & controls */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer}
+.chip{font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 10px;border-radius:8px}
+.chip:hover{border-color:var(--pd)}
+.chip[aria-pressed="true"]{background:var(--pd);color:var(--paper);border-color:var(--pd)}
+:focus-visible{outline:2px solid var(--pd);outline-offset:2px}
+.codes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.code{background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:12px 14px;font-family:var(--f-mono);font-size:.84rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;min-width:0;position:relative;margin:0}
+.code .tag{position:absolute;top:8px;right:10px;font-size:.68rem;font-weight:700;letter-spacing:.08em;padding:1px 8px;border-radius:4px}
+.code.pdc{border-top:3px solid var(--pd)} .code.pdc .tag{background:var(--pd);color:#0C1416}
+.code.sqlc{border-top:3px solid var(--sql)} .code.sqlc .tag{background:var(--sql);color:#0C1416}
+.explain{background:var(--bg);border-radius:10px;padding:12px 16px;font-size:.95rem;display:flex;flex-direction:column;gap:6px}
+.scalar{font-family:var(--f-mono);font-size:1.4rem;color:var(--pd);font-weight:600}
+.ctrls{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.ctrl{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);font-weight:700}
+select{font:inherit;font-size:.92rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-family:var(--f-mono)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink);font-weight:500;padding-bottom:6px}
+.btn{background:var(--pd);color:var(--paper);border:0;border-radius:8px;padding:8px 16px;font-weight:700}
+.btn.ghost{background:transparent;color:var(--pd);border:1px solid var(--pd)}
+/* groupby stages */
+.stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.stage{border:1px dashed var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:opacity .4s,transform .4s}
+.stage h4{margin:0;font-family:var(--f-display);font-weight:400;font-size:1.15rem;display:flex;gap:8px;align-items:baseline}
+.stage h4 small{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.stage.wait{opacity:.25;transform:translateY(6px)}
+.bucket{border-radius:8px;padding:8px 10px;font-family:var(--f-mono);font-size:.78rem;display:flex;flex-direction:column;gap:2px}
+.bucket .bk{font-weight:600;font-size:.82rem}
+.b0{background:var(--pd-soft)} .b1{background:var(--sql-soft)} .b2{background:var(--good-soft)}
+.bucket .row{display:flex;justify-content:space-between;gap:8px}
+.bucket .row .nan{color:var(--bad);font-style:italic}
+.bucket .calc{border-top:1px solid var(--line);margin-top:4px;padding-top:4px;font-weight:600}
+.note{font-size:.9rem;border-radius:8px;padding:10px 14px;background:var(--hl-soft)}
+.note.diff{background:var(--bad-soft)}
+/* compare */
+.cmp{display:flex;flex-direction:column;gap:12px}
+.row-cmp{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row-cmp summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:700}
+.row-cmp summary::-webkit-details-marker{display:none}
+.row-cmp summary::after{content:"+";margin-left:auto;font-family:var(--f-mono);color:var(--muted)}
+.row-cmp[open] summary::after{content:"−"}
+.row-cmp .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.order{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;font-size:.9rem}
+.order .lbl{font-weight:700;font-size:.82rem;color:var(--muted)}
+.seq{display:flex;flex-wrap:wrap;gap:4px}
+.seq span{font-family:var(--f-mono);font-size:.76rem;padding:3px 8px;border-radius:5px;background:var(--sql-soft);color:var(--sql)}
+.seq.p span{background:var(--pd-soft);color:var(--pd)}
+.seq b{font-size:.7rem;color:var(--muted);align-self:center}
+.dict{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.dict table{border-collapse:collapse;width:100%;min-width:620px;font-size:.88rem}
+.dict th,.dict td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.dict th{background:var(--bg);font-size:.8rem;letter-spacing:.04em}
+.dict td:nth-child(2) code{color:var(--pd)} .dict td:nth-child(3) code{color:var(--sql)}
+.fn{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.fn div{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.88rem}
+.fn code{color:var(--pd);font-weight:600;display:block}
+/* quiz */
+.quiz{display:flex;flex-direction:column;gap:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.bar{height:6px;background:var(--bg);border-radius:6px;overflow:hidden;flex:1;min-width:120px}
+.bar i{display:block;height:100%;background:var(--pd);width:0;transition:width .3s}
+.q{font-size:1.08rem;font-weight:700}
+.q pre{margin-top:8px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:.95rem}
+.opt code{font-size:.85em}
+.opt:hover:not(:disabled){border-color:var(--pd)}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.fb{border-radius:10px;padding:12px 16px;font-size:.95rem}
+.fb.ok{background:var(--good-soft)} .fb.no{background:var(--bad-soft)}
+.fb b{display:block;margin-bottom:2px}
+.done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:20px 0}
+.done .scalar{font-size:2.4rem}
+.fig{overflow-x:auto;max-width:100%}
+.fig svg{display:block;width:100%;height:auto}
+.fig.wide svg{min-width:560px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+figure{margin:0;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+figcaption{font-size:.86rem;color:var(--muted)}
+figcaption code{color:var(--pd)}
+svg text{font-family:var(--f-body)}
+svg .t{fill:var(--ink);font-size:14px} svg .tb{fill:var(--ink);font-size:15px;font-weight:700}
+svg .tm{fill:var(--muted);font-size:12px} svg .tc{fill:var(--ink);font-family:var(--f-mono);font-size:12px}
+svg .f-paper{fill:var(--paper)} svg .f-bg{fill:var(--bg)} svg .f-pd{fill:var(--pd)} svg .f-pds{fill:var(--pd-soft)}
+svg .f-sql{fill:var(--sql)} svg .f-sqls{fill:var(--sql-soft)} svg .f-good{fill:var(--good)} svg .f-goods{fill:var(--good-soft)}
+svg .f-hl{fill:var(--hl)} svg .f-hls{fill:var(--hl-soft)} svg .f-bad{fill:var(--bad)} svg .f-none{fill:none}
+svg .s-line{stroke:var(--line)} svg .s-pd{stroke:var(--pd)} svg .s-ink{stroke:var(--ink)} svg .s-bad{stroke:var(--bad)} svg .s-paper{stroke:var(--paper)} svg .s-hl{stroke:var(--hl)} svg .s-muted{stroke:var(--muted)}
+svg .grow{transform-origin:left center;animation:grow .6s ease-out both}
+@keyframes grow{from{transform:scaleX(.05)}to{transform:scaleX(1)}}
+.cmp3 tr.dim td{text-decoration:line-through;text-decoration-color:var(--bad)}
+.cmp3 .tw{border-radius:8px}
+td.mT{color:var(--good);font-weight:700;background:var(--good-soft)} td.mF{color:var(--bad);background:var(--bad-soft)}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.face{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.face .ans{font-family:var(--f-display);font-size:1.25rem}
+.face .ans.c{color:var(--pd)} .face .ans.r{color:var(--sql)} .face .ans.v{color:var(--good)}
+.rule{display:flex;gap:14px;align-items:stretch;flex-wrap:wrap}
+.rule > div{flex:1 1 240px;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.rule .rc{background:var(--pd-soft)} .rule .rr{background:var(--sql-soft)}
+.rule .big2{font-family:var(--f-display);font-size:1.5rem;line-height:1.2}
+.rule .rc .big2{color:var(--pd)} .rule .rr .big2{color:var(--sql)}
+.game{display:flex;flex-direction:column;gap:14px}
+.gcode{background:var(--code-bg);color:var(--code-fg);font-family:var(--f-mono);font-size:clamp(1rem,3.6vw,1.35rem);padding:22px 16px;border-radius:12px;text-align:center;word-break:break-word;line-height:1.5}
+.gcode mark{background:var(--hl);color:#172329;border-radius:5px;padding:1px 4px;font-weight:600}
+.gq{font-size:.95rem;color:var(--muted);text-align:center}
+.gbtns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:520px){.gbtns{grid-template-columns:repeat(2,1fr)}}
+.gbtn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink);font-weight:700;font-size:1rem}
+.gbtn:hover:not(:disabled){border-color:var(--pd);transform:translateY(-1px)}
+.gbtn svg{width:46px;height:34px}
+.gbtn.right{border-color:var(--good);background:var(--good-soft)} .gbtn.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.gstat{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.miss{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%}
+.miss div{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.88rem}
+.miss code mark{background:var(--hl);color:#172329;border-radius:3px;padding:0 2px}
+footer{color:var(--muted);font-size:.85rem;text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Data Science Lv1 · 11월 5일 수업 복습</div>
+    <h1>Python<span class="dot">.</span>Pandas 작업대</h1>
+    <p>판다스는 <span class="mark">표(테이블) 데이터를 다루는 파이썬 도구</span>예요. 엑셀을 코드로 조종한다고 생각하면 돼요. 아래에서 직접 눌러보고, SQL이랑 뭐가 같고 뭐가 다른지 정리한 다음, 퀴즈로 마무리해요.</p>
+    <nav class="toc" aria-label="목차">
+      <a href="#s1">판다스가 뭐야</a><a href="#s2">시리즈 vs 데이터프레임</a><a href="#s3">명령어 실험실</a><a href="#s4">groupby 실험실</a><a href="#s5">SQL 번역기</a><a href="#qa">헷갈렸던 Q&amp;A</a><a href="#rcv">열? 행? 값?</a><a href="#game">판별 게임</a><a href="#s6">함수 사전</a><a href="#task">수업 TASK</a><a href="#s7">퀴즈</a>
+    </nav>
+    <div class="fig wide" id="heroFig"></div>
+  </header>
+
+  <!-- 1 -->
+  <section class="card" id="s1">
+    <div class="step">STEP 1</div>
+    <h2>판다스는 데이터의 '작업대'</h2>
+    <div class="analogy"><div class="big">🍳</div><p><b>요리로 비유하면</b> — 시장에서 재료를 사오고(수집), 씻고 다듬고(전처리), 요리하고(가공·집계), 그릇에 담아요(저장). 판다스는 이 중 <b>도마 위 작업</b>을 거의 다 맡는 부엌 작업대예요.</p></div>
+    <div class="fig wide" id="pipeFig"></div>
+    <p style="color:var(--muted);font-size:.92rem">진하게 칠한 칸이 판다스가 가장 많이 일하는 구간이에요. 수업 예제 4줄이 딱 이 흐름이에요.</p>
+    <pre class="code pdc"><span class="tag">PANDAS</span>import pandas as pd
+df = pd.read_csv("titanic.0.txt")                  # ① 불러오기
+df["Age"] = df["Age"].fillna(df["Age"].median())   # ② 빈칸(결측치)을 중앙값으로 채우기
+summary = df.groupby("Pclass")["Fare"].mean()      # ③ 객실 등급별 평균 요금
+summary.to_csv("pclass_fare_mean.csv")             # ④ 저장</pre>
+  </section>
+
+  <!-- 2 -->
+  <section class="card" id="s2">
+    <div class="step">STEP 2</div>
+    <h2>시리즈 vs 데이터프레임</h2>
+    <p><b>데이터프레임</b>은 표 전체, <b>시리즈</b>는 그 표에서 뽑은 <b>열 하나</b>예요. 아래 표의 <b>열 이름을 눌러보세요.</b> 맨 왼쪽 회색 숫자(인덱스)를 누르면 다시 표 전체가 돼요.</p>
+    <div class="fig wide" id="anatFig"></div>
+    <div class="tw"><table class="df" id="t2"></table></div>
+    <div class="readout" id="r2"></div>
+    <div class="terms">
+      <div class="term"><b>행(row)</b><small>= 관측치 = 샘플. 승객 한 명의 정보</small></div>
+      <div class="term"><b>열(column)</b><small>= 변수 = 특성. 나이, 요금 같은 항목</small></div>
+      <div class="term"><b>인덱스(index)</b><small>각 행에 붙인 이름표. 안 정하면 0, 1, 2…</small></div>
+      <div class="term"><b>dtype</b><small>int64 정수 · float64 실수 · object 문자열 · bool · datetime64 · category</small></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="card" id="s3">
+    <div class="step">STEP 3</div>
+    <h2>명령어 실험실</h2>
+    <p>명령어를 하나씩 눌러보세요. 표에서 <span style="background:var(--hl-soft);padding:0 4px">노랗게</span> 칠해진 게 결과예요. 옆에는 SQL로 쓰면 어떻게 되는지도 같이 보여줘요.</p>
+    <div class="figs">
+      <figure><div class="fig" id="ax0"></div><figcaption><code>drop([0, 2], axis=0)</code> 세로로 훑으며 <b>행</b>을 지워요. 기본값이라 생략 가능.</figcaption></figure>
+      <figure><div class="fig" id="ax1"></div><figcaption><code>drop('영어', axis=1)</code> 가로로 훑으며 <b>열</b>을 지워요.</figcaption></figure>
+      <figure><div class="fig" id="locFig"></div><figcaption><code>loc['민수', '영어']</code>는 이름표로, <code>iloc[0, 1]</code>은 번호로 같은 칸을 찾아요. 둘 다 95.</figcaption></figure>
+    </div>
+    <div class="box cmp3">
+      <h3>헷갈림 해결: <code>drop([0, 2])</code> vs <code>iloc[0, 2]</code></h3>
+      <p style="font-size:.93rem">숫자 0과 2는 똑같은데 뜻이 완전히 달라요. 세 표를 나란히 비교해 보세요. 열 번호는 name=0, sex=1, <b>age=2</b>예요.</p>
+      <div class="figs">
+        <figure><pre class="code pdc" style="margin:0"><span class="tag">목록</span>df.drop([0, 2], axis=0)</pre><div class="tw" id="c3a"></div>
+          <figcaption><code>[0, 2]</code>는 "0번, 2번" <b>이름표 목록</b>이에요. 그래서 <b>줄 두 개가 통째로</b> 사라져요. 결과는 2줄짜리 새 표예요. SQL로 치면 <code>DELETE</code>.</figcaption></figure>
+        <figure><pre class="code pdc" style="margin:0"><span class="tag">좌표</span>df.iloc[0, 2]</pre><div class="tw" id="c3b"></div>
+          <figcaption><code>iloc[ ]</code> 바로 안의 <code>0, 2</code>는 <b>(행, 열) 좌표</b>예요. 0번 행과 2번 열이 만나는 칸 하나를 <b>읽기만</b> 해요. 결과는 22.</figcaption></figure>
+        <figure><pre class="code pdc" style="margin:0"><span class="tag">칸 비우기</span>df.iloc[0, 2] = np.nan</pre><div class="tw" id="c3c"></div>
+          <figcaption>칸 하나만 없애고 싶으면 지우지 말고 <b>NaN으로 바꿔요</b>. 표 모양은 그대로예요. SQL로 치면 <code>UPDATE … SET age = NULL</code>.</figcaption></figure>
+      </div>
+      <div class="note"><b>외우는 법</b> 숫자가 <code>drop( )</code>처럼 함수 괄호 안에 <code>[ ]</code>로 들어가면 <b>목록</b>이에요. <code>iloc[ ]</code>나 <code>loc[ ]</code> 바로 안에 쉼표로 있으면 <b>좌표</b>예요. 그리고 drop은 칸 하나는 못 지워요. 줄 전체나 열 전체만 지워요.</div>
+    </div>
+    <div class="chips" id="chips3" role="group" aria-label="명령어 선택"></div>
+    <div class="codes" id="codes3"></div>
+    <div class="explain" id="ex3"></div>
+    <div class="tw"><table class="df" id="t3"></table></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="card" id="s4">
+    <div class="step">STEP 4</div>
+    <h2>groupby 실험실 = SQL의 GROUP BY</h2>
+    <p>groupby는 <b>"같은 것끼리 바구니에 나눠 담고 → 바구니마다 계산하고 → 결과를 한 표로 합치기"</b>예요. 반 학생들을 반별로 모아서 반 평균 점수를 내는 거랑 똑같아요.</p>
+    <div class="ctrls">
+      <label class="ctrl" for="gkey">무엇으로 나눌까? (by)
+        <select id="gkey"><option value="pclass">pclass (객실 등급)</option><option value="sex">sex (성별)</option><option value="survived">survived (생존 여부)</option></select></label>
+      <label class="ctrl" for="gcol">어떤 열을 계산할까?
+        <select id="gcol"><option value="fare">fare (요금)</option><option value="age">age (나이, 빈칸 있음!)</option><option value="survived">survived</option></select></label>
+      <label class="ctrl" for="gagg">무슨 계산?
+        <select id="gagg"><option value="mean">mean() 평균</option><option value="sum">sum() 합계</option><option value="count">count() 개수</option><option value="size">size() 행 개수</option></select></label>
+      <label class="toggle" for="greset"><input type="checkbox" id="greset"> reset_index() 붙이기</label>
+      <button class="btn ghost" id="gplay" type="button">▶ 순서대로 다시 보기</button>
+    </div>
+    <div class="stages" id="stages"></div>
+    <div class="codes" id="codes4"></div>
+    <div id="notes4" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    <div class="box" style="gap:12px">
+      <h3>reset_index()를 붙이면 뭐가 달라져?</h3>
+      <p style="font-size:.93rem">계산된 숫자는 똑같아요. 바뀌는 건 <b>모양</b>이에요. pclass가 <b>이름표(인덱스)</b>에 있느냐, <b>보통 열</b>에 있느냐의 차이예요.</p>
+      <div class="figs">
+        <figure>
+          <pre class="code pdc" style="margin:0"><span class="tag">안 붙임</span>df.groupby('pclass')['fare'].mean()</pre>
+          <div class="tw"><table class="df"><thead><tr><th class="idx">pclass</th><th>fare</th></tr></thead><tbody><tr><td class="idx">1</td><td>58.75</td></tr><tr><td class="idx">3</td><td>10.55</td></tr></tbody></table></div>
+          <figcaption><b>시리즈</b>, 데이터 열은 fare 1개예요. 회색 칸의 1, 3은 줄마다 붙은 <b>이름표</b>예요.</figcaption>
+        </figure>
+        <figure>
+          <pre class="code pdc" style="margin:0"><span class="tag">붙임</span>df.groupby('pclass')['fare'].mean().reset_index()</pre>
+          <div class="tw"><table class="df"><thead><tr><th class="idx"></th><th>pclass</th><th>fare</th></tr></thead><tbody><tr><td class="idx">0</td><td class="hcell">1</td><td>58.75</td></tr><tr><td class="idx">1</td><td class="hcell">3</td><td>10.55</td></tr></tbody></table></div>
+          <figcaption><b>데이터프레임</b>, 열이 2개예요. pclass가 <b>진짜 열</b>로 내려왔고 이름표는 0, 1로 새로 붙었어요. SQL 결과와 같은 평평한 표예요.</figcaption>
+        </figure>
+      </div>
+
+      <h3 style="font-size:1.1rem">① 꺼내는 방법이 달라요</h3>
+      <div class="codes">
+        <pre class="code pdc"><span class="tag">안 붙임</span>r = df.groupby('pclass')['fare'].mean()
+r['pclass']    # ❌ 에러! 열이 아니라 이름표라서
+r.loc[1]       # ✅ 58.75 (이름표 1번)
+r.index        # ✅ [1, 3]</pre>
+        <pre class="code pdc"><span class="tag">붙임</span>r2 = r.reset_index()
+r2['pclass']              # ✅ [1, 3]
+r2[r2['pclass'] == 1]     # ✅ 평소 쓰던 불 인덱스
+r2.merge(other, on='pclass')  # ✅ 다른 표와 합치기</pre>
+      </div>
+      <div class="note diff"><b>초보 때 제일 자주 나는 에러</b> "분명 pclass로 묶었는데 <code>r['pclass']</code>가 왜 없대?" 정답: pclass는 열이 아니라 이름표로 올라가 있어서예요.</div>
+
+      <h3 style="font-size:1.1rem">② 기준이 두 개면 차이가 더 커요</h3>
+      <div class="codes">
+        <pre class="code pdc"><span class="tag">안 붙임</span>df.groupby(['sex', 'pclass'])['fare'].mean()
+
+sex     pclass
+female  1         62.19
+        3          7.93
+male    1         51.86
+        3         11.21</pre>
+        <pre class="code pdc"><span class="tag">붙임</span>(df.groupby(['sex', 'pclass'])['fare']
+   .mean().reset_index())
+
+      sex  pclass   fare
+0  female       1  62.19
+1  female       3   7.93
+2    male       1  51.86
+3    male       3  11.21</pre>
+      </div>
+      <p style="font-size:.93rem">왼쪽은 이름표가 2층(MultiIndex)이라 다루기 까다로워요. 오른쪽은 세 열짜리 평범한 표로 펴졌어요.</p>
+
+      <h3 style="font-size:1.1rem">③ 그럼 언제 붙여?</h3>
+      <div class="grid2">
+        <div class="box"><b>그냥 두기</b><span style="font-size:.92rem">결과를 <b>눈으로 보기만</b> 할 때. 더 깔끔하고, <code>r.loc[1]</code>처럼 이름으로 바로 찾을 수 있어요.</span></div>
+        <div class="box"><b>reset_index() 붙이기</b><span style="font-size:.92rem">결과를 <b>표로 계속 가공</b>할 때. merge, 새 열 만들기, 차트 x축, SQL처럼 평평한 표가 필요할 때요.</span></div>
+      </div>
+      <pre class="code pdc"><span class="tag">같은 효과</span># 처음부터 평평한 표로 받기
+df.groupby('pclass', as_index=False)['fare'].mean()</pre>
+      <p style="font-size:.9rem;color:var(--muted)">위의 'reset_index() 붙이기' 체크박스를 켰다 껐다 하면서 '③ 합치기' 칸을 보세요. pclass가 회색 이름표 칸에 있다가 보통 열로 내려와요.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="card" id="s5">
+    <div class="step">STEP 5</div>
+    <h2>SQL 번역기: 같은 점 · 다른 점</h2>
+    <p>제목을 누르면 펼쳐져요. <span class="pill same">똑같아요</span>는 그냥 번역하면 되는 것, <span class="pill diff">헷갈림 주의</span>는 SQL 습관대로 쓰면 결과가 달라지는 것이에요.</p>
+    <div class="cmp" id="cmp"></div>
+
+    <h3 style="margin-top:8px">실행 순서가 달라요</h3>
+    <div class="box">
+      <div class="order">
+        <span class="lbl">SQL 쓰는 순서</span><div class="seq"><span>SELECT</span><span>FROM</span><span>WHERE</span><span>GROUP BY</span><span>HAVING</span><span>ORDER BY</span><span>LIMIT</span></div>
+        <span class="lbl">SQL 실제 실행</span><div class="seq"><span>FROM</span><b>→</b><span>WHERE</span><b>→</b><span>GROUP BY</span><b>→</b><span>HAVING</span><b>→</b><span>SELECT</span><b>→</b><span>ORDER BY</span><b>→</b><span>LIMIT</span></div>
+        <span class="lbl">판다스</span><div class="seq p"><span>df</span><b>→</b><span>[조건]</span><b>→</b><span>.groupby()</span><b>→</b><span>.mean()</span><b>→</b><span>[결과 조건]</span><b>→</b><span>.sort_values()</span><b>→</b><span>.head()</span></div>
+      </div>
+      <p style="font-size:.92rem;color:var(--muted)">판다스는 <b>쓴 순서 그대로 실행</b>돼요. 왼쪽에서 오른쪽으로 점(.)을 이어 붙이는 게 곧 실행 순서라서, SQL의 실제 실행 순서를 그대로 받아 적는다고 생각하면 편해요.</p>
+    </div>
+    <pre class="code pdc"><span class="tag">PANDAS</span>(df[df['age'] > 20]            # WHERE
+   .groupby('pclass')['fare']   # GROUP BY
+   .mean()                      # SELECT AVG(fare)
+   .loc[lambda s: s > 20]       # HAVING
+   .sort_values(ascending=False)# ORDER BY ... DESC
+   .head(3))                    # LIMIT 3</pre>
+    <pre class="code sqlc"><span class="tag">SQL</span>SELECT pclass, AVG(fare) AS fare
+FROM titanic
+WHERE age > 20
+GROUP BY pclass
+HAVING AVG(fare) > 20
+ORDER BY fare DESC
+LIMIT 3;</pre>
+
+    <h3 style="margin-top:8px">그 밖에 1:1로 번역되는 개념들</h3>
+    <div class="dict"><table>
+      <thead><tr><th>하고 싶은 일</th><th>판다스</th><th>SQL</th><th>한 줄 메모</th></tr></thead>
+      <tbody id="dictbody"></tbody>
+    </table></div>
+  </section>
+
+  <!-- QA -->
+  <section class="card" id="qa">
+    <div class="step">Q&amp;A · 수업 후 질문 모음</div>
+    <h2>헷갈렸던 것들 정리</h2>
+    <p>복습하면서 나온 질문들이에요. 제목을 누르면 펼쳐져요.</p>
+
+    <h3 style="font-size:1.15rem">조건으로 고르기</h3>
+    <div class="cmp">
+      <details class="row-cmp" open><summary><span class="pill pd">불 인덱스</span><span>불 인덱스(Boolean Index)가 뭐야?</span></summary><div class="body">
+        <p style="font-size:.93rem">"불"은 불(火)이 아니라 <b>불리언(Boolean) = True/False(참/거짓)</b>예요. 불 인덱스는 <b>True/False 목록으로 줄을 고르는 방법</b>이에요. 두 단계로 일어나요.</p>
+        <div class="grid2">
+          <div class="box"><b>1단계 · O/X 목록 만들기</b><span style="font-size:.9rem"><code>df['age'] > 30</code>은 승객마다 "30살 넘어?"에 True/False를 매긴 출석부를 만들어요. 이 목록을 <b>마스크(mask)</b>라고도 해요.</span></div>
+          <div class="box"><b>2단계 · True인 줄만 남기기</b><span style="font-size:.9rem">바깥 <code>df[ ]</code>가 그 목록을 받아서 True인 줄만 통과시켜요. 체로 거르는 것과 같아요.</span></div>
+        </div>
+        <p style="font-size:.93rem"><b>조건을 눌러보세요.</b> 오른쪽 끝 <b>mask</b> 열이 1단계, 흐려지지 않은 줄이 2단계 결과예요.</p>
+        <div class="chips" id="maskChips" role="group" aria-label="조건 선택"></div>
+        <div class="codes" id="maskCodes"></div>
+        <div class="tw"><table class="df" id="maskTbl"></table></div>
+        <div class="readout" id="maskOut"></div>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">나눠 쓰기</span>mask = df['age'] > 30   # ① O/X 목록
+df[mask]                # ② 고르기
+
+(df['age'] > 30).sum()  # True=1, False=0 → 개수 4
+df.loc[df['age'] < 3, 'name']   # 조건 + 원하는 열만</pre>
+          <pre class="code pdc"><span class="tag">조건 여러 개</span>df[(df['age'] > 30) & (df['sex'] == 'female')]  # AND
+df[(df['pclass'] == 1) | (df['fare'] > 20)]      # OR
+df[~(df['sex'] == 'male')]                       # NOT
+df[df['age'].isna()]                             # 빈칸만</pre>
+        </div>
+        <div class="note diff"><b>자주 하는 실수</b> 파이썬의 <code>and</code>, <code>or</code>, <code>not</code> 대신 <b><code>&amp;</code>, <code>|</code>, <code>~</code></b>를 써요. 그리고 조건마다 <b>괄호를 꼭</b> 쳐야 해요. 안 치면 계산 순서가 꼬여서 에러가 나요.</div>
+        <div class="note"><b>꿀팁</b> True는 1, False는 0으로 계산돼서 <code>.sum()</code>은 조건에 맞는 개수, <code>.mean()</code>은 비율이 돼요. TASK ④에서 <code>survived</code> 평균이 생존율이었던 것도 같은 원리예요.</div>
+        <p style="font-size:.93rem"><b>SQL로는 WHERE</b>예요. SQL은 한 단어로 끝나고, 판다스는 그 속을 열어서 "O/X 목록 만들기 → 고르기"를 눈에 보이게 하는 거예요. 빈칸(NaN/NULL)이 비교에서 빠지는 것도 둘이 똑같아요.</p>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill pd">& | ~</span><span>OR로 했는데 왜 요금 안 넘는 2살 아이가 뽑혀? 그리고 <code>~</code>는 뭐야?</span></summary><div class="body">
+        <p style="font-size:.93rem"><b>실수가 아니에요!</b> <code>|</code>(OR)는 두 조건 중 <b>하나만</b> True여도 통과예요. Palsson은 요금 조건은 못 넘었지만 나이 조건(10살 미만)을 만족해서 들어왔어요.</p>
+        <div class="dict"><table>
+          <thead><tr><th>승객</th><th><code>age < 10</code></th><th><code>fare > 60</code></th><th>OR <code>|</code></th><th>AND <code>&amp;</code></th></tr></thead>
+          <tbody>
+            <tr><td>Palsson (2살, 21.08)</td><td style="color:var(--good);font-weight:700">True</td><td>False</td><td class="mT">True</td><td class="mF">False</td></tr>
+            <tr><td>Cumings (38살, 71.28)</td><td>False</td><td style="color:var(--good);font-weight:700">True</td><td class="mT">True</td><td class="mF">False</td></tr>
+            <tr><td>나머지 6명</td><td>False</td><td>False</td><td class="mF">False</td><td class="mF">False</td></tr>
+          </tbody></table></div>
+        <div class="grid2">
+          <div class="analogy"><div class="big">🎢</div><p><b>OR <code>|</code></b> "놀이공원에 <b>어린이거나</b> VIP면 무료 입장." 둘 중 하나만 돼도 OK → 2명 통과.</p></div>
+          <div class="analogy"><div class="big">🎁</div><p><b>AND <code>&amp;</code></b> "<b>어린이면서</b> VIP면 선물 증정." 둘 다 돼야 OK → 0명.</p></div>
+        </div>
+        <h4 style="margin:6px 0 0;font-family:var(--f-display);font-weight:400;font-size:1.15rem"><code>~</code> 물결표(tilde) = NOT, True/False 뒤집기</h4>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">뒤집기</span>df['sex'] == 'male'      # True, False, False, ...
+~(df['sex'] == 'male')    # False, True, True, ...
+df[~(df['sex'] == 'male')]  # 남자가 아닌 사람</pre>
+          <pre class="code pdc"><span class="tag">자주 쓰는 곳</span>df[~df['name'].isin(['Allen', 'Moran'])]  # NOT IN
+df[~df['age'].isna()]     # 빈칸 아닌 것
+df[df['age'].notna()]     # 위와 똑같음
+df[~((df['pclass'] == 1) & (df['sex'] == 'female'))]
+                          # "1등석 여성"이 아닌 사람 전부</pre>
+        </div>
+        <div class="note diff"><b>주의 1 · 괄호</b> <code>df[~df['sex'] == 'male']</code>은 ❌. <code>~</code>가 <code>==</code>보다 먼저 계산돼서 "sex 열을 뒤집어라"가 돼버려요. <code>isin()</code>, <code>isna()</code>처럼 함수로 끝나는 건 그 자체가 한 덩어리라 괄호 없이도 돼요.<br><b>주의 2 · not은 안 돼요</b> 파이썬 <code>not</code>은 True/False <b>하나</b>만 뒤집어요. 판다스 조건은 True/False가 <b>여러 개 든 목록</b>이라 <code>~</code>를 써요.</div>
+        <div class="dict"><table>
+          <thead><tr><th>뜻</th><th>파이썬 기본</th><th>판다스 조건</th><th>SQL</th></tr></thead>
+          <tbody>
+            <tr><td>그리고</td><td><code>and</code></td><td><code>&amp;</code></td><td><code>AND</code></td></tr>
+            <tr><td>또는</td><td><code>or</code></td><td><code>|</code></td><td><code>OR</code></td></tr>
+            <tr><td>아니다</td><td><code>not</code></td><td><code>~</code></td><td><code>NOT</code></td></tr>
+          </tbody></table></div>
+        <p style="font-size:.9rem;color:var(--muted)">위의 마스크 실험실에서 AND, OR, NOT 버튼을 누르면 조건마다 True/False 열이 따로 보여요.</p>
+      </div></details>
+    </div>
+
+    <h3 style="font-size:1.15rem">괄호 문법</h3>
+    <div class="cmp">
+      <details class="row-cmp" open><summary><span class="pill pd">괄호</span><span><code>df['fare']</code> vs <code>df[['fare']]</code> 대괄호 두 겹은 왜 표야?</span></summary><div class="body">
+        <p style="font-size:.93rem">바깥 <code>[ ]</code>는 "골라줘"라는 명령이고, 안쪽 <code>[ ]</code>는 파이썬 <b>리스트(목록)</b>예요. 이름 하나를 주면 열 하나(시리즈)가 오고, 목록을 주면 "이 열들로 된 표"(데이터프레임)가 와요. 목록에 하나만 들어 있어도 표로 와요.</p>
+        <div class="analogy"><div class="big">🥤</div><p>"콜라 주세요"라고 하면 캔 하나를 손에 쥐어줘요(시리즈). "콜라 담은 봉투 주세요"라고 하면 캔 하나가 든 봉투를 줘요(데이터프레임). 내용물은 같고 받는 모양만 달라요.</p></div>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">시리즈</span>df['fare']
+0     7.25
+1    71.28
+...
+Name: fare, dtype: float64   ← 열 이름이 아래에
+
+df['fare'].shape    # (8,)  1차원</pre>
+          <pre class="code pdc"><span class="tag">데이터프레임</span>df[['fare']]
+    fare                     ← 열 이름이 머리글에
+0   7.25
+1  71.28
+...
+
+df[['fare']].shape  # (8, 1)  8행 1열 표</pre>
+        </div>
+        <p style="font-size:.93rem">groupby도 같아요. <code>groupby('pclass')['fare']</code>는 시리즈, <code>groupby('pclass')[['fare']]</code>는 1열짜리 표가 나와요. 단, 표가 되어도 <b>pclass는 여전히 이름표</b>예요. <code>r['pclass']</code> 에러를 없애려면 <code>reset_index()</code>나 <code>as_index=False</code>가 필요해요.</p>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill pd">괄호</span><span>좌표 · 목록 · 튜플 · 함수: 괄호 총정리</span></summary><div class="body">
+        <div class="dict"><table>
+          <thead><tr><th>모양</th><th>뜻</th><th>결과</th></tr></thead>
+          <tbody>
+            <tr><td><code>df.iloc[0, 2]</code></td><td><b>좌표</b> (행, 열)</td><td>칸 하나 → 22</td></tr>
+            <tr><td><code>df.iloc[(0, 2)]</code></td><td>위와 똑같은 좌표. 파이썬이 <code>[0, 2]</code>를 속으로 튜플 <code>(0, 2)</code>로 읽어요</td><td>칸 하나 → 22</td></tr>
+            <tr><td><code>df.iloc[[0, 2]]</code></td><td><b>목록</b> (여러 개 고르기)</td><td>0행, 2행 두 줄 전체</td></tr>
+            <tr><td><code>df.iloc[[0, 2], 2]</code></td><td>목록 + 열</td><td>0행과 2행의 age → 22, 26</td></tr>
+            <tr><td><code>df.drop([0, 2])</code></td><td><b>함수 실행</b> + 목록 재료</td><td>0행, 2행 삭제한 새 표</td></tr>
+            <tr><td><code>t.loc[('female', 3), 'fare']</code></td><td>2층 주소 <b>튜플</b> + 열</td><td>칸 하나 → 7.93</td></tr>
+          </tbody></table></div>
+        <div class="note"><b>외우는 법</b> 소괄호 <code>( )</code>는 "한 덩어리", 대괄호 리스트 <code>[ ]</code>는 "여러 개", 쉼표는 "칸막이". 함수 이름 바로 뒤의 <code>( )</code>는 "실행해"라는 뜻이라 좌표와 상관없어요.</div>
+        <p style="font-size:.93rem"><code>('female', 3)</code>처럼 소괄호로 묶은 덩어리를 <b>튜플</b>이라고 해요. <code>df.shape</code>가 <code>(8, 6)</code>으로 나오는 것도 튜플이에요.</p>
+      </div></details>
+    </div>
+
+    <h3 style="font-size:1.15rem">groupby 결과 다루기</h3>
+    <div class="cmp">
+      <details class="row-cmp"><summary><span class="pill pd">MultiIndex</span><span>2층 이름표가 뭐야? 튜플이랑 무슨 관계야?</span></summary><div class="body">
+        <p style="font-size:.93rem">기준을 두 개로 groupby하면 이름표가 <b>두 칸짜리</b>가 돼요. "3반"이 아니라 "<b>2학년 3반</b>"처럼 두 단계를 말해야 한 줄이 정해져요. 아파트의 "101동 502호"도 마찬가지예요.</p>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">2층 이름표</span>r = df.groupby(['sex', 'pclass'])['fare'].mean()
+
+sex     pclass        ← 1층 sex, 2층 pclass
+female  1         62.19
+        3          7.93   ← 빈칸은 "위와 같은 female"
+male    1         51.86
+        3         11.21
+
+r.index
+# MultiIndex([('female', 1), ('female', 3),
+#             ('male', 1),   ('male', 3)])</pre>
+          <pre class="code pdc"><span class="tag">꺼내기</span>r.loc['female']        # 1층만 → female 아래 전부
+r.loc[('female', 3)]   # 두 층 다 → 7.93
+r.loc['female', 3]     # 시리즈라 괄호 생략 OK → 7.93
+
+t = df.groupby(['sex', 'pclass'])[['fare']].mean()
+t.loc[('female', 3), 'fare']  # ✅ 데이터프레임은 튜플로 묶기
+t.loc['female', 3]            # ❌ 'female'행, 3열로 읽어버림</pre>
+        </div>
+        <p style="font-size:.93rem">줄 하나의 진짜 이름은 <code>'female'</code>도 <code>3</code>도 아니라 <b>튜플 <code>('female', 3)</code> 한 덩어리</b>예요. 시리즈는 열이 없어서 소괄호를 빼도 알아듣지만, 데이터프레임은 쉼표 뒤가 열 자리라 꼭 묶어야 해요. 헷갈리면 <b>항상 묶는 습관</b>이 안전해요.</p>
+        <div class="note diff"><b>SQL엔 없는 개념</b> <code>GROUP BY sex, pclass</code>는 처음부터 sex, pclass가 그냥 열 두 개로 나와요. 판다스에서 <code>reset_index()</code>를 하면 SQL과 같은 모양이 돼요.</div>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill pd">unstack</span><span>unstack()은 왜 써?</span></summary><div class="body">
+        <p style="font-size:.93rem">세로로 길게 늘어선 결과를 <b>가로로 펼쳐서 교차표</b>로 만들어요. 2층 이름표 중 안쪽 층(pclass)이 열 머리글로 올라가요. 숫자 4개는 그대로고 배치만 바뀌어요.</p>
+        <div class="figs">
+          <figure><b style="font-size:.9rem">펼치기 전 · 세로로 김</b><div class="tw"><table class="df"><thead><tr><th class="idx">sex</th><th class="idx">pclass</th><th>fare</th></tr></thead><tbody>
+            <tr><td class="idx">female</td><td class="idx">1</td><td>62.19</td></tr><tr><td class="idx"></td><td class="idx">3</td><td>7.93</td></tr>
+            <tr><td class="idx">male</td><td class="idx">1</td><td>51.86</td></tr><tr><td class="idx"></td><td class="idx">3</td><td>11.21</td></tr></tbody></table></div></figure>
+          <figure><b style="font-size:.9rem">r.unstack() · 가로로 펼침</b><div class="tw"><table class="df"><thead><tr><th class="idx">sex \ pclass</th><th class="hc">1</th><th class="hc">3</th></tr></thead><tbody>
+            <tr><td class="idx">female</td><td>62.19</td><td>7.93</td></tr><tr><td class="idx">male</td><td>51.86</td><td>11.21</td></tr></tbody></table></div><figcaption>가로로 읽으면 등급 비교, 세로로 읽으면 성별 비교</figcaption></figure>
+        </div>
+        <div class="grid3">
+          <div class="box"><b>① 한눈에 비교</b><span style="font-size:.9rem">엑셀 피벗 테이블처럼 두 기준을 동시에 비교해요.</span></div>
+          <div class="box"><b>② 열끼리 계산</b><span style="font-size:.9rem"><code>w = r.unstack()</code><br><code>w[1] - w[3]</code> → female 54.26, male 40.65</span></div>
+          <div class="box"><b>③ 묶음 막대그래프</b><span style="font-size:.9rem"><code>r.unstack().plot(kind='bar')</code> 열 하나가 막대 색 하나가 돼요.</span></div>
+        </div>
+        <pre class="code pdc"><span class="tag">PANDAS</span>r.unstack()          # 기본: 안쪽 층(pclass)을 펼침
+r.unstack('sex')     # 바깥 층(sex)을 펼침 → 열이 female, male
+w.stack()            # 반대: 펼친 표를 다시 세로로 접기
+
+# 원본에서 바로 만들면 같은 결과
+df.pivot_table(index='sex', columns='pclass', values='fare')</pre>
+        <p style="font-size:.93rem">짝이 없는 칸(예: 2등석 여성이 0명)은 NaN으로 채워져요. SQL에는 이런 함수가 없어서 STEP 5의 <code>CASE WHEN</code>처럼 열마다 손으로 써야 해요. 수업 슬라이드의 제주 거주/방문인구 예시가 바로 stack/unstack이에요.</p>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill pd">실무</span><span>실무에선 항상 평평한 표(reset_index)로 바꾸는 게 좋아?</span></summary><div class="body">
+        <p style="font-size:.93rem">실무에서는 <b>대부분 평평하게 바꿔 쓰는 편</b>이에요. 다만 이름표가 오히려 편한 경우도 있어서, <b>결과를 어디에 쓸지</b>로 정해요.</p>
+        <div class="grid2">
+          <div class="box"><b>평평하게 (as_index=False / reset_index)</b><span style="font-size:.9rem">· 다른 표와 merge할 때<br>· CSV, 엑셀, DB로 내보낼 때<br>· seaborn처럼 열 이름으로 x축을 지정할 때<br>· 여러 단계 이어서 가공할 때<br>· 기준이 2개 이상일 때</span></div>
+          <div class="box"><b>이름표 그대로</b><span style="font-size:.9rem">· 노트북에서 보고 끝낼 때<br>· <code>r.loc[1]</code>처럼 이름으로 바로 찾을 때<br>· <code>r.plot()</code>: 이름표가 자동으로 x축이 됨<br>· <code>unstack()</code>으로 펼칠 때<br>· 날짜 이름표로 <code>resample('M')</code> 같은 시계열 작업<br>· <code>올해 / 작년</code>처럼 이름표끼리 줄 맞춰 계산할 때</span></div>
+        </div>
+        <div class="note">SQL에 익숙하면 처음부터 <code>as_index=False</code>를 습관처럼 붙이는 경우가 많아요. 그러다 그래프나 날짜 작업처럼 이름표가 필요할 때 <code>set_index()</code>로 다시 올리면 돼요.</div>
+      </div></details>
+    </div>
+
+    <h3 style="font-size:1.15rem">원본 지키기</h3>
+    <div class="cmp">
+      <details class="row-cmp"><summary><span class="pill pd">copy</span><span>copy()는 언제 필요해? drop하면 원본이 지워져?</span></summary><div class="body">
+        <p style="font-size:.93rem"><code>drop</code>은 원본을 안 건드리고 <b>새 표를 돌려줘요</b>. 결과를 다시 담아야 바뀌어요. <code>copy()</code>가 진짜 필요한 건 열 추가, 값 바꾸기처럼 <b>원본을 직접 고치는 명령</b>을 쓸 때예요.</p>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">읽기만</span>df.drop([0, 2])        # 결과만 보여줌. df는 그대로 8줄
+df = df.drop([0, 2])   # 다시 담으면 그때 바뀜</pre>
+          <pre class="code pdc"><span class="tag">원본이 바뀜</span>backup = df.copy()             # 먼저 복사본
+df['fare_x2'] = df['fare'] * 2  # 열 추가
+df.loc[0, 'age'] = 99           # 값 바꾸기</pre>
+        </div>
+        <div class="note diff"><b>함정</b> <code>backup = df</code>는 복사가 아니에요. 같은 표에 이름표만 하나 더 붙인 거라 df를 고치면 backup도 같이 바뀌어요. 그래서 <code>copy()</code>를 꼭 붙여요.</div>
+        <p style="font-size:.93rem">판다스에서 바뀌는 건 <b>메모리 위의 표</b>뿐이에요. 원본 CSV 파일은 <code>to_csv</code>로 덮어쓰기 전까지 멀쩡해서, 최악의 경우 <code>read_csv</code>로 다시 불러오면 돼요.</p>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill sql">SQL</span><span>SQL은 진짜로 지워지는데 실수하면 어떻게 해?</span></summary><div class="body">
+        <div class="grid2">
+          <div class="box"><b>① SELECT로 먼저 확인</b><pre class="code sqlc" style="margin:0"><span class="tag">SQL</span>SELECT * FROM titanic WHERE age IS NULL;
+DELETE FROM titanic WHERE age IS NULL;</pre><span style="font-size:.88rem">WHERE는 그대로 두고 앞만 바꾸면, 방금 본 그 줄들이 정확히 지워져요.</span></div>
+          <div class="box"><b>② 트랜잭션 = 되돌리기 버튼</b><pre class="code sqlc" style="margin:0"><span class="tag">SQL</span>BEGIN;
+DELETE FROM titanic WHERE pclass = 3;
+SELECT COUNT(*) FROM titanic;  -- 이상하다!
+ROLLBACK;                      -- 없던 일로</pre><span style="font-size:.88rem"><code>COMMIT</code> 전까지는 확정이 아니에요. 단, 많은 도구가 기본으로 <b>자동 확정(autocommit)</b>이에요.</span></div>
+          <div class="box"><b>③ 백업 테이블 (= copy())</b><pre class="code sqlc" style="margin:0"><span class="tag">SQL</span>CREATE TABLE titanic_backup AS
+SELECT * FROM titanic;</pre></div>
+          <div class="box"><b>④ 회사의 정기 백업</b><span style="font-size:.9rem">데이터베이스 관리자가 정기적으로 백업해서 특정 시점으로 복구할 수 있어요. 그래도 번거로워서 ①~③ 습관이 중요해요.</span></div>
+        </div>
+        <div class="dict"><table>
+          <thead><tr><th></th><th>판다스</th><th>SQL</th></tr></thead>
+          <tbody>
+            <tr><td>읽기만</td><td><code>df.drop(...)</code>, <code>df[조건]</code></td><td><code>SELECT</code></td></tr>
+            <tr><td>원본이 바뀜</td><td><code>df = df.drop(...)</code>, <code>df['새열'] = ...</code>, <code>inplace=True</code></td><td><code>DELETE</code>, <code>UPDATE</code></td></tr>
+            <tr><td>백업</td><td><code>df.copy()</code></td><td><code>CREATE TABLE ... AS SELECT</code></td></tr>
+            <tr><td>되돌리기</td><td>다시 <code>read_csv</code></td><td><code>ROLLBACK</code> (확정 전에만)</td></tr>
+          </tbody></table></div>
+        <p style="font-size:.93rem">데이터 분석가가 쓰는 SQL은 대부분 <code>SELECT</code>예요. SELECT는 <b>읽기만</b> 해서 아무리 틀려도 데이터가 망가지지 않아요.</p>
+      </div></details>
+
+      <details class="row-cmp"><summary><span class="pill sql">SQL</span><span><code>DELETE FROM titanic;</code>이랑 WHERE 있는 거랑 뭐가 달라?</span></summary><div class="body">
+        <p style="font-size:.93rem"><code>WHERE</code>는 <b>"어떤 줄을?"</b>을 정하는 조건이에요. 없으면 SQL은 "조건 없음 = 전부"로 알아들어요.</p>
+        <pre class="code sqlc"><span class="tag">SQL</span>DELETE FROM titanic WHERE age IS NULL;  -- 나이 빈칸인 줄만 (Moran 1명)
+DELETE FROM titanic WHERE pclass = 3;   -- 3등석만 (5명)
+DELETE FROM titanic;                    -- 조건 없음 → 8명 전부!</pre>
+        <div class="analogy"><div class="big">🏫</div><p><code>DELETE FROM 우리반 WHERE 지각 = 1;</code>은 "지각한 사람만 나가세요"예요. <code>DELETE FROM 우리반;</code>은 "다 나가세요". 표 껍데기(열 이름)만 남고 안은 0명이 돼요. WHERE를 빼먹는 실수가 가장 유명한 사고예요.</p></div>
+        <p style="font-size:.93rem"><b>판다스에는 "지워라"가 아니라 "남길 줄만 고른다"</b>고 생각해요. 그래서 조건을 뒤집어서 써요.</p>
+        <div class="codes">
+          <pre class="code pdc"><span class="tag">PANDAS</span>df[df['pclass'] == 3]   # WHERE pclass = 3 → 3등석만 고르기
+df[df['pclass'] != 3]   # 3등석을 "지운" 결과 = 나머지만
+df.iloc[0:0]            # 전부 지운 것 = 열 이름만 있는 빈 표</pre>
+          <pre class="code sqlc"><span class="tag">SQL</span>SELECT * FROM titanic WHERE pclass = 3;
+DELETE FROM titanic WHERE pclass = 3;
+DELETE FROM titanic;</pre>
+        </div>
+      </div></details>
+    </div>
+
+    <h3 style="font-size:1.15rem">SQL에서 행 거르기</h3>
+    <div class="cmp">
+      <details class="row-cmp"><summary><span class="pill sql">SQL</span><span>"행은 조건으로" 때문에 WHERE가 행을 거르는 거야?</span></summary><div class="body">
+        <p style="font-size:.93rem">네, 정확해요! SQL은 처음부터 그 원칙대로 <b>자리를 나눠서</b> 만들어졌어요.</p>
+        <div class="rule">
+          <div class="rc"><span class="big2">SELECT = 열 고르기</span><span style="font-size:.92rem"><b>이름</b>으로 불러요. <code>SELECT name, fare</code></span></div>
+          <div class="rr"><span class="big2">WHERE = 행 고르기</span><span style="font-size:.92rem"><b>조건</b>으로 걸러요. <code>WHERE age > 30</code></span></div>
+        </div>
+        <p style="font-size:.93rem">그래서 WHERE에는 "3번째 줄" 같은 줄 번호를 쓸 수 없어요. SQL 표에는 줄 번호나 이름표가 없어서 언제나 <b>"이 조건을 만족하는 줄"</b>로만 골라요.</p>
+        <div class="dict"><table>
+          <thead><tr><th>SQL에서 행을 고르는 자리</th><th>언제 거르나</th><th>기준</th><th>판다스</th></tr></thead>
+          <tbody>
+            <tr><td><code>WHERE</code></td><td>묶기 <b>전</b> 원본 줄</td><td>조건</td><td><code>df[df['age'] > 30]</code></td></tr>
+            <tr><td><code>HAVING</code></td><td>GROUP BY로 묶은 <b>후</b> 결과 줄</td><td>조건</td><td><code>r[r > 20]</code></td></tr>
+            <tr><td><code>LIMIT</code></td><td>정렬한 뒤 맨 위에서</td><td>개수</td><td><code>.head(3)</code></td></tr>
+            <tr><td>(없음)</td><td>아무 때나</td><td>이름표 · 번호</td><td><code>df.loc[3]</code>, <code>df.iloc[2]</code></td></tr>
+          </tbody></table></div>
+      </div></details>
+
+      <details class="row-cmp" open><summary><span class="pill diff">헷갈림 주의</span><span>평균 요금 거르기를 왜 WHERE가 아니라 HAVING에서 해?</span></summary><div class="body">
+        <p style="font-size:.93rem"><b>순서 때문이에요.</b> WHERE가 실행되는 순간에는 아직 <b>평균이라는 게 존재하지 않아요.</b> 아래 그림은 이 쿼리가 실제로 흘러가는 순서예요.</p>
+        <pre class="code sqlc"><span class="tag">SQL</span>SELECT pclass, AVG(fare)
+FROM titanic
+WHERE age > 20            -- ① 승객 한 명씩: 20살 넘는 사람만
+GROUP BY pclass           -- ② 남은 사람을 등급별 바구니로
+HAVING AVG(fare) > 20;    -- ③ 바구니마다 평균 → 20 넘는 바구니만</pre>
+        <div class="fig wide" id="whFig"></div>
+        <div class="seq" style="justify-content:center"><span>FROM</span><b>→</b><span style="background:var(--sql);color:var(--paper)">WHERE</span><b>→</b><span>GROUP BY</span><b>→</b><span style="background:var(--sql);color:var(--paper)">HAVING</span><b>→</b><span>SELECT</span><b>→</b><span>ORDER BY</span><b>→</b><span>LIMIT</span></div>
+        <div class="grid2">
+          <div class="box"><b>WHERE 시점</b><span style="font-size:.92rem">표가 아직 승객 한 줄 한 줄이에요. 각 줄엔 그 사람의 나이·요금뿐이라 "1등석 평균"은 물어볼 수가 없어요.</span></div>
+          <div class="box"><b>HAVING 시점</b><span style="font-size:.92rem">바구니를 나누고 평균을 계산한 <b>다음</b>이에요. 이제 "1등석 58.75, 3등석 7.74"가 있으니 비교할 수 있어요.</span></div>
+        </div>
+        <div class="analogy"><div class="big">🏆</div><p><b>반 평균 비유</b> "반 평균 70점 넘는 반만 상 주자." 철수가 65점이어도 철수네 반 평균은 75점일 수 있어요. <b>학생 한 명만 봐서는 알 수 없죠.</b> 반별로 모으고 → 평균 내고 → 그다음에 반을 골라야 해요. WHERE는 <b>학생 한 명</b>을, HAVING은 <b>반 하나</b>를 판단해요.</p></div>
+        <div class="codes">
+          <pre class="code sqlc"><span class="tag">에러</span>SELECT pclass, AVG(fare) FROM titanic
+WHERE AVG(fare) > 20     -- ❌ WHERE에선 집계 함수 금지
+GROUP BY pclass;</pre>
+          <pre class="code pdc"><span class="tag">PANDAS</span>r = (df[df['age'] > 20]       # WHERE
+       .groupby('pclass')['fare'] # GROUP BY
+       .mean())
+r[r > 20]                         # HAVING
+# pclass
+# 1    58.75</pre>
+        </div>
+        <p style="font-size:.93rem">판다스는 <b>쓴 순서대로 실행</b>돼서 "평균 낸 다음 거른다"가 코드 모양 그대로 보여요. SQL은 쓰는 순서와 실행 순서가 달라서, 묶기 전 거르기(WHERE)와 묶은 후 거르기(HAVING)를 다른 단어로 나눠 놓은 거예요.</p>
+      </div></details>
+    </div>
+
+    <h3 style="font-size:1.15rem">SQL 사투리</h3>
+    <div class="cmp">
+      <details class="row-cmp"><summary><span class="pill sql">SQL</span><span>"MEDIAN은 DB마다 이름이 달라요"가 무슨 말이야?</span></summary><div class="body">
+        <p style="font-size:.93rem">SQL은 표준 언어지만 MySQL, PostgreSQL, SQLite, Oracle, BigQuery 같은 <b>데이터베이스 프로그램마다 "사투리"</b>가 있어요. 같은 영어라도 미국은 elevator, 영국은 lift라고 하는 것처럼요. 다른 단어를 쓰면 에러가 나요.</p>
+        <div class="dict"><table>
+          <thead><tr><th>데이터베이스</th><th>중앙값 쓰는 법</th></tr></thead>
+          <tbody>
+            <tr><td>Oracle, Snowflake, DuckDB</td><td><code>MEDIAN(age)</code></td></tr>
+            <tr><td>PostgreSQL, SQL Server</td><td><code>PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY age)</code> ("50% 지점 값")</td></tr>
+            <tr><td>BigQuery</td><td><code>PERCENTILE_CONT(age, 0.5) OVER ()</code></td></tr>
+            <tr><td>MySQL, SQLite</td><td>함수가 없음 → 정렬해서 가운데를 직접 찾는 긴 쿼리</td></tr>
+          </tbody></table></div>
+        <div class="grid2">
+          <div class="box"><span class="pill same" style="align-self:flex-start">어디서나 같음</span><span style="font-size:.9rem"><code>SELECT WHERE GROUP BY ORDER BY COUNT SUM AVG MIN MAX COALESCE</code>. 처음 배우는 기본기는 대부분 여기예요.</span></div>
+          <div class="box"><span class="pill diff" style="align-self:flex-start">사투리가 갈림</span><span style="font-size:.9rem">중앙값 같은 통계 함수, 날짜 함수, 문자열 함수, 위에서 n개 자르기(<code>LIMIT 3</code>가 SQL Server에선 <code>SELECT TOP 3</code>)</span></div>
+        </div>
+        <p style="font-size:.93rem">SQLBolt 같은 브라우저 연습 사이트는 보통 SQLite 기반이라 <code>MEDIAN</code>을 쓰면 에러가 날 거예요. 판다스는 프로그램이 하나뿐이라 어디서나 <code>df['age'].median()</code>이에요.</p>
+      </div></details>
+    </div>
+  </section>
+
+  <!-- RCV -->
+  <section class="card" id="rcv">
+    <div class="step">특강 · 제일 헷갈리는 것</div>
+    <h2>이건 열이야? 행이야? 값이야?</h2>
+    <p>번역 사전을 보면 판다스도 SQL도 거의 다 <b>열 이름</b>으로 일을 해요. 그럼 리스트 <code>[ ]</code>는 항상 열일까요? 정답은 <b>"아니요"</b>예요. 이 섹션 하나로 헷갈림을 끝내봐요.</p>
+
+    <h3>① 리스트는 봉투예요. 방향이 없어요</h3>
+    <p style="font-size:.95rem">리스트는 그냥 <b>"여러 개를 담은 봉투"</b>예요. 봉투 자체는 열도 행도 아니에요. <b>어느 우체통에 넣느냐</b>에 따라 열이 되기도, 행이 되기도, 값이 되기도 해요.</p>
+    <div class="fig wide" id="envFig"></div>
+    <div class="dict"><table>
+      <thead><tr><th>코드</th><th>리스트의 뜻</th><th>왜?</th></tr></thead>
+      <tbody>
+        <tr><td><code>df[['name', 'fare']]</code></td><td><span class="pill pd">열</span></td><td>그냥 <code>df[ ]</code>에 <b>글자</b>를 넣으면 열 이름으로 읽어요</td></tr>
+        <tr><td><code>df.iloc[[0, 2]]</code></td><td><span class="pill sql">행</span></td><td>iloc 쉼표 앞자리 = 행 자리</td></tr>
+        <tr><td><code>df.drop([0, 2], axis=0)</code></td><td><span class="pill sql">행</span></td><td>axis=0 = 행 방향 (기본값)</td></tr>
+        <tr><td><code>df.drop(['age', 'fare'], axis=1)</code></td><td><span class="pill pd">열</span></td><td>axis=1 = 열 방향</td></tr>
+        <tr><td><code>df['name'].isin(['Allen', 'Moran'])</code></td><td><span class="pill same">값</span></td><td>열은 이미 <code>df['name']</code>으로 정해졌으니 괄호 안은 찾을 <b>내용</b></td></tr>
+        <tr><td><code>df.groupby(['sex', 'pclass'])</code></td><td><span class="pill pd">열</span></td><td>"~열로 묶어줘"라는 함수</td></tr>
+        <tr><td><code>df.sort_values(by=['age', 'fare'])</code></td><td><span class="pill pd">열</span></td><td>"~열 기준으로 정렬해줘"라는 함수</td></tr>
+      </tbody></table></div>
+    <div class="note">열이 많이 나오는 건 리스트 때문이 아니에요. 그 <b>함수가 원래 열을 받는 함수</b>라서 그래요. 똑같은 리스트를 <code>iloc</code>이나 <code>drop(axis=0)</code>에 넣으면 행이 돼요.</div>
+
+    <h3>② 그래도 "열 중심"인 이유: 열은 이름으로, 행은 조건으로</h3>
+    <div class="rule">
+      <div class="rc"><span class="big2">열은 이름으로 불러요</span><span style="font-size:.92rem">열은 <b>수가 적고 이름과 뜻</b>이 있어요(age, fare, sex). 그래서 이름을 직접 불러요. 설문지의 "질문 항목"이에요.</span></div>
+      <div class="rr"><span class="big2">행은 조건으로 골라요</span><span style="font-size:.92rem">행은 <b>수가 많고 이름보다 내용</b>이 중요해요. 891명을 하나하나 부르는 대신 "30살 넘는 사람"처럼 골라요. 설문지에 "응답한 사람들"이에요.</span></div>
+    </div>
+    <div class="fig wide" id="ruleFig"></div>
+    <p style="font-size:.95rem">그래서 <b>행을 고를 때도 결국 열 이름이 등장</b>해요. 아래 코드는 age 열을 쓰지만, 결과로 골라지는 건 <b>행</b>이에요.</p>
+    <div class="codes">
+      <pre class="code pdc"><span class="tag">PANDAS</span>df[df['age'] > 30]   # 기준은 age 열, 골라지는 건 행</pre>
+      <pre class="code sqlc"><span class="tag">SQL</span>SELECT * FROM titanic WHERE age > 30;</pre>
+    </div>
+    <div class="note diff"><b>판다스만의 차이</b> SQL은 행을 <b>조건으로만</b> 골라요. 표에 정해진 순서나 이름표가 없거든요. 판다스는 행에 인덱스가 있어서 <code>loc[3]</code>, <code>iloc[2]</code>처럼 <b>이름이나 번호로도</b> 부를 수 있어요.</div>
+
+    <h3>③ 제일 헷갈리는 <code>df[ ]</code>의 네 얼굴</h3>
+    <p style="font-size:.95rem">그냥 <code>df[ ]</code>는 안에 뭘 넣느냐에 따라 열을 고르기도, 행을 고르기도 해요. 판다스가 편하라고 만든 지름길인데, 그래서 헷갈려요.</p>
+    <div class="grid4" id="faces"></div>
+    <div class="note">헷갈리면 <b><code>loc</code></b>을 쓰면 확실해요. <code>loc[행, 열]</code>처럼 자리가 고정돼서 쉼표 앞은 언제나 행, 뒤는 언제나 열이에요.
+      <pre class="code pdc" style="margin-top:8px"><span class="tag">PANDAS</span>df.loc[df['age'] > 30, ['name', 'fare']]   # 30살 넘는 사람(행)의 name, fare(열)</pre></div>
+
+    <h3>④ 판별 순서도: 세 가지 질문만 던져요</h3>
+    <div class="fig wide" id="flowFig"></div>
+    <div class="grid3">
+      <div class="box"><span class="pill pd" style="align-self:flex-start">질문 1</span><b>대괄호 바로 앞이 loc / iloc?</b><span style="font-size:.9rem">그럼 자리로 정해져요. <code>loc[ 행 , 열 ]</code>. 쉼표가 없으면 행이에요.</span></div>
+      <div class="box"><span class="pill pd" style="align-self:flex-start">질문 2</span><b>함수 괄호 ( ) 안이야?</b><span style="font-size:.9rem">함수 이름을 우리말로 읽어요. groupby는 "~열로 묶어줘", isin은 "이 값들 중에 있어?"</span></div>
+      <div class="box"><span class="pill pd" style="align-self:flex-start">질문 3</span><b>안에 든 게 어떻게 생겼어?</b><span style="font-size:.9rem">열 이름과 같은 글자 → 열 · 0, 1, 2 숫자 → 대부분 행 · 데이터 속 내용('Allen', 'female') → 값</span></div>
+    </div>
+
+    <h3>⑤ 꿀팁: 이름표를 붙여서 쓰면 안 헷갈려요</h3>
+    <div class="codes">
+      <pre class="code pdc"><span class="tag">헷갈림</span>df.drop(['fare'], axis=1)
+df.drop([0, 2], axis=0)
+df.sort_values(['age'])</pre>
+      <pre class="code pdc"><span class="tag">추천</span>df.drop(columns=['fare'])   # "열을 지워"
+df.drop(index=[0, 2])       # "행을 지워"
+df.sort_values(by=['age'])  # "age 기준으로"</pre>
+    </div>
+    <p style="font-size:.93rem"><code>axis=0</code>, <code>axis=1</code>을 외울 필요가 없어요. 코드만 읽어도 뜻이 보여요. 나중에 다시 볼 나 자신이나 동료에게도 친절한 코드예요.</p>
+
+    <h3>⑥ 그래도 모르겠으면: 실행해서 확인하기</h3>
+    <div class="grid2">
+      <pre class="code pdc"><span class="tag">확인</span>result = df.drop([0, 2])
+df.shape        # (8, 6)
+result.shape    # (6, 6) ← 앞 숫자(행)가 줄었다!
+result.columns  # 열 목록은 그대로</pre>
+      <div class="box"><b>shape 읽는 법</b><span style="font-size:.92rem"><code>(행 수, 열 수)</code>예요.<br>· 앞 숫자가 줄면 → <b>행</b>이 지워진 것<br>· 뒤 숫자가 줄면 → <b>열</b>이 지워진 것<br>판다스는 원본을 안 바꾸니까 마음껏 실험해도 괜찮아요.</span></div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section class="card" id="game">
+    <div class="step">미니게임</div>
+    <h2>열·행·값 판별 게임</h2>
+    <p>코드에서 <b>노랗게 칠한 부분</b>이 무엇을 가리키는지 골라보세요. 위의 순서도(질문 1 → 2 → 3)를 떠올리면 다 풀 수 있어요. 연속으로 맞히면 콤보가 올라가요!</p>
+    <div class="game" id="gameBox"></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="card" id="s6">
+    <div class="step">STEP 6</div>
+    <h2>오늘의 함수 사전</h2>
+    <div class="fn" id="fns"></div>
+  </section>
+
+  <!-- TASK -->
+  <section class="card" id="task">
+    <div class="step">TASK · PPT 마지막 장</div>
+    <h2>Pandas + Titanic 과제</h2>
+    <p>수업 과제 4개예요. <b>먼저 노트북에 직접 써보고</b>, 막히면 힌트를, 다 쓰면 정답과 결과를 열어서 맞춰보세요. 결과는 위의 승객 8명 기준이라 실제 891명 데이터와 숫자는 달라요. 대신 코드는 그대로 쓸 수 있어요(실제 열 이름은 <code>Fare</code>, <code>Pclass</code>처럼 대문자로 시작해요).</p>
+    <div class="cmp" id="taskbox"></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="card" id="s7">
+    <div class="step">STEP 7</div>
+    <h2>퀴즈 타임</h2>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <footer>표의 승객 8명은 타이타닉 데이터 앞부분을 간단히 줄인 예시예요. 요금은 소수 둘째 자리까지만 적었어요.</footer>
+</div>
+
+<script>
+const DF=[
+ {name:'Braund',sex:'male',age:22,pclass:3,fare:7.25,survived:0},
+ {name:'Cumings',sex:'female',age:38,pclass:1,fare:71.28,survived:1},
+ {name:'Heikkinen',sex:'female',age:26,pclass:3,fare:7.93,survived:1},
+ {name:'Futrelle',sex:'female',age:35,pclass:1,fare:53.10,survived:1},
+ {name:'Allen',sex:'male',age:35,pclass:3,fare:8.05,survived:0},
+ {name:'Moran',sex:'male',age:null,pclass:3,fare:8.46,survived:0},
+ {name:'McCarthy',sex:'male',age:54,pclass:1,fare:51.86,survived:0},
+ {name:'Palsson',sex:'male',age:2,pclass:3,fare:21.08,survived:0}
+];
+const SP={Braund:[1,0],Cumings:[1,0],Heikkinen:[0,0],Futrelle:[1,0],Allen:[0,0],Moran:[0,0],McCarthy:[0,0],Palsson:[3,1]};
+DF.forEach(r=>{r.sibsp=SP[r.name][0];r.parch=SP[r.name][1]});
+const COLS=['name','sex','age','pclass','fare','survived'];
+const TXT=new Set(['name','sex']);
+const ALL=DF.map((r,i)=>({i,r}));
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function fmt(v){ if(v===null||v===undefined||Number.isNaN(v)) return '<span class="nan">NaN</span>';
+  if(typeof v==='number'){ return Number.isInteger(v)?String(v):String(Math.round(v*100)/100); } return esc(v); }
+
+function renderTable(el,{rows=ALL,cols=COLS,hlRows=new Set(),hlCols=new Set(),hlCells=new Set(),dimRows=new Set(),click=false}={}){
+  let h='<thead'+(click?' class="click"':'')+'><tr><th class="idx" data-col="__all">'+(click?'⊞':'')+'</th>';
+  cols.forEach(c=>{h+=`<th class="${TXT.has(c)?'txt':''} ${hlCols.has(c)?'hc':''}" data-col="${c}" ${click?'tabindex="0" role="button"':''}>${c}</th>`});
+  h+='</tr></thead><tbody>';
+  rows.forEach(({i,r})=>{
+    h+=`<tr class="${hlRows.has(i)?'hr':''} ${dimRows.has(i)?'dim':''}"><td class="idx" ${click?'data-col="__all"':''}>${i}</td>`;
+    cols.forEach(c=>{const k=i+':'+c;h+=`<td class="${TXT.has(c)?'txt':''} ${hlCols.has(c)?'hc':''} ${hlCells.has(k)?'hcell':''}">${fmt(r[c])}</td>`});
+    h+='</tr>';
+  });
+  el.innerHTML=h+'</tbody>';
+}
+
+/* ---------- graphics ---------- */
+const SVG=(w,h,inner,label)=>`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;
+const arrowR=(x1,x2,y,cls='s-muted',fcls='f-pd')=>`<line x1="${x1}" y1="${y}" x2="${x2-8}" y2="${y}" class="${cls}" stroke-width="2"/><polygon points="${x2},${y} ${x2-10},${y-6} ${x2-10},${y+6}" class="${fcls}"/>`;
+function heroSVG(){
+  let g='';
+  const tk=[[18,26,-8,'Braund','7.25'],[88,14,6,'Cumings','71.28'],[30,84,5,'Moran','NaN'],[104,76,-6,'Allen','8.05'],[22,134,7,'Futrelle','53.10'],[98,136,-3,'Palsson','21.08']];
+  tk.forEach(([x,y,r,n,f])=>{g+=`<g transform="translate(${x} ${y}) rotate(${r} 34 16)"><rect width="70" height="34" rx="5" class="f-paper s-line" stroke-width="1.5"/><text x="8" y="14" class="tm" style="font-size:10px">${n}</text><text x="8" y="28" class="tc ${f==='NaN'?'f-bad':''}" style="font-size:11px">${f}</text></g>`});
+  g+=`<text x="96" y="192" class="tm" text-anchor="middle">흩어진 원본 데이터</text>`;
+  g+=arrowR(188,240,95)+`<text x="214" y="82" class="tc f-pd" text-anchor="middle" style="font-size:11px">read_csv</text>`;
+  const gx=252,cw=44,hy=32,rh=22,hd=['name','sex','age','fare'];
+  g+=`<rect x="${gx+cw*3}" y="${hy}" width="${cw}" height="${rh*6}" class="f-pds"/>`;
+  hd.forEach((h,i)=>{g+=`<rect x="${gx+i*cw}" y="${hy}" width="${cw}" height="${rh}" class="f-pd"/><text x="${gx+i*cw+cw/2}" y="${hy+15}" text-anchor="middle" class="tc f-paper" style="font-size:10px">${h}</text>`});
+  for(let r=1;r<=5;r++)for(let c=0;c<4;c++)g+=`<rect x="${gx+c*cw}" y="${hy+r*rh}" width="${cw}" height="${rh}" class="f-none s-line"/>`;
+  for(let r=1;r<=5;r++)for(let c=0;c<4;c++)g+=`<rect x="${gx+c*cw+8}" y="${hy+r*rh+9}" width="${cw-16}" height="4" rx="2" class="${c===2&&r===3?'f-bad':'f-bg'}"/>`;
+  g+=`<text x="${gx+cw*2}" y="192" class="tm" text-anchor="middle">깔끔한 표 (DataFrame)</text>`;
+  g+=arrowR(438,492,95)+`<text x="465" y="82" class="tc f-pd" text-anchor="middle" style="font-size:11px">groupby</text>`;
+  const base=164;
+  g+=`<text x="620" y="20" class="tm" text-anchor="middle">등급별 평균 요금</text><line x1="510" y1="${base}" x2="740" y2="${base}" class="s-line" stroke-width="2"/>`;
+  g+=`<rect x="540" y="${base-110}" width="60" height="110" rx="4" class="f-pd"/><text x="570" y="${base-116}" text-anchor="middle" class="tc">58.75</text><text x="570" y="${base+18}" text-anchor="middle" class="t" style="font-size:12px">1등석</text>`;
+  g+=`<rect x="640" y="${base-20}" width="60" height="20" rx="4" class="f-sql"/><text x="670" y="${base-26}" text-anchor="middle" class="tc">10.55</text><text x="670" y="${base+18}" text-anchor="middle" class="t" style="font-size:12px">3등석</text>`;
+  g+=`<text x="625" y="198" class="tm" text-anchor="middle">한눈에 보이는 결과</text>`;
+  return SVG(760,205,g,'흩어진 데이터가 read_csv로 표가 되고, groupby로 등급별 평균 요금 막대그래프가 되는 흐름');
+}
+function pipeSVG(){
+  const N=[['데이터 소스','db'],['수집','down'],['처리·변환','tbl'],['저장','file'],['분석·모델링','chart']];
+  let g='';
+  N.forEach(([lab,ic],i)=>{const cx=76+i*152,on=(i===2||i===3);const st=on?'s-paper':'s-pd',fl=on?'f-paper':'f-pd';
+    g+=`<rect x="${cx-56}" y="10" width="112" height="78" rx="12" class="${on?'f-pd':'f-pds'}"/>`;
+    const y=49;let p='';
+    if(ic==='db')p=`<ellipse cx="${cx}" cy="${y-16}" rx="18" ry="6" class="f-none ${st}" stroke-width="2.5"/><path d="M${cx-18} ${y-16} v28 a18 6 0 0 0 36 0 v-28" class="f-none ${st}" stroke-width="2.5"/><path d="M${cx-18} ${y-2} a18 6 0 0 0 36 0" class="f-none ${st}" stroke-width="2"/>`;
+    if(ic==='down')p=`<line x1="${cx}" y1="${y-20}" x2="${cx}" y2="${y+4}" class="${st}" stroke-width="3"/><polyline points="${cx-9},${y-5} ${cx},${y+5} ${cx+9},${y-5}" class="f-none ${st}" stroke-width="3"/><path d="M${cx-20} ${y+6} v10 h40 v-10" class="f-none ${st}" stroke-width="3"/>`;
+    if(ic==='tbl')p=`<rect x="${cx-22}" y="${y-18}" width="44" height="34" rx="3" class="f-none ${st}" stroke-width="2.5"/><line x1="${cx-22}" y1="${y-7}" x2="${cx+22}" y2="${y-7}" class="${st}" stroke-width="2"/><line x1="${cx-22}" y1="${y+4}" x2="${cx+22}" y2="${y+4}" class="${st}" stroke-width="1.5"/><line x1="${cx-7}" y1="${y-18}" x2="${cx-7}" y2="${y+16}" class="${st}" stroke-width="1.5"/><line x1="${cx+8}" y1="${y-18}" x2="${cx+8}" y2="${y+16}" class="${st}" stroke-width="1.5"/>`;
+    if(ic==='file')p=`<path d="M${cx-15} ${y-20} h20 l10 10 v28 h-30 z" class="f-none ${st}" stroke-width="2.5"/><text x="${cx}" y="${y+10}" text-anchor="middle" class="tc ${fl}" style="font-size:10px;font-weight:600">csv</text>`;
+    if(ic==='chart')p=`<rect x="${cx-20}" y="${y}" width="10" height="14" class="${fl}"/><rect x="${cx-5}" y="${y-12}" width="10" height="26" class="${fl}"/><rect x="${cx+10}" y="${y-22}" width="10" height="36" class="${fl}"/>`;
+    g+=p+`<text x="${cx}" y="112" text-anchor="middle" class="tb" style="font-size:14px">${lab}</text>`;
+    if(on)g+=`<text x="${cx}" y="128" text-anchor="middle" class="tm f-pd" style="font-size:11px;font-weight:700">판다스 담당</text>`;
+    if(i<4)g+=arrowR(cx+60,cx+92,49);
+  });
+  return SVG(760,135,g,'데이터 소스, 수집, 처리·변환, 저장, 분석·모델링 순서의 파이프라인. 처리·변환과 저장이 판다스 담당');
+}
+function anatSVG(){
+  const ix=150,iw=50,cw=90,top=50,hh=36,rh=36,cols=['name','sex','age','fare'],x0=ix+iw;
+  let g=`<rect x="${x0+2*cw}" y="${top}" width="${cw}" height="${hh+4*rh}" class="f-pds"/>`;
+  g+=`<rect x="${ix}" y="${top}" width="${iw}" height="${hh+4*rh}" class="f-bg"/>`;
+  cols.forEach((c,i)=>{g+=`<rect x="${x0+i*cw}" y="${top}" width="${cw}" height="${hh}" class="${i===2?'f-pd':'f-bg'} s-line"/><text x="${x0+i*cw+cw/2}" y="${top+23}" text-anchor="middle" class="tc ${i===2?'f-paper':''}" style="font-weight:600">${c}</text>`});
+  for(let r=0;r<4;r++){const y=top+hh+r*rh;
+    g+=`<rect x="${ix}" y="${y}" width="${iw}" height="${rh}" class="f-none s-line"/><text x="${ix+iw/2}" y="${y+23}" text-anchor="middle" class="tc f-pd" style="font-weight:600">${r}</text>`;
+    cols.forEach((c,i)=>{const v=DF[r][c];g+=`<rect x="${x0+i*cw}" y="${y}" width="${cw}" height="${rh}" class="f-none s-line"/><text x="${x0+i*cw+cw/2}" y="${y+23}" text-anchor="middle" class="tc">${v===null?'NaN':v}</text>`});}
+  const ry=top+hh+2*rh;
+  g+=`<rect x="${ix-3}" y="${ry-3}" width="${iw+4*cw+6}" height="${rh+6}" rx="6" class="f-none s-hl" stroke-width="3" stroke-dasharray="7 4"/>`;
+  g+=`<path d="M${x0} 40 v-8 h${4*cw} v8" class="f-none s-muted" stroke-width="1.5"/><text x="${x0+2*cw}" y="22" text-anchor="middle" class="t"><tspan font-weight="700">열 이름 (columns)</tspan> = 변수 · 특성</text>`;
+  g+=`<text x="138" y="140" text-anchor="end" class="t" font-weight="700">인덱스</text><text x="138" y="158" text-anchor="end" class="tm">각 행의 이름표</text><line x1="140" y1="148" x2="${ix-2}" y2="148" class="s-muted" stroke-width="1.5"/>`;
+  g+=`<text x="${x0+4*cw+14}" y="${ry+23}" class="t">← <tspan font-weight="700">행</tspan> = 관측치 · 샘플</text>`;
+  const by=top+hh+4*rh;
+  g+=`<path d="M${x0+2*cw} ${by+6} v8 h${cw} v-8" class="f-none s-pd" stroke-width="2"/><text x="${x0+2.5*cw}" y="${by+34}" text-anchor="middle" class="tb f-pd">df['age'] → 시리즈 (열 하나)</text>`;
+  g+=`<text x="${ix}" y="${by+62}" class="tm">표 전체 df → 데이터프레임 (2차원)</text>`;
+  return SVG(720,300,g,'데이터프레임 해부도: 열 이름, 인덱스, 행, 그리고 age 열 하나가 시리즈');
+}
+function miniGrid({fadeRows=[],fadeCols=[],arrow,hlCell}){
+  const x0=70,y0=44,cw=62,rh=36,R=4,C=3;let g='';
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){const f=fadeRows.includes(r)||fadeCols.includes(c);
+    g+=`<rect x="${x0+c*cw}" y="${y0+r*rh}" width="${cw}" height="${rh}" class="${f?'f-bg':'f-pds'} s-line" stroke-width="1.5"/>`;}
+  fadeRows.forEach(r=>{g+=`<line x1="${x0-6}" y1="${y0+r*rh+rh/2}" x2="${x0+C*cw+6}" y2="${y0+r*rh+rh/2}" class="s-bad" stroke-width="3" stroke-linecap="round"/>`});
+  fadeCols.forEach(c=>{g+=`<line x1="${x0+c*cw+cw/2}" y1="${y0-6}" x2="${x0+c*cw+cw/2}" y2="${y0+R*rh+6}" class="s-bad" stroke-width="3" stroke-linecap="round"/>`});
+  if(arrow==='down')g+=`<line x1="36" y1="${y0}" x2="36" y2="${y0+R*rh-10}" class="s-pd" stroke-width="3"/><polygon points="36,${y0+R*rh} 29,${y0+R*rh-12} 43,${y0+R*rh-12}" class="f-pd"/><text x="36" y="${y0-12}" text-anchor="middle" class="tc f-pd" style="font-weight:600">axis=0</text>`;
+  if(arrow==='right')g+=`<line x1="${x0}" y1="20" x2="${x0+C*cw-10}" y2="20" class="s-pd" stroke-width="3"/><polygon points="${x0+C*cw},20 ${x0+C*cw-12},13 ${x0+C*cw-12},27" class="f-pd"/><text x="36" y="25" text-anchor="middle" class="tc f-pd" style="font-weight:600">axis=1</text>`;
+  return SVG(270,196,g,arrow==='down'?'axis=0은 행을 지움':'axis=1은 열을 지움');
+}
+function locSVG(){
+  const x0=96,y0=50,cw=62,rh=36,names=['민수','지수','철수'],subs=['국어','영어','수학'],S=[[80,95,70],[90,85,88],[75,60,92]];let g='';
+  subs.forEach((s,c)=>{g+=`<text x="${x0+c*cw+cw/2}" y="18" text-anchor="middle" class="tc" style="fill:var(--sql);font-size:11px">${c}</text><rect x="${x0+c*cw}" y="${y0-30}" width="${cw}" height="28" class="f-bg s-line"/><text x="${x0+c*cw+cw/2}" y="${y0-11}" text-anchor="middle" class="t" style="font-size:13px;font-weight:700">${s}</text>`});
+  names.forEach((n,r)=>{const y=y0+r*rh;g+=`<text x="16" y="${y+23}" class="tc" style="fill:var(--sql);font-size:11px">${r}</text><rect x="30" y="${y}" width="${x0-30}" height="${rh}" class="f-bg s-line"/><text x="${(30+x0)/2}" y="${y+23}" text-anchor="middle" class="t" style="font-size:13px;font-weight:700">${n}</text>`;
+    S[r].forEach((v,c)=>{const h=r===0&&c===1;g+=`<rect x="${x0+c*cw}" y="${y}" width="${cw}" height="${rh}" class="${h?'f-hl':'f-none'} s-line"/><text x="${x0+c*cw+cw/2}" y="${y+23}" text-anchor="middle" class="tc" ${h?'style="fill:#172329;font-weight:700"':''}>${v}</text>`})});
+  g+=`<text x="${x0}" y="${y0+3*rh+24}" class="tm" style="font-size:11px"><tspan style="fill:var(--ink);font-weight:700">굵은 글씨</tspan> = loc 이름표 · <tspan style="fill:var(--sql)">주황 숫자</tspan> = iloc 위치</text>`;
+  return SVG(300,196,g,'loc는 민수/영어 같은 이름표로, iloc는 0, 1 같은 위치 번호로 같은 칸을 찾음');
+}
+function barsSVG(items,f=fmt){
+  const max=Math.max(...items.map(x=>x.value||0),0)||1,rh=34,lw=74,bw=190;let g='';
+  items.forEach((it,i)=>{const y=6+i*rh,w=Math.max(2,bw*(it.value||0)/max);
+    g+=`<text x="${lw-8}" y="${y+18}" text-anchor="end" class="tc" style="font-size:11px">${esc(it.label)}</text><rect x="${lw}" y="${y+4}" width="${w}" height="20" rx="4" class="f-${it.cls} grow" style="animation-delay:${i*.08}s"/><text x="${lw+w+6}" y="${y+19}" class="tc" style="font-weight:600">${f(it.value)}</text>`});
+  return `<div class="fig">${SVG(330,items.length*rh+10,g,'결과 막대그래프')}</div>`;
+}
+$('#heroFig').innerHTML=heroSVG();
+$('#pipeFig').innerHTML=pipeSVG();
+$('#anatFig').innerHTML=anatSVG();
+$('#ax0').innerHTML=miniGrid({fadeRows:[0,2],arrow:'down'});
+$('#ax1').innerHTML=miniGrid({fadeCols:[1],arrow:'right'});
+$('#locFig').innerHTML=locSVG();
+
+/* ---------- STEP 2 ---------- */
+function s2(col){
+  if(!col||col==='__all'){ renderTable($('#t2'),{click:true});
+    $('#r2').innerHTML=`<span class="pill pd">df</span> 표 전체 → <code class="inline">pandas.core.frame.DataFrame</code> · <code class="inline">df.shape</code> = (8, 6) → 8행 6열`;
+  } else {
+    renderTable($('#t2'),{click:true,hlCols:new Set([col])});
+    const dtype={name:'object',sex:'object',age:'float64',pclass:'int64',fare:'float64',survived:'int64'}[col];
+    $('#r2').innerHTML=`<span class="pill pd">df['${col}']</span> 열 하나 → <code class="inline">pandas.core.series.Series</code> · dtype: <code class="inline">${dtype}</code>`+
+      (col==='age'?' · 빈칸(NaN)이 섞여서 정수인데도 float64가 됐어요':'');
+  }
+}
+$('#t2').addEventListener('click',e=>{const c=e.target.closest('[data-col]');if(c)s2(c.dataset.col)});
+$('#t2').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const c=e.target.closest('[data-col]');if(c){e.preventDefault();s2(c.dataset.col)}}});
+s2('age');
+
+/* ---------- STEP 3 ---------- */
+const P=[
+ {code:"df.head(3)",sql:"SELECT * FROM titanic\nLIMIT 3;",same:true,
+  ex:"맨 위에서 3줄만 보여줘요. 숫자를 안 쓰면 기본 5줄이고, 끝에서 보려면 <code>tail()</code>.",
+  run:()=>({hlRows:new Set([0,1,2]),dimRows:new Set([3,4,5,6,7])})},
+ {code:"df[['name', 'fare']]",sql:"SELECT name, fare\nFROM titanic;",same:true,
+  ex:"대괄호를 <b>두 겹</b> 쓰면 열 여러 개를 골라 데이터프레임으로 받아요. 한 겹 <code>df['fare']</code>면 시리즈 하나.",
+  run:()=>({hlCols:new Set(['name','fare'])})},
+ {code:"df[df['age'] > 30]",sql:"SELECT * FROM titanic\nWHERE age > 30;",same:true,
+  ex:"불 인덱스(Boolean Index): 조건이 True인 행만 남겨요. 나이가 빈칸(NaN)인 Moran은 빠지는데, SQL에서도 NULL은 비교에서 빠지니까 결과가 같아요.",
+  run:()=>{const s=new Set(DF.map((r,i)=>r.age>30?i:-1).filter(i=>i>=0));return{hlRows:s,dimRows:new Set(ALL.map(x=>x.i).filter(i=>!s.has(i)))}}},
+ {code:"df.sort_values('fare', ascending=False)",sql:"SELECT * FROM titanic\nORDER BY fare DESC;",same:true,
+  ex:"요금이 비싼 순서로 줄 세우기. 인덱스 번호(왼쪽 회색)는 원래 자리를 기억한 채로 따라 움직여요.",
+  run:()=>({rows:[...ALL].sort((a,b)=>b.r.fare-a.r.fare),hlCols:new Set(['fare'])})},
+ {code:"df.loc[3, 'name']",sql:"-- SQL엔 '3번 행'이란 개념이 없어요\n-- id 열이 있다면:\nSELECT name FROM titanic\nWHERE id = 3;",same:false,
+  ex:"<b>loc = 이름표(라벨)</b>로 찾기. 인덱스 이름이 3인 행의 name 칸이에요. 결과: ",scalar:()=>DF[3].name,
+  run:()=>({hlCells:new Set(['3:name'])})},
+ {code:"df.iloc[2, 2]",sql:"-- 직접 대응 없음\n-- SQL 테이블엔 '몇 번째 칸'이라는\n-- 고정된 위치가 없어요",same:false,
+  ex:"<b>iloc = 위치(번호)</b>로 찾기. 0부터 세서 3번째 행, 3번째 열(age). 결과: ",scalar:()=>DF[2].age,
+  run:()=>({hlCells:new Set(['2:age'])})},
+ {code:"df[df['name'].isin(['Allen', 'Moran'])]",sql:"SELECT * FROM titanic\nWHERE name IN ('Allen', 'Moran');",same:true,
+  ex:"<code>isin</code>은 SQL의 <code>IN</code>이랑 똑같아요. 목록 안에 있으면 True.",
+  run:()=>{const s=new Set([4,5]);return{hlRows:s,dimRows:new Set(ALL.map(x=>x.i).filter(i=>!s.has(i)))}}},
+ {code:"df[::-1]",sql:"-- 정해진 순서가 없어서 직접 대응 없음\nSELECT * FROM titanic\nORDER BY id DESC;",same:false,
+  ex:"슬라이싱 <code>[시작:끝:간격]</code>에서 간격이 -1이면 거꾸로. 판다스 표는 '순서'가 있어서 가능한 기술이에요.",
+  run:()=>({rows:[...ALL].reverse()})},
+ {code:"df.drop([0, 2], axis=0)",sql:"DELETE FROM titanic\nWHERE id IN (0, 2);\n-- 주의: SQL은 원본이 지워짐!",same:false,
+  ex:"<b>axis=0 = 행</b>을 지워요(기본값). drop은 원본은 그대로 두고 <b>새 표</b>를 돌려줘서 df는 여전히 8줄이에요. 진짜 바꾸려면 <code>df = df.drop([0, 2])</code>처럼 다시 담아야 해요. <code>copy()</code>는 열 추가, 값 수정처럼 원본을 직접 고칠 때 필요해요(Q&A 참고).",
+  run:()=>({dimRows:new Set([0,2])})},
+ {code:"df.drop('fare', axis=1)",sql:"-- '이 열만 빼고'는 표준 SQL에 없음\nSELECT name, sex, age, pclass, survived\nFROM titanic;",same:false,
+  ex:"<b>axis=1 = 열</b>을 지워요. 외우는 법: 0은 세로로 쭉 내려가며 행을 훑고, 1은 가로로 열을 훑는다.",
+  run:()=>({cols:COLS.filter(c=>c!=='fare')})},
+ {code:"df['age'].fillna(df['age'].median())",sql:"SELECT COALESCE(age,\n  (SELECT MEDIAN(age) FROM titanic))\nFROM titanic;\n-- MEDIAN은 DB마다 사투리가 달라요 (Q&A 참고)",same:true,
+  ex:"빈칸(NaN)을 중앙값으로 채우기. 나이를 순서대로 놓으면 2, 22, 26, <b>35</b>, 35, 38, 54 → 가운데 값 35가 Moran 자리에 들어가요.",
+  run:()=>({rows:ALL.map(x=>x.r.age===null?{i:x.i,r:{...x.r,age:35}}:x),hlCells:new Set(['5:age']),hlCols:new Set(['age'])})}
+];
+let cur3=0;
+function s3(k){
+  cur3=k;const p=P[k];
+  [...$('#chips3').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===k));
+  $('#codes3').innerHTML=`<pre class="code pdc"><span class="tag">PANDAS</span>${esc(p.code)}</pre><pre class="code sqlc"><span class="tag">SQL</span>${esc(p.sql)}</pre>`;
+  $('#ex3').innerHTML=`<div>${p.same?'<span class="pill same">SQL과 거의 같음</span>':'<span class="pill diff">SQL과 다름</span>'}</div><div>${p.ex}${p.scalar?`<span class="scalar">${fmt(p.scalar())}</span>`:''}</div>`;
+  renderTable($('#t3'),p.run());
+}
+{const R4=ALL.slice(0,4),C4=['name','sex','age','pclass'];
+ const mk=id=>{const t=document.createElement('table');t.className='df';$(id).appendChild(t);return t};
+ renderTable(mk('#c3a'),{rows:R4,cols:C4,dimRows:new Set([0,2]),hlRows:new Set([1,3])});
+ renderTable(mk('#c3b'),{rows:R4,cols:C4,hlCells:new Set(['0:age'])});
+ renderTable(mk('#c3c'),{rows:R4.map(x=>x.i===0?{i:0,r:{...x.r,age:null}}:x),cols:C4,hlCells:new Set(['0:age'])});}
+P.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=p.code;b.onclick=()=>s3(i);$('#chips3').appendChild(b)});
+s3(0);
+
+/* ---------- STEP 4 ---------- */
+const AGG={mean:'평균',sum:'합계',count:'개수(빈칸 제외)',size:'행 개수(빈칸 포함)'};
+const SQLF={mean:c=>`AVG(${c})`,sum:c=>`SUM(${c})`,count:c=>`COUNT(${c})`,size:()=>'COUNT(*)'};
+let playTimer=[];
+function s4(animate){
+  const key=$('#gkey').value, agg=$('#gagg').value, reset=$('#greset').checked;
+  let col=$('#gcol').value;
+  $('#gcol').disabled=(agg==='size');
+  if(col===key){ col = key==='fare'?'age':'fare'; }
+  const groups=new Map();
+  ALL.forEach(x=>{const g=x.r[key];if(!groups.has(g))groups.set(g,[]);groups.get(g).push(x)});
+  const keys=[...groups.keys()].sort((a,b)=>a<b?-1:a>b?1:0);
+  const res=keys.map(g=>{const L=groups.get(g);const vals=L.map(x=>x.r[col]);const nn=vals.filter(v=>v!==null);
+    let v; if(agg==='mean')v=nn.reduce((a,b)=>a+b,0)/nn.length; else if(agg==='sum')v=nn.reduce((a,b)=>a+b,0); else if(agg==='count')v=nn.length; else v=L.length;
+    return{g,L,v,nn:nn.length}});
+  const vname = agg==='size' ? (reset?'0':'') : col;
+  // split
+  let split='', apply='', comb='';
+  res.forEach((o,bi)=>{
+    split+=`<div class="bucket b${bi%3}"><span class="bk">${key} = ${esc(o.g)}</span>${o.L.map(x=>`<div class="row"><span>${x.i} ${esc(x.r.name)}</span>${agg==='size'?'':`<span>${fmt(x.r[col])}</span>`}</div>`).join('')}</div>`;
+    const vs=o.L.map(x=>x.r[col]).filter(v=>v!==null);
+    let how;
+    if(agg==='size') how=`${o.L.length}줄 → <b>${o.L.length}</b>`;
+    else if(agg==='count') how=`빈칸 빼고 ${vs.length}개 → <b>${vs.length}</b>`;
+    else if(agg==='sum') how=`${vs.map(fmt).join(' + ')} = <b>${fmt(o.v)}</b>`;
+    else how=`(${vs.map(fmt).join(' + ')}) ÷ ${vs.length} = <b>${fmt(o.v)}</b>`;
+    apply+=`<div class="bucket b${bi%3}"><span class="bk">${key} = ${esc(o.g)}</span><div class="calc" style="border:0;margin:0;padding:0;font-weight:400">${how}</div></div>`;
+  });
+  if(reset){
+    comb=`<div class="tw"><table class="df"><thead><tr><th class="idx"></th><th>${key}</th><th>${vname}</th></tr></thead><tbody>${res.map((o,i)=>`<tr><td class="idx">${i}</td><td>${esc(o.g)}</td><td>${fmt(o.v)}</td></tr>`).join('')}</tbody></table></div><div style="font-size:.82rem;color:var(--muted)">${key}가 <b>보통 열</b>로 내려왔고, 인덱스는 다시 0, 1, 2…</div>`;
+  } else {
+    comb=`<div class="tw"><table class="df"><thead><tr><th class="idx">${key}</th><th>${vname}</th></tr></thead><tbody>${res.map(o=>`<tr><td class="idx">${esc(o.g)}</td><td>${fmt(o.v)}</td></tr>`).join('')}</tbody></table></div><div style="font-size:.82rem;color:var(--muted)">회색 칸의 ${key}는 <b>열이 아니라 인덱스(이름표)</b>예요. 결과는 시리즈.</div>`;
+  }
+  comb+=barsSVG(res.map((o,bi)=>({label:key+'='+o.g,value:o.v,cls:['pd','sql','good'][bi%3]})));
+  $('#stages').innerHTML=`<div class="stage" data-s="0"><h4>① 나누기 <small>split</small></h4>${split}</div><div class="stage" data-s="1"><h4>② 계산하기 <small>apply · ${AGG[agg]}</small></h4>${apply}</div><div class="stage" data-s="2"><h4>③ 합치기 <small>combine</small></h4>${comb}</div>`;
+  const pcode = agg==='size' ? `df.groupby('${key}').size()` : `df.groupby('${key}')['${col}'].${agg}()`;
+  const alias = agg==='size'?'n':col;
+  $('#codes4').innerHTML=`<pre class="code pdc"><span class="tag">PANDAS</span>${esc(pcode+(reset?'.reset_index()':''))}</pre><pre class="code sqlc"><span class="tag">SQL</span>SELECT ${key}, ${SQLF[agg](col)} AS ${alias}\nFROM titanic\nGROUP BY ${key};\n-- 순서를 보장하려면 ORDER BY ${key} 추가</pre>`;
+  const notes=[];
+  if(!reset) notes.push(['diff','<b>다른 점 · 결과 모양</b> SQL 결과에선 '+key+'가 그냥 열 하나지만, 판다스에선 인덱스로 올라가요. SQL처럼 평평한 표가 필요하면 <code>.reset_index()</code>를 붙이거나 <code>groupby(..., as_index=False)</code>. 위 체크박스로 비교해 보세요.']);
+  notes.push(['diff','<b>다른 점 · 정렬</b> 판다스는 그룹 이름을 자동으로 정렬해서 보여줘요(sort=True가 기본). SQL의 GROUP BY는 순서를 약속하지 않아서 <code>ORDER BY</code>를 따로 써야 해요.']);
+  if(col==='age'&&(agg==='count'||agg==='size')) notes.push(['diff','<b>count vs size</b> 3등석 바구니를 보세요. Moran의 나이가 빈칸이라 <code>count()</code>는 빈칸을 빼고 세고, <code>size()</code>는 줄 수를 그대로 세요. SQL로는 <code>COUNT(age)</code> ↔ count(), <code>COUNT(*)</code> ↔ size().']);
+  else if(agg==='count'||agg==='size') notes.push(['','<b>count vs size</b> 계산할 열을 <code>age</code>로 바꿔서 count와 size를 번갈아 눌러보세요. 빈칸이 있을 때만 숫자가 달라져요.']);
+  if(agg==='mean'&&col==='age') notes.push(['','<b>같은 점</b> 평균을 낼 때 빈칸(NaN)은 빼고 계산해요. SQL의 <code>AVG()</code>도 NULL을 빼니까 결과가 똑같아요.']);
+  $('#notes4').innerHTML=notes.map(([c,t])=>`<div class="note ${c}">${t}</div>`).join('');
+  if(animate){
+    playTimer.forEach(clearTimeout);playTimer=[];
+    const st=[...document.querySelectorAll('.stage')];
+    st.forEach((s,i)=>{if(i>0)s.classList.add('wait')});
+    st.forEach((s,i)=>{if(i>0)playTimer.push(setTimeout(()=>s.classList.remove('wait'),i*700))});
+  }
+}
+['gkey','gcol','gagg','greset'].forEach(id=>$('#'+id).addEventListener('change',()=>s4(true)));
+$('#gplay').onclick=()=>s4(true);
+s4(false);
+
+/* ---------- STEP 5 ---------- */
+const CMP=[
+ {same:true,t:'기본 문법: 나누고 계산하기',
+  p:"df.groupby('pclass')['fare'].mean()",s:"SELECT pclass, AVG(fare)\nFROM titanic\nGROUP BY pclass;",
+  d:'뼈대는 똑같아요. <code>groupby(기준)</code> = <code>GROUP BY 기준</code>, <code>.mean()</code> = <code>AVG()</code>, <code>.sum()</code> = <code>SUM()</code>, <code>.max()/.min()</code> = <code>MAX()/MIN()</code>.'},
+ {same:true,t:'나누기 전에 거르기 = WHERE',
+  p:"df[df['sex'] == 'female'].groupby('pclass')['fare'].mean()",s:"SELECT pclass, AVG(fare)\nFROM titanic\nWHERE sex = 'female'\nGROUP BY pclass;",
+  d:'먼저 불 인덱스로 거르고 groupby를 붙이면 SQL의 WHERE와 같아요.'},
+ {same:true,t:'기준을 두 개 이상',
+  p:"df.groupby(['sex', 'survived'])['fare'].mean()",s:"SELECT sex, survived, AVG(fare)\nFROM titanic\nGROUP BY sex, survived;",
+  d:'리스트로 넘기면 여러 열 기준. 판다스에선 인덱스가 2층(MultiIndex)이 되고, 이걸 옆으로 펼치는 게 <code>unstack()</code>이에요.'},
+ {same:true,t:'평균은 빈칸을 빼고 계산',
+  p:"df.groupby('pclass')['age'].mean()",s:"SELECT pclass, AVG(age)\nFROM titanic\nGROUP BY pclass;",
+  d:'NaN(판다스)과 NULL(SQL)은 둘 다 평균·합계에서 빠져요. 결과 같음.'},
+ {same:false,t:'그룹 기준 열이 인덱스로 올라감',
+  p:"df.groupby('pclass')['fare'].mean()\n# pclass가 인덱스 → 결과는 시리즈\n\ndf.groupby('pclass', as_index=False)['fare'].mean()\n# 또는 ... .mean().reset_index()",s:"-- SQL 결과는 언제나 평평한 표\n-- pclass는 그냥 첫 번째 열",
+  d:'가장 많이 헷갈리는 부분! 결과에서 <code>result["pclass"]</code>로 꺼내려다 에러가 나면 이것 때문이에요. 인덱스라서 <code>result.index</code>나 <code>result.loc[1]</code>로 꺼내야 해요.'},
+ {same:false,t:'COUNT(*) vs COUNT(열) ↔ size() vs count()',
+  p:"df.groupby('pclass').size()          # 빈칸 포함 줄 수\ndf.groupby('pclass')['age'].count()  # 빈칸 빼고",s:"SELECT pclass, COUNT(*)   FROM titanic GROUP BY pclass;\nSELECT pclass, COUNT(age) FROM titanic GROUP BY pclass;",
+  d:'이름이 헷갈려요. 판다스의 <code>count()</code>는 SQL의 <code>COUNT(*)</code>가 아니라 <code>COUNT(열)</code>이에요. 그리고 <code>df.groupby("pclass").count()</code>처럼 열을 안 고르면 <b>모든 열마다</b> 따로 세서 열마다 숫자가 달라질 수 있어요.'},
+ {same:false,t:'HAVING이 따로 없음',
+  p:"r = df.groupby('pclass')['fare'].mean()\nr[r > 20]                # 결과에 다시 조건\n# 또는 .loc[lambda s: s > 20]",s:"SELECT pclass, AVG(fare)\nFROM titanic\nGROUP BY pclass\nHAVING AVG(fare) > 20;",
+  d:'판다스에선 계산이 끝난 결과도 그냥 표/시리즈라서, 평범한 불 인덱스를 한 번 더 쓰면 그게 HAVING이에요.'},
+ {same:false,t:'그룹 기준에 빈칸이 있으면',
+  p:"df.groupby('age').size()\n# 기본: age가 NaN인 행은 결과에서 사라짐\ndf.groupby('age', dropna=False).size()\n# NaN 그룹도 보여줌",s:"SELECT age, COUNT(*)\nFROM titanic\nGROUP BY age;\n-- NULL도 하나의 그룹으로 나옴",
+  d:'SQL은 NULL을 한 그룹으로 모아 보여주는데, 판다스는 기본으로 버려요. 인원 수를 셀 때 합계가 안 맞으면 이걸 의심해 보세요.'},
+ {same:false,t:'SELECT에 아무 열이나 못 쓰는 규칙',
+  p:"df.groupby('pclass').mean(numeric_only=True)\n# 숫자 열 전부를 한 번에 평균",s:"-- SELECT pclass, name, AVG(fare) ... GROUP BY pclass\n-- → name은 묶이지도 계산되지도 않아서 에러(대부분 DB)",
+  d:'SQL은 SELECT에 "기준 열 또는 계산한 열"만 허락해요. 판다스는 열을 안 고르면 계산 가능한 열 전부에 한꺼번에 적용해요. 문자열 열 때문에 에러가 나면 <code>numeric_only=True</code>.'},
+ {same:false,t:'여러 계산을 한 번에: agg',
+  p:"df.groupby('pclass').agg(\n    avg_fare=('fare', 'mean'),\n    n=('name', 'size'),\n    alive=('survived', 'sum'))",s:"SELECT pclass,\n  AVG(fare)     AS avg_fare,\n  COUNT(*)      AS n,\n  SUM(survived) AS alive\nFROM titanic GROUP BY pclass;",
+  d:'생각은 같지만 문법이 달라요. SQL은 SELECT에 나열, 판다스는 <code>agg(새이름=(열, 함수))</code>로 짝지어 적어요.'}
+];
+$('#cmp').innerHTML=CMP.map((c,i)=>`<details class="row-cmp" ${i===4?'open':''}><summary>${c.same?'<span class="pill same">똑같아요</span>':'<span class="pill diff">헷갈림 주의</span>'}<span>${c.t}</span></summary><div class="body"><div class="codes"><pre class="code pdc"><span class="tag">PANDAS</span>${esc(c.p)}</pre><pre class="code sqlc"><span class="tag">SQL</span>${esc(c.s)}</pre></div><p style="font-size:.93rem">${c.d}</p></div></details>`).join('');
+
+const DICT=[
+ ['열 고르기',"df[['a','b']]","SELECT a, b",'대괄호 두 겹'],
+ ['조건으로 행 거르기',"df[df['age'] > 30]","WHERE age > 30",'여러 조건은 & | 와 괄호'],
+ ['목록 안에 있는지',"df['x'].isin([...])","WHERE x IN (...)",''],
+ ['정렬',"sort_values('fare', ascending=False)","ORDER BY fare DESC",'여러 열: by=[...]'],
+ ['위에서 n개',"head(n)","LIMIT n",'기본 5'],
+ ['새 열 만들기',"df['x2'] = df['x']*2  /  assign()","SELECT x*2 AS x2",'판다스는 표에 붙여버림'],
+ ['열 이름 바꾸기',"rename(columns={'a':'b'})","SELECT a AS b",''],
+ ['빈칸 채우기',"fillna(값)","COALESCE(열, 값)",''],
+ ['빈칸 찾기',"df['x'].isna()","WHERE x IS NULL",'SQL에서 = NULL은 안 됨'],
+ ['중복 제거',"drop_duplicates()","SELECT DISTINCT",''],
+ ['값별 개수 세기',"df['sex'].value_counts()","GROUP BY sex + COUNT(*)\nORDER BY 2 DESC",'많은 순으로 정렬까지 해줌'],
+ ['교차표',"pivot_table(index=,columns=,values=)","GROUP BY + CASE WHEN",'SQL은 직접 펼쳐야 해서 길어짐'],
+ ['두 표 옆으로 잇기',"pd.merge(a, b, on='id', how='left')","LEFT JOIN b ON a.id = b.id",'how = inner/left/right/outer'],
+ ['두 표 아래로 쌓기',"pd.concat([a, b])","UNION ALL",'중복 제거까지면 UNION'],
+ ['행 번호로 찾기',"iloc[2]","(없음)",'SQL 표엔 고정된 순서가 없어요']
+];
+$('#dictbody').innerHTML=DICT.map(([a,b,c,d])=>`<tr><td>${a}</td><td><code>${esc(b)}</code></td><td><code>${esc(c).replace(/\n/g,'<br>')}</code></td><td style="color:var(--muted)">${d}</td></tr>`).join('');
+
+const FNS=[
+ ['pd.Series(리스트)','리스트 → 시리즈'],['pd.DataFrame(리스트/딕셔너리)','→ 데이터프레임'],
+ ['read_csv / read_excel','파일 읽기 (sep="\\t"면 탭 구분, sheet_name으로 시트 지정)'],['to_csv / to_excel','파일 저장'],
+ ['head() / tail()','앞/뒤 5줄'],['len(df) / df.shape','행 수 / (행, 열) 튜플'],
+ ['info()','열마다 빈칸 아닌 개수와 dtype'],['describe()','숫자 열의 개수·평균·표준편차·사분위수'],
+ ['dtypes / astype()','타입 확인 / 바꾸기 (category로 바꾸면 메모리 절약)'],['columns / index / values','열 이름 / 인덱스 / 값 배열'],
+ ['copy()','원본 지키는 복사본'],['drop(…, axis=0/1)','행/열 지우기'],
+ ['set_index / reset_index','열을 인덱스로 / 인덱스를 0부터 다시'],['sort_index / sort_values','인덱스 기준 / 값 기준 정렬'],
+ ['loc / iloc','라벨로 / 위치(번호)로 찾기'],['pd.date_range()','날짜 인덱스 만들기'],
+ ['stack / unstack','옆으로 펼친 걸 세로로 쌓기 / 반대로 펼치기'],['str.strip / str.split','문자열 공백 지우기 / 쪼개기']
+];
+$('#fns').innerHTML=FNS.map(([a,b])=>`<div><code>${esc(a)}</code>${esc(b)}</div>`).join('');
+
+/* ---------- TASK ---------- */
+function tbl(opts){const t=document.createElement('table');t.className='df';renderTable(t,opts);return '<div class="tw">'+t.outerHTML+'</div>'}
+function quant(a,q){const s=[...a].sort((x,y)=>x-y);const p=(s.length-1)*q,lo=Math.floor(p),hi=Math.ceil(p);return s[lo]+(s[hi]-s[lo])*(p-lo)}
+function desc(col){const v=DF.map(r=>r[col]).filter(x=>x!==null);const m=v.reduce((a,b)=>a+b,0)/v.length;const sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/(v.length-1));
+  return {count:v.length,mean:m,std:sd,min:Math.min(...v),'25%':quant(v,.25),'50%':quant(v,.5),'75%':quant(v,.75),max:Math.max(...v)}}
+const TASKS=[
+ {t:'① 데이터프레임 요약 정보',goal:'각 열의 데이터 타입, 열 이름, 데이터 개수, 기본 통계를 출력하기',
+  hint:'함수 3개: <code>describe()</code> 통계, <code>info()</code> 빈칸·타입, <code>dtypes</code> 타입만. dtypes는 괄호가 없는 <b>속성</b>이에요.',
+  p:"titanic_df.info()       # 열 이름, non-null 개수, dtype\ntitanic_df.describe()   # 숫자 열 통계\ntitanic_df.dtypes       # 괄호 없음!\ntitanic_df.shape        # (행, 열)",
+  s:"-- 열 정보: DB마다 다름\nDESCRIBE titanic;          -- MySQL\n-- 통계는 직접 계산\nSELECT COUNT(fare), AVG(fare),\n       MIN(fare), MAX(fare)\nFROM titanic;",
+  out:()=>{const st=['count','mean','std','min','25%','50%','75%','max'];const cs=['age','pclass','fare','survived'];const D={};cs.forEach(c=>D[c]=desc(c));
+    const dt={name:'object',sex:'object',age:'float64',pclass:'int64',fare:'float64',survived:'int64'};
+    const info=COLS.map(c=>`<tr><td class="txt">${c}</td><td>${DF.filter(r=>r[c]!==null).length} non-null</td><td class="txt">${dt[c]}</td></tr>`).join('');
+    return `<b style="font-size:.9rem">info()</b><div class="tw"><table class="df"><thead><tr><th class="txt">Column</th><th>Non-Null Count</th><th class="txt">Dtype</th></tr></thead><tbody>${info}</tbody></table></div>
+     <b style="font-size:.9rem">describe()</b><div class="tw"><table class="df"><thead><tr><th class="idx"></th>${cs.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${st.map(s=>`<tr><td class="idx">${s}</td>${cs.map(c=>`<td>${fmt(D[c][s])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+     <div class="note">age의 count가 7인 걸 보세요. info()에서도 7 non-null이라 <b>빈칸이 1개</b> 있다는 걸 알 수 있어요. name, sex는 문자열(object)이라 describe에서 빠졌어요.</div>`}},
+ {t:'② 데이터 정렬 및 필터링',goal:'Fare 기준으로 내림차순 정렬하고 상위 10명의 승객 정보 출력하기',
+  hint:'<code>sort_values(\'fare\', ascending=False)</code>로 줄 세우고, <code>head(10)</code>로 자르기. 보고 싶은 열만 고르려면 <code>loc[:, [열 목록]]</code>.',
+  p:"top10 = (titanic_df\n    .sort_values('fare', ascending=False)\n    .head(10))\n\n# 필요한 열만 + loc\ntop10.loc[:, ['name', 'pclass', 'fare']]",
+  s:"SELECT name, pclass, fare\nFROM titanic\nORDER BY fare DESC\nLIMIT 10;",
+  out:()=>tbl({rows:[...ALL].sort((a,b)=>b.r.fare-a.r.fare).slice(0,10),cols:['name','pclass','fare'],hlCols:new Set(['fare'])})+
+   `<div class="note">예시는 8명뿐이라 전부 나왔어요. 진짜 데이터에선 10명만 나와요. <code>head(10)</code>을 정렬보다 <b>먼저</b> 쓰면 "앞 10명 중에서 정렬"이 돼서 틀린 답이에요. <code>titanic_df.nlargest(10, 'fare')</code>로 한 번에 해도 돼요.</div>`},
+ {t:'③ 열 추가 및 변환',goal:'Fare_per_person 열 추가하기 = Fare ÷ (SibSp + Parch + 1)',
+  hint:'SibSp = 함께 탄 형제·배우자 수, Parch = 부모·자녀 수, +1 = 본인. 열끼리 바로 더하고 나누면 <b>모든 행에 한꺼번에</b> 계산돼요. 원본 보호를 위해 <code>copy()</code>부터.',
+  p:"copy_titanic_df = titanic_df.copy()\ncopy_titanic_df['Fare_per_person'] = (\n    copy_titanic_df['fare'] /\n    (copy_titanic_df['sibsp'] + copy_titanic_df['parch'] + 1))\n\n# 또는 assign\ntitanic_df.assign(Fare_per_person=\n    titanic_df['fare'] / (titanic_df['sibsp'] + titanic_df['parch'] + 1))",
+  s:"SELECT *,\n  fare / (sibsp + parch + 1)\n    AS fare_per_person\nFROM titanic;",
+  out:()=>tbl({rows:ALL.map(x=>({i:x.i,r:{...x.r,Fare_per_person:x.r.fare/(x.r.sibsp+x.r.parch+1)}})),cols:['name','fare','sibsp','parch','Fare_per_person'],hlCols:new Set(['Fare_per_person'])})+
+   `<div class="note">Palsson을 보세요. 21.08 ÷ (3 + 1 + 1) = 4.22. 가족 다섯 명이 한 표로 탄 거라 1인당은 3등석 평균보다 싸요. 같은 점: SQL의 <code>AS</code>로 새 열 만드는 것과 같아요. 다른 점: 판다스는 표에 열이 <b>계속 붙어 있고</b>, SQL은 그 조회 결과에만 잠깐 보여요.</div>`},
+ {t:'④ Pclass별 승객 생존율',goal:'티켓 클래스(Pclass)에 따른 생존율 계산하기',
+  hint:'survived는 0(사망) / 1(생존)이라서 <b>평균 = 생존율</b>이에요. 1이 3개, 0이 2개면 평균 0.6 = 60%.',
+  p:"titanic_df.groupby('pclass')['survived'].mean()\n\n# 퍼센트로 + 표 모양으로\n(titanic_df.groupby('pclass')['survived']\n    .mean().mul(100).round(1)\n    .reset_index())",
+  s:"SELECT pclass,\n  ROUND(AVG(survived) * 100, 1)\n    AS survival_rate\nFROM titanic\nGROUP BY pclass\nORDER BY pclass;",
+  out:()=>{const g={};DF.forEach(r=>{(g[r.pclass]=g[r.pclass]||[]).push(r.survived)});
+   const rows=Object.keys(g).sort().map(k=>{const a=g[k];return`<tr><td class="idx">${k}</td><td>${fmt(a.reduce((x,y)=>x+y,0)/a.length)}</td><td style="color:var(--muted)">${a.join(', ')}</td></tr>`}).join('');
+   return `<div class="tw"><table class="df"><thead><tr><th class="idx">pclass</th><th>survived</th><th>바구니 안의 값</th></tr></thead><tbody>${rows}</tbody></table></div>${barsSVG(Object.keys(g).sort().map((k,i)=>({label:k+'등석',value:g[k].reduce((x,y)=>x+y,0)/g[k].length,cls:['pd','sql'][i%2]})),v=>Math.round(v*100)+'%')}
+   <div class="note">1등석 0.67(67%), 3등석 0.2(20%). STEP 4 groupby 실험실에서 <b>pclass / survived / mean</b>을 고르면 나누는 과정이 그대로 보여요.</div>`}},
+ {t:'⑤ 기타: 더 해보기',goal:'배운 걸 섞어서 질문을 하나 더 던져보기',
+  hint:'성별에 따른 생존율, 그리고 성별×등급을 한 번에 보는 피벗 테이블.',
+  p:"# 성별 생존율\ntitanic_df.groupby('sex')['survived'].mean()\n\n# 성별 × 등급 생존율 표\ntitanic_df.pivot_table(index='sex',\n    columns='pclass', values='survived',\n    aggfunc='mean')\n\n# 같은 결과\ntitanic_df.groupby(['sex', 'pclass'])['survived'].mean().unstack()",
+  s:"SELECT sex,\n  AVG(CASE WHEN pclass = 1 THEN survived END) AS p1,\n  AVG(CASE WHEN pclass = 3 THEN survived END) AS p3\nFROM titanic\nGROUP BY sex;",
+  out:()=>{const ks=['female','male'],ps=[1,3];const cell=(s,p)=>{const a=DF.filter(r=>r.sex===s&&r.pclass===p).map(r=>r.survived);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null};
+   return `<div class="tw"><table class="df"><thead><tr><th class="idx">sex \\ pclass</th>${ps.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>${ks.map(s=>`<tr><td class="idx">${s}</td>${ps.map(p=>`<td>${fmt(cell(s,p))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+   <div class="note">SQL은 등급마다 CASE WHEN을 손으로 써야 해서 길어져요. 판다스 pivot_table은 한 줄. 예시 8명에선 여성은 전원 생존, 남성은 전원 사망이라 극단적으로 나왔어요.</div>`}}
+];
+$('#taskbox').innerHTML=TASKS.map((k,i)=>`<details class="row-cmp" ${i===0?'open':''}><summary><span class="pill pd">TASK</span><span>${k.t}</span></summary><div class="body">
+  <p><b>목표</b> ${k.goal}</p>
+  <div class="chips"><button type="button" class="chip" data-h="${i}">💡 힌트 보기</button><button type="button" class="chip" data-a="${i}">✅ 정답과 결과 보기</button></div>
+  <div class="explain" id="th${i}" hidden>${k.hint}</div>
+  <div id="ta${i}" hidden style="display:flex;flex-direction:column;gap:10px"></div>
+</div></details>`).join('');
+$('#taskbox').addEventListener('click',e=>{const h=e.target.closest('[data-h]'),a=e.target.closest('[data-a]');
+  if(h){const el=$('#th'+h.dataset.h);el.hidden=!el.hidden;h.setAttribute('aria-pressed',!el.hidden)}
+  if(a){const i=+a.dataset.a,el=$('#ta'+i),k=TASKS[i];if(!el.innerHTML)el.innerHTML=`<div class="codes"><pre class="code pdc"><span class="tag">PANDAS</span>${esc(k.p)}</pre><pre class="code sqlc"><span class="tag">SQL</span>${esc(k.s)}</pre></div>`+k.out();el.hidden=!el.hidden;a.setAttribute('aria-pressed',!el.hidden)}});
+
+/* ---------- mask lab ---------- */
+const MASKS=[
+ {p:"df[df['age'] > 30]",s:"WHERE age > 30",f:r=>r.age!==null&&r.age>30,n:"Moran은 나이가 빈칸이라 비교할 수 없어서 False예요."},
+ {p:"df[df['sex'] == 'female']",s:"WHERE sex = 'female'",f:r=>r.sex==='female',n:"같다는 <code>=</code> 하나가 아니라 <code>==</code> 두 개예요. <code>=</code> 하나는 값을 담는 기호예요."},
+ {p:"df[(df['pclass'] == 1) & (df['fare'] > 52)]",s:"WHERE pclass = 1 AND fare > 52",f:r=>r.pclass===1&&r.fare>52,parts:[["pclass == 1",r=>r.pclass===1],["fare > 52",r=>r.fare>52]],n:"AND는 두 조건이 <b>모두</b> True여야 통과해요. McCarthy는 1등석(True)이지만 요금 51.86(False)이라 탈락."},
+ {p:"df[(df['age'] < 10) | (df['fare'] > 60)]",s:"WHERE age < 10 OR fare > 60",f:r=>(r.age!==null&&r.age<10)||r.fare>60,parts:[["age < 10",r=>r.age!==null&&r.age<10],["fare > 60",r=>r.fare>60]],n:"OR는 둘 중 <b>하나만</b> True여도 통과해요. 2살 Palsson은 요금은 21.08(False)이지만 나이 조건이 True라서 통과! \"어린이<b>이거나</b> 비싼 표\"예요."},
+ {p:"df[~(df['sex'] == 'male')]",s:"WHERE NOT sex = 'male'",f:r=>!(r.sex==='male'),parts:[["sex == 'male'",r=>r.sex==='male']],n:"<code>~</code>는 True와 False를 <b>뒤집어요</b>. 회색 열이 뒤집기 전, mask가 뒤집은 후예요."},
+ {p:"df[df['age'].isna()]",s:"WHERE age IS NULL",f:r=>r.age===null,n:"빈칸 찾기는 <code>== NaN</code>으로는 안 돼요. 꼭 <code>isna()</code>를 써요. SQL도 <code>= NULL</code>이 아니라 <code>IS NULL</code>."}
+];
+function maskLab(k){
+  const m=MASKS[k],cols=['name','sex','age','pclass','fare'];
+  [...$('#maskChips').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===k));
+  $('#maskCodes').innerHTML=`<pre class="code pdc"><span class="tag">PANDAS</span>${esc(m.p)}</pre><pre class="code sqlc"><span class="tag">SQL</span>SELECT * FROM titanic\n${esc(m.s)};</pre>`;
+  const parts=m.parts||[];
+  let h='<thead><tr><th class="idx"></th>'+cols.map(c=>`<th class="${TXT.has(c)?'txt':''}">${c}</th>`).join('')+parts.map(p=>`<th style="color:var(--muted)">${esc(p[0])}</th>`).join('')+'<th>mask</th></tr></thead><tbody>';
+  let n=0;
+  DF.forEach((r,i)=>{const t=m.f(r);if(t)n++;h+=`<tr class="${t?'hr':'dim'}"><td class="idx">${i}</td>`+cols.map(c=>`<td class="${TXT.has(c)?'txt':''}">${fmt(r[c])}</td>`).join('')+parts.map(p=>{const v=p[1](r);return`<td style="color:${v?'var(--good)':'var(--muted)'};font-weight:${v?700:400}">${v?'True':'False'}</td>`}).join('')+`<td class="${t?'mT':'mF'}">${t?'True':'False'}</td></tr>`});
+  $('#maskTbl').innerHTML=h+'</tbody>';
+  $('#maskOut').innerHTML=`<span class="pill same">통과 ${n}명</span><span class="pill diff">탈락 ${DF.length-n}명</span><span style="font-size:.92rem">${m.n}</span>`;
+}
+MASKS.forEach((m,i)=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=m.p;b.onclick=()=>maskLab(i);$('#maskChips').appendChild(b)});
+maskLab(0);
+
+/* ---------- RCV graphics ---------- */
+function mini(x,y,{cols=4,rows=3,cw=24,rh=15,hc=[],hr=[],hcell=[],outline=null}={}){
+  let g='';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const k=r+','+c;let cl='f-paper';
+    if(hc.includes(c))cl='f-pd'; if(hr.includes(r))cl='f-sql'; if(hcell.includes(k))cl='f-hl';
+    g+=`<rect x="${x+c*cw}" y="${y+r*rh}" width="${cw}" height="${rh}" class="${cl} s-line" stroke-width="1.2"/>`;}
+  if(outline!==null)g+=`<rect x="${x+outline*cw}" y="${y}" width="${cw}" height="${rows*rh}" class="f-none s-ink" stroke-width="2"/>`;
+  return g;
+}
+function envSVG(){
+  let g=`<text x="95" y="62" text-anchor="middle" class="tb">리스트 = 봉투</text>
+  <rect x="30" y="80" width="130" height="84" rx="8" class="f-hls s-ink" stroke-width="2"/>
+  <path d="M30 80 L95 124 L160 80" class="f-none s-ink" stroke-width="2"/>
+  <text x="95" y="152" text-anchor="middle" class="tc" style="font-size:15px;font-weight:600">[ … ]</text>
+  <text x="95" y="190" text-anchor="middle" class="tm">혼자서는 방향이 없어요</text>`;
+  const rows=[[42,"df[ [봉투] ]",{hc:[1,3]},'열','f-pd','열 이름들로 읽음'],[124,"df.iloc[ [봉투] ]",{hr:[0,2]},'행','f-sql','행 번호들로 읽음'],[206,"df['name'].isin( [봉투] )",{hcell:['0,0','2,0'],outline:0},'값','f-good','찾을 내용으로 읽음']];
+  rows.forEach(([yc,code,opt,lab,cl,sub])=>{
+    g+=`<path d="M164 122 Q190 ${yc} 214 ${yc}" class="f-none s-muted" stroke-width="2"/><polygon points="222,${yc} 212,${yc-5} 212,${yc+5}" class="f-pd"/>`;
+    g+=`<rect x="226" y="${yc-17}" width="214" height="34" rx="6" class="f-bg s-line"/><text x="333" y="${yc+5}" text-anchor="middle" class="tc" style="font-size:12.5px">${esc(code)}</text>`;
+    g+=mini(460,yc-22,opt);
+    g+=`<text x="574" y="${yc-2}" class="tb ${cl}" style="font-size:18px">→ ${lab}</text><text x="574" y="${yc+16}" class="tm">${sub}</text>`;
+  });
+  return SVG(720,240,g,'같은 리스트가 df[ ]에선 열, iloc에선 행, isin에선 값이 됨');
+}
+function ruleSVG(){
+  const x0=170,cw=58,hy=58,rh=24,R=6,names=['name','age','fare','sex'],pass=[1,3,4];let g='';
+  g+=`<text x="20" y="30" class="tb f-pd">열 = 이름으로 불러요</text><text x="20" y="52" class="tc">df['age']</text>`;
+  g+=`<path d="M92 48 Q170 20 ${x0+cw*1.5} ${hy-2}" class="f-none s-pd" stroke-width="2" stroke-dasharray="5 4"/><polygon points="${x0+cw*1.5},${hy} ${x0+cw*1.5-8},${hy-10} ${x0+cw*1.5+4},${hy-11}" class="f-pd"/>`;
+  names.forEach((n,i)=>{g+=`<rect x="${x0+i*cw+3}" y="${hy}" width="${cw-6}" height="22" rx="11" class="${i===1?'f-pd':'f-pds'}"/><text x="${x0+i*cw+cw/2}" y="${hy+15}" text-anchor="middle" class="tc ${i===1?'f-paper':''}" style="font-size:11px;font-weight:600">${n}</text>`});
+  for(let r=0;r<R;r++)for(let c=0;c<4;c++){const y=hy+28+r*rh;g+=`<rect x="${x0+c*cw}" y="${y}" width="${cw}" height="${rh}" class="${pass.includes(r)?'f-hls':'f-paper'} s-line"/>`;
+    g+=`<rect x="${x0+c*cw+10}" y="${y+10}" width="${cw-20}" height="4" rx="2" class="${c===1?'f-pd':'f-bg'}"/>`;}
+  const fy=hy+28;
+  g+=arrowR(x0+4*cw+6,450,fy+60);
+  g+=`<rect x="456" y="${fy-30}" width="106" height="24" rx="6" class="f-sqls"/><text x="509" y="${fy-13}" text-anchor="middle" class="tc" style="fill:var(--sql);font-weight:600">age > 30</text>`;
+  g+=`<polygon points="456,${fy} 562,${fy} 522,${fy+80} 496,${fy+80}" class="f-sqls s-line" stroke-width="1.5"/><rect x="496" y="${fy+80}" width="26" height="26" class="f-sqls"/>`;
+  g+=`<text x="509" y="${fy+40}" text-anchor="middle" class="tm" style="font-size:11px">조건 체</text>`;
+  g+=arrowR(530,598,fy+96);
+  [0,1,2].forEach(i=>{g+=`<rect x="604" y="${fy+66+i*22}" width="100" height="18" rx="4" class="f-hl"/>`});
+  g+=`<text x="580" y="30" class="tb" style="fill:var(--sql)">행 = 조건으로 골라요</text><text x="654" y="${fy+148}" text-anchor="middle" class="tm">통과한 줄만 남음</text>`;
+  return SVG(720,270,g,'열은 이름표로 부르고, 행은 조건 체로 걸러서 고름');
+}
+function flowSVG(){
+  const cx=290;let g='';
+  const box=(x,y,w,h,cls,lines,txtCls='t',fs=13)=>{let s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" class="${cls}"/>`;const lh=fs+5,start=y+h/2-(lines.length-1)*lh/2+fs/3;
+    lines.forEach((l,i)=>{s+=`<text x="${x+w/2}" y="${start+i*lh}" text-anchor="middle" class="${txtCls}" style="font-size:${fs}px">${l}</text>`});return s};
+  const down=(x,y1,y2,lab)=>`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2-8}" class="s-muted" stroke-width="2"/><polygon points="${x},${y2} ${x-6},${y2-10} ${x+6},${y2-10}" class="f-pd"/>`+(lab?`<text x="${x+10}" y="${(y1+y2)/2+4}" class="tm">${lab}</text>`:'');
+  g+=box(cx-140,8,280,40,'f-pd',['[ ] 나 ( ) 를 만났다!'],'tb f-paper',15);
+  g+=down(cx,48,78);
+  g+=box(cx-150,80,300,50,'f-pds s-pd',['<tspan font-weight="700">질문 1</tspan> 바로 앞이 loc / iloc 이야?']);
+  g+=arrowR(cx+150,468,105)+`<text x="${cx+168}" y="97" class="tm" style="font-weight:700">예</text>`;
+  g+=box(470,64,240,82,'f-hls',['<tspan font-weight="700">자리로 정해져요</tspan>','쉼표 앞 = 행 · 쉼표 뒤 = 열','쉼표가 없으면 = 행'],'t',12.5);
+  g+=down(cx,130,168,'아니오');
+  g+=box(cx-150,170,300,50,'f-pds s-pd',['<tspan font-weight="700">질문 2</tspan> 함수 괄호 ( ) 안이야?']);
+  g+=arrowR(cx+150,468,195)+`<text x="${cx+168}" y="187" class="tm" style="font-weight:700">예</text>`;
+  g+=box(470,154,240,96,'f-hls',['<tspan font-weight="700">함수 이름을 우리말로</tspan>','groupby · sort_values → 열','isin → 값','drop → axis(0행·1열)'],'t',12.5);
+  g+=down(cx,220,258,'아니오');
+  g+=box(cx-150,260,300,50,'f-pds s-pd',['<tspan font-weight="700">질문 3</tspan> 그냥 df[ ] 안 · 생김새를 봐요']);
+  const outs=[[120,'f-pds',["'fare' · ['a', 'b']",'<tspan font-weight="700" style="fill:var(--pd)">글자 → 열</tspan>']],[360,'f-sqls',["df['age'] > 30",'<tspan font-weight="700" style="fill:var(--sql)">조건 → 행</tspan>']],[600,'f-sqls',['0:3','<tspan font-weight="700" style="fill:var(--sql)">콜론 범위 → 행</tspan>']]];
+  outs.forEach(([x,cl,l])=>{g+=`<path d="M${cx} 310 Q${cx} 330 ${x} 336" class="f-none s-muted" stroke-width="2"/><polygon points="${x},346 ${x-6},336 ${x+6},336" class="f-pd"/>`;g+=box(x-105,348,210,56,cl,l,'tc',12.5)});
+  g+=`<text x="360" y="428" text-anchor="middle" class="tm">그래도 모르겠으면 → 실행하고 shape · columns 확인!</text>`;
+  return SVG(720,438,g,'열 행 값 판별 순서도: loc/iloc인지, 함수 괄호인지, df[ ] 안의 생김새를 차례로 확인');
+}
+const FACES=[
+ {code:"df['fare']",ans:'열 하나',k:'c',opt:{hc:[2]},d:'이름(글자) 하나 → 시리즈'},
+ {code:"df[['name', 'fare']]",ans:'열 여러 개',k:'c',opt:{hc:[0,2]},d:'글자 리스트 → 표'},
+ {code:"df[df['age'] > 30]",ans:'행 (조건)',k:'r',opt:{hr:[1,3]},d:'True/False 목록 → True인 줄'},
+ {code:"df[0:3]",ans:'행 (범위)',k:'r',opt:{hr:[0,1,2]},d:'콜론 슬라이싱 → 앞에서 3줄'}
+];
+$('#faces').innerHTML=FACES.map(f=>`<div class="face"><code style="font-size:.92rem">${esc(f.code)}</code><div class="fig">${SVG(140,70,mini(10,5,{rows:4,cols:4,cw:30,rh:15,...f.opt}),f.ans)}</div><span class="ans ${f.k}">${f.ans}</span><span style="font-size:.86rem;color:var(--muted)">${f.d}</span></div>`).join('');
+$('#envFig').innerHTML=envSVG();
+$('#ruleFig').innerHTML=ruleSVG();
+$('#flowFig').innerHTML=flowSVG();
+function whSVG(){
+  const S0=[10,200,390,580],W=170;let g='';
+  const heads=[['FROM titanic','f-pds','tc'],['WHERE age > 20','f-sql','tc f-paper'],['GROUP BY pclass','f-pds','tc'],['HAVING AVG(fare) > 20','f-sql','tc f-paper']];
+  const subs=['승객 8명 그대로','승객 한 명씩 판단','바구니 + 평균 계산','바구니 하나씩 판단'];
+  heads.forEach(([t,cl,tc],i)=>{g+=`<rect x="${S0[i]}" y="8" width="${W}" height="30" rx="8" class="${cl}"/><text x="${S0[i]+W/2}" y="28" text-anchor="middle" class="${tc}" style="font-weight:600;font-size:12px">${t}</text>`;
+    g+=`<text x="${S0[i]+W/2}" y="304" text-anchor="middle" class="tm">${subs[i]}</text>`;
+    if(i<3)g+=arrowR(S0[i]+W+2,S0[i+1]-2,150);});
+  const chips=(s,cross)=>{let c='';DF.forEach((r,i)=>{const col=i%2,row=Math.floor(i/2),x=s+4+col*84,y=54+row*34,out=cross&&!(r.age!==null&&r.age>20);
+    c+=`<g opacity="${out?.35:1}"><rect x="${x}" y="${y}" width="78" height="26" rx="6" class="${r.pclass===1?'f-pds':'f-sqls'} s-line"/><text x="${x+6}" y="${y+17}" class="tc" style="font-size:10.5px">${r.name.slice(0,8)} ${r.age===null?'NaN':r.age}</text></g>`;
+    if(out)c+=`<line x1="${x-2}" y1="${y+13}" x2="${x+80}" y2="${y+13}" class="s-bad" stroke-width="2.5"/>`;});return c};
+  g+=chips(S0[0],false)+chips(S0[1],true);
+  g+=`<text x="${S0[1]+W/2}" y="210" text-anchor="middle" class="tm" style="fill:var(--bad);font-size:11px">Palsson(2살) · Moran(빈칸) 탈락</text>`;
+  const B=[[1,['Cumings 71.28','Futrelle 53.10','McCarthy 51.86'],58.75,54,'f-pds'],[3,['Braund 7.25','Heikkinen 7.93','Allen 8.05'],7.74,172,'f-sqls']];
+  B.forEach(([p,ns,avg,y,cl])=>{const x=S0[2];g+=`<rect x="${x}" y="${y}" width="${W}" height="108" rx="10" class="${cl} s-line"/><text x="${x+12}" y="${y+20}" class="tb" style="font-size:13px">${p}등석 바구니</text>`;
+    ns.forEach((n,i)=>{g+=`<text x="${x+12}" y="${y+40+i*16}" class="tc" style="font-size:10.5px">${n}</text>`});
+    g+=`<line x1="${x+10}" y1="${y+86}" x2="${x+W-10}" y2="${y+86}" class="s-line"/><text x="${x+12}" y="${y+101}" class="tc" style="font-weight:700">평균 ${avg}</text>`;
+    const ok=avg>20,x4=S0[3];
+    g+=`<g opacity="${ok?1:.4}"><rect x="${x4}" y="${y+30}" width="${W}" height="48" rx="10" class="${ok?'f-goods':'f-bg'} s-line"/><text x="${x4+14}" y="${y+59}" class="tb" style="font-size:14px">${p}등석 · ${avg}</text><text x="${x4+W-14}" y="${y+60}" text-anchor="end" class="tb ${ok?'f-good':'f-bad'}" style="font-size:16px">${ok?'통과':'탈락'}</text></g>`;
+    if(!ok)g+=`<line x1="${x4}" y1="${y+54}" x2="${x4+W}" y2="${y+54}" class="s-bad" stroke-width="2.5"/>`;
+  });
+  return SVG(760,314,g,'WHERE는 승객 한 명씩 걸러서 2명을 빼고, GROUP BY로 등급별 평균을 낸 뒤, HAVING이 평균 20 넘는 1등석만 남김');
+}
+$('#whFig').innerHTML=whSVG();
+
+/* ---------- 판별 게임 ---------- */
+const ICON={
+ col:SVG(46,34,mini(4,3,{rows:2,cols:4,cw:9.5,rh:14,hc:[1]}),'열'),
+ row:SVG(46,34,mini(4,3,{rows:2,cols:4,cw:9.5,rh:14,hr:[1]}),'행'),
+ val:SVG(46,34,mini(4,3,{rows:2,cols:4,cw:9.5,rh:14,hcell:['0,1','1,1']}),'값'),
+ cell:SVG(46,34,mini(4,3,{rows:2,cols:4,cw:9.5,rh:14})+`<rect x="23" y="17" width="9.5" height="14" class="f-hl s-ink" stroke-width="1.5"/>`,'칸 하나')
+};
+const LAB={col:'열',row:'행',val:'값',cell:'칸 하나'};
+const G=[
+ {c:"df[⟦'fare'⟧]",a:'col',w:"질문 3: 그냥 df[ ] 안에 글자 → 열 이름이에요."},
+ {c:"df[⟦df['age'] > 30⟧]",a:'row',w:"질문 3: df[ ] 안에 조건(True/False 목록) → True인 행을 골라요."},
+ {c:"df.iloc[⟦2⟧]",a:'row',w:"질문 1: iloc인데 쉼표가 없어요 → 행 하나(2번 위치)."},
+ {c:"df['name'].isin(⟦['Allen', 'Moran']⟧)",a:'val',w:"질문 2: isin은 \"이 값들 중에 있어?\" → 찾을 내용(값)이에요."},
+ {c:"df.iloc[0, ⟦2⟧]",a:'col',w:"질문 1: iloc 쉼표 뒤 자리 → 열(2번째 위치 = age)."},
+ {c:"df[⟦0:3⟧]",a:'row',w:"질문 3: df[ ] 안에 콜론 범위 → 앞에서부터 3줄(행)."},
+ {c:"df.drop(⟦[0, 2]⟧)",a:'row',w:"질문 2: drop은 axis를 봐요. 안 쓰면 기본 axis=0 → 행."},
+ {c:"df.groupby(⟦'pclass'⟧)['fare'].mean()",a:'col',w:"질문 2: groupby는 \"~열로 묶어줘\" → 기준 열."},
+ {c:"df.iloc[⟦0, 2⟧]",a:'cell',w:"질문 1: iloc 안에 쉼표로 (행, 열)이 둘 다 → 칸 하나(좌표)예요."},
+ {c:"df[df['sex'] == ⟦'female'⟧]",a:'val',w:"질문 3: 'female'은 sex 열 안에 들어 있는 내용 → 값."},
+ {c:"df[⟦['name', 'fare']⟧]",a:'col',w:"질문 3: df[ ] 안에 글자 리스트 → 열 여러 개."},
+ {c:"df.drop(⟦'fare'⟧, axis=1)",a:'col',w:"질문 2: drop + axis=1 → 열."},
+ {c:"df.loc[⟦3⟧, 'name']",a:'row',w:"질문 1: loc 쉼표 앞 → 행(이름표 3)."},
+ {c:"df.sort_values(by=⟦['age', 'fare']⟧)",a:'col',w:"질문 2: sort_values는 \"~열 기준으로 정렬해줘\" → 열."},
+ {c:"df.iloc[⟦[0, 2]⟧]",a:'row',w:"질문 1: iloc 안에 리스트 하나(쉼표 앞 자리) → 0행, 2행."},
+ {c:"df.loc[df['age'] > 30, ⟦['name', 'fare']⟧]",a:'col',w:"질문 1: loc 쉼표 뒤 → 열."},
+ {c:"df.loc[⟦df['age'] > 30⟧, ['name', 'fare']]",a:'row',w:"질문 1: loc 쉼표 앞 → 행(조건으로 고른 행)."},
+ {c:"df[df['pclass'] == ⟦1⟧]",a:'val',w:"질문 3: 1은 pclass 열 안의 내용 → 값. 숫자라고 다 행 번호는 아니에요!"},
+ {c:"df.drop(columns=⟦['age']⟧)",a:'col',w:"질문 2: columns= 라고 이름표를 붙였으니 → 열. 이래서 이름표 붙이는 게 편해요."},
+ {c:"df.head(⟦3⟧)",a:'row',w:"질문 2: head는 \"위에서 몇 줄\" → 행 개수."},
+ {c:"df.loc[⟦3, 'name'⟧]",a:'cell',w:"질문 1: loc 안에 (행, 열) 둘 다 → 칸 하나 → 'Allen'."},
+ {c:"df['age'].fillna(⟦35⟧)",a:'val',w:"질문 2: fillna는 \"이 값으로 채워줘\" → 값."},
+ {c:"df.drop(index=⟦[1]⟧)",a:'row',w:"질문 2: index= 라고 이름표를 붙였으니 → 행."},
+ {c:"df.iloc[[0, 2], ⟦2⟧]",a:'col',w:"질문 1: iloc 쉼표 뒤 → 열. 앞의 [0, 2]는 행 목록이에요."},
+ {c:"df.groupby(⟦['sex', 'pclass']⟧)['fare'].mean()",a:'col',w:"질문 2: groupby 안의 리스트 → 기준 열 두 개. 결과는 2층 이름표!"},
+ {c:"r.loc[⟦('female', 3)⟧]",a:'row',w:"질문 1: loc 안에 튜플 하나 → 2층 이름표로 된 행 하나의 주소예요."}
+];
+const gHTML=s=>esc(s).replace('⟦','<mark>').replace('⟧','</mark>');
+let gi=0,gs=0,combo=0,best=0,miss=[],order=[];
+function gStart(){order=G.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}gi=0;gs=0;combo=0;best=0;miss=[];gRender()}
+function gRender(){
+  const box=$('#gameBox');
+  if(gi>=order.length){
+    const pct=gs/order.length;
+    box.innerHTML=`<div class="done"><div class="scalar">${gs} / ${order.length}</div><p>${pct===1?'완벽해요! 이제 괄호가 하나도 안 무섭죠?':pct>=.8?'거의 마스터! 틀린 것만 다시 보면 끝.':pct>=.5?'절반 넘었어요. 순서도를 옆에 띄워 두고 한 번 더!':'처음엔 다 헷갈려요. 순서도 질문 1부터 천천히 다시!'}</p><p style="color:var(--muted)">최고 콤보 ${best}연속</p>
+     ${miss.length?`<div class="miss"><b>틀린 문제 다시 보기</b>${miss.map(k=>`<div><code>${gHTML(G[k].c)}</code> → <b>${LAB[G[k].a]}</b><br><span style="color:var(--muted)">${esc(G[k].w)}</span></div>`).join('')}</div>`:''}
+     <button class="btn" type="button" id="gre">다시 하기 (순서 섞임)</button></div>`;
+    $('#gre').onclick=gStart;return;
+  }
+  const q=G[order[gi]];
+  box.innerHTML=`<div class="gstat"><span class="mono" style="color:var(--muted)">${gi+1} / ${order.length}</span><div class="bar"><i style="width:${gi/order.length*100}%"></i></div><span class="pill same">맞힘 ${gs}</span>${combo>=2?`<span class="pill sql">🔥 ${combo} 콤보</span>`:''}</div>
+   <div class="gcode">${gHTML(q.c)}</div><div class="gq">노란 부분은 무엇을 가리킬까?</div>
+   <div class="gbtns">${['col','row','val','cell'].map(k=>`<button type="button" class="gbtn" data-k="${k}">${ICON[k]}<span>${LAB[k]}</span></button>`).join('')}</div><div id="gfb"></div>`;
+  box.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>{
+    const ok=b.dataset.k===q.a;
+    if(ok){gs++;combo++;best=Math.max(best,combo)}else{combo=0;miss.push(order[gi])}
+    box.querySelectorAll('.gbtn').forEach(x=>{x.disabled=true;if(x.dataset.k===q.a)x.classList.add('right')});
+    if(!ok)b.classList.add('wrong');
+    $('#gfb').innerHTML=`<div class="fb ${ok?'ok':'no'}"><b>${ok?(combo>=3?`정답! ${combo}연속 🔥`:'정답!'):`아쉬워요 · 정답은 ${LAB[q.a]}`}</b>${esc(q.w)}</div><div style="margin-top:10px"><button type="button" class="btn" id="gn">${gi===order.length-1?'결과 보기':'다음 →'}</button></div>`;
+    $('#gn').onclick=()=>{gi++;gRender()};$('#gn').focus();
+  });
+}
+gStart();
+
+/* ---------- STEP 7 quiz ---------- */
+const Q=[
+ {q:"<code>df['age']</code>를 type()으로 확인하면?",o:['DataFrame','Series','list','dict'],a:1,e:'열 하나를 뽑으면 시리즈예요. 대괄호 두 겹 <code>df[["age"]]</code>이면 데이터프레임.'},
+ {q:"'fare' <b>열</b>을 지우려면 axis에 뭘 넣을까?",o:['axis=0','axis=1','axis=-1','안 넣어도 됨'],a:1,e:'0은 행(기본값), 1은 열. 아무것도 안 넣으면 행을 지우려다 "fare라는 행이 없다"는 에러가 나요.'},
+ {q:"STEP 3 표에서 <code>df.iloc[2, 2]</code>의 값은?",o:['Heikkinen','3','26','NaN'],a:2,e:'iloc은 0부터 세는 위치. 2번 행(Heikkinen)의 2번 열(name, sex, <b>age</b>) → 26.'},
+ {q:"<code>loc</code>과 <code>iloc</code> 중 '이름표(라벨)'로 찾는 건?",o:['loc','iloc','둘 다','둘 다 아님'],a:0,e:'loc = Location(라벨), iloc = Integer Location(번호 위치).'},
+ {q:"SQL <code>WHERE age > 30</code>을 판다스로 쓰면?",o:["df['age' > 30]","df[df['age'] > 30]","df.where('age > 30')","df.groupby('age') > 30"],a:1,e:'안쪽 <code>df["age"] > 30</code>이 True/False 목록을 만들고, 바깥 <code>df[...]</code>가 True인 행만 남겨요.'},
+ {q:"<code>df.groupby('pclass')['fare'].mean()</code> 결과에서 pclass는 어디에 있을까?",o:['보통 열','인덱스','사라짐','맨 아래 행'],a:1,e:'groupby 기준은 인덱스로 올라가요. SQL처럼 보통 열로 쓰려면 <code>.reset_index()</code> 또는 <code>as_index=False</code>.'},
+ {q:"SQL <code>COUNT(*)</code>와 같은 판다스 함수는?",o:['count()','size()','len()만 가능','sum()'],a:1,e:'size()는 빈칸 포함 줄 수 = COUNT(*). count()는 빈칸 빼고 = COUNT(열). 이름이 비슷해서 함정!'},
+ {q:"SQL의 HAVING은 판다스에서 어떻게 할까?",o:["groupby(having=...)","계산 결과에 다시 불 인덱스: r[r > 20]","WHERE랑 똑같이 groupby 앞에 조건","판다스엔 불가능"],a:1,e:'계산이 끝난 결과도 시리즈라서 평범하게 한 번 더 거르면 돼요.'},
+ {q:"그룹 기준 열에 NaN이 있을 때 판다스 groupby의 기본 동작은?",o:['NaN도 한 그룹으로 보여줌','NaN 행은 결과에서 빠짐','에러가 남','0으로 바꿈'],a:1,e:'기본 <code>dropna=True</code>라서 빠져요. SQL은 NULL을 한 그룹으로 보여주니까 결과가 달라요. 보고 싶으면 <code>dropna=False</code>.'},
+ {q:"SQL <code>ORDER BY fare DESC LIMIT 3</code>을 판다스로?",o:["df.sort_values('fare').head(3)","df.sort_values('fare', ascending=False).head(3)","df.head(3).sort_values('fare')","df.sort_index(ascending=False)[:3]"],a:1,e:'내림차순은 ascending=False. 정렬 <b>먼저</b>, 자르기는 그다음. 세 번째 보기는 순서가 반대라 틀려요.'},
+ {q:"<code>describe()</code>는 기본적으로 어떤 열을 요약할까?",o:['모든 열','문자열 열만','숫자(int, float) 열만','인덱스만'],a:2,e:'개수·평균·표준편차·최솟값·사분위수·최댓값을 숫자 열에만 계산해요. 빈칸 개수와 타입은 info()로.'},
+ {q:"두 표를 공통 열로 옆에 이어 붙이는 SQL <code>JOIN</code>에 해당하는 판다스 함수는?",o:['pd.concat()','pd.merge()','df.stack()','df.append()'],a:1,e:'merge = JOIN. concat은 위아래로 쌓는 UNION ALL 쪽이에요.'},
+ {q:"<code>df[['fare']].shape</code>의 결과는? (승객 8명)",o:['(8,)','(8, 1)','(1, 8)','에러'],a:1,e:'대괄호 두 겹 = 목록으로 골랐으니 8행 1열짜리 <b>표</b>예요. 한 겹 <code>df["fare"]</code>면 시리즈라 <code>(8,)</code>.'},
+ {q:"<code>df.iloc[[0, 2]]</code>는 무엇을 가져올까?",o:['0행과 2행, 두 줄 전체','0행 2열 칸 하나','2행 0열 칸 하나','에러가 남'],a:0,e:'대괄호 안의 대괄호는 <b>목록</b>이에요. 칸 하나(좌표)는 <code>iloc[0, 2]</code>처럼 리스트 없이 써요.'},
+ {q:"SQL에서 <code>DELETE FROM titanic;</code>처럼 WHERE 없이 실행하면?",o:['열 이름만 남고 모든 줄이 지워짐','표 자체가 사라짐','에러가 남','아무 일도 안 일어남'],a:0,e:'조건 없음 = 전부예요. 표 껍데기는 남아요. 표 자체를 없애는 건 <code>DROP TABLE</code>이라는 다른 명령이에요.'},
+ {q:"<code>backup = df</code>라고 쓴 뒤 <code>df['x'] = 1</code>을 하면 backup은?",o:['그대로 원래 모습','같이 바뀜','에러가 남','backup이 지워짐'],a:1,e:'<code>=</code>만 쓰면 같은 표에 이름표만 하나 더 붙인 거예요. 진짜 복사본은 <code>df.copy()</code>.'},
+ {q:"2층 이름표 결과 <code>r</code>에 <code>r.unstack()</code>을 하면?",o:['안쪽 이름표 층이 열 머리글로 펼쳐짐','이름표가 모두 지워짐','행과 열 순서가 거꾸로 됨','NaN이 모두 지워짐'],a:0,e:'세로로 긴 결과를 가로 교차표로 펼쳐요. <code>pivot_table</code>과 같은 모양이고, 반대는 <code>stack()</code>.'},
+ {q:"조건 두 개를 '그리고'로 묶는 올바른 판다스 코드는?",o:["df[df['age'] > 30 and df['sex'] == 'female']","df[(df['age'] > 30) & (df['sex'] == 'female')]","df[df['age'] > 30 & df['sex'] == 'female']","df.where(age > 30, sex == 'female')"],a:1,e:'<code>and</code> 대신 <code>&amp;</code>, 그리고 조건마다 괄호! 세 번째 보기는 괄호가 없어서 계산 순서가 꼬여요.'},
+ {q:"<code>(df['age'] > 30).sum()</code>의 결과는? (STEP 3 표 기준)",o:['True','4','169','에러'],a:1,e:'True는 1, False는 0으로 계산돼서 sum은 조건에 맞는 사람 수예요. 38, 35, 35, 54세 → 4명.'},
+ {q:"리스트 <code>[ ]</code>에 대한 설명으로 맞는 것은?",o:['리스트는 항상 열을 뜻한다','리스트는 항상 행을 뜻한다','리스트는 방향이 없고, 넣는 자리(함수)가 뜻을 정한다','리스트는 값만 담을 수 있다'],a:2,e:'리스트는 봉투예요. <code>df[[...]]</code>에선 열, <code>iloc[[...]]</code>에선 행, <code>isin([...])</code>에선 값이 돼요.'},
+ {q:"SQL과 판다스의 공통 원칙: \"열은 ___으로, 행은 ___으로 고른다\"",o:['번호 / 이름','이름 / 조건','조건 / 이름','순서 / 번호'],a:1,e:'열은 수가 적고 뜻이 있어서 이름으로 불러요. 행은 수가 많아서 \"30살 넘는 사람\"처럼 조건으로 골라요.'},
+ {q:"<code>df.loc[A, B]</code>에서 쉼표 뒤의 B는 언제나?",o:['행','열','값','상황마다 다름'],a:1,e:'loc / iloc은 자리가 고정돼 있어요. 쉼표 앞은 언제나 행, 뒤는 언제나 열. 그래서 헷갈릴 땐 loc이 제일 확실해요.'},
+ {q:"axis를 외우지 않고 fare <b>열</b>을 지우는 가장 읽기 쉬운 코드는?",o:["df.drop('fare')","df.drop(columns=['fare'])","df.drop(index=['fare'])","df.drop(['fare'], axis=0)"],a:1,e:'<code>columns=</code>라고 이름표를 붙이면 축 번호를 외울 필요가 없어요. 첫 번째와 네 번째는 행을 지우려다 에러가 나요.'},
+ {q:"<code>df.drop(...)</code> 결과가 행을 지웠는지 열을 지웠는지 가장 빨리 확인하는 법은?",o:['print를 10번 한다','result.shape를 원본 df.shape와 비교한다','파일을 저장해서 엑셀로 연다','SQL로 바꿔 실행한다'],a:1,e:'shape는 (행 수, 열 수)예요. 앞 숫자가 줄면 행, 뒤 숫자가 줄면 열이 지워진 거예요.'},
+ {q:"<code>df['name'].isin(['Allen'])</code>에서 괄호 안 리스트가 \"값\"인 이유는?",o:['리스트라서','열은 이미 df[\"name\"]으로 정해졌고, 그 열에서 찾을 내용이라서','isin은 열을 고르는 함수라서','Allen이 대문자라서'],a:1,e:'앞에서 열을 이미 골랐으니까 괄호 안은 그 열 속에서 찾을 내용일 수밖에 없어요.'},
+ {q:"다음 중 SQL에는 없고 판다스에만 있는 행 고르는 방법은?",o:['조건으로 고르기 (WHERE)','값 목록으로 고르기 (IN)','이름표나 위치 번호로 고르기 (loc / iloc)','정렬 후 위에서 자르기 (LIMIT)'],a:2,e:'SQL 표에는 고정된 순서나 행 이름표가 없어요. 판다스는 인덱스가 있어서 loc[3], iloc[2]가 가능해요.'},
+ {q:"<code>df.loc[df['age'] > 30, ['name', 'fare']].shape</code>는? (STEP 3 표 기준)",o:['(4, 2)','(2, 4)','(8, 2)','(4, 6)'],a:0,e:'30살 넘는 4명(행) × name, fare 2개(열) = (4, 2).'},
+ {q:"<code>df[df['pclass'] == 1]</code>에서 숫자 <code>1</code>은?",o:['1번 행','1번 열','pclass 열 안의 값(1등석)','칸 하나'],a:2,e:'숫자라고 다 행 번호는 아니에요! 비교(==) 오른쪽은 열 안에서 찾을 값이에요.'},
+ {q:"<code>df.sort_values(by=['age', 'fare'])</code>는 어떻게 정렬할까?",o:['fare 순으로만','age 순으로, 나이가 같으면 fare 순으로','age와 fare를 더한 값 순으로','age 열과 fare 열의 자리를 바꿈'],a:1,e:'리스트 순서대로 기준이 돼요. 첫 기준이 같을 때 다음 기준을 봐요. 예시에서 35세 두 명(Futrelle, Allen)은 요금이 싼 Allen이 먼저.'},
+ {q:"<code>df[(df['age'] < 10) | (df['fare'] > 60)]</code>에 2살 Palsson(요금 21.08)이 뽑힌 이유는?",o:['버그라서','OR는 둘 중 하나만 True여도 통과라서','NaN이라서','요금이 60을 넘어서'],a:1,e:'<code>|</code>는 OR. 나이 조건이 True라서 요금 조건이 False여도 통과해요. 둘 다 만족해야 하는 건 <code>&amp;</code>(AND).'},
+ {q:"판다스 조건에서 <code>~</code>의 뜻은?",o:['대략, 비슷한 값','True/False 뒤집기 (NOT)','범위 지정','빈칸 채우기'],a:1,e:'물결표(tilde)는 NOT이에요. <code>df[~df["name"].isin([...])]</code>가 SQL의 NOT IN이에요.'},
+ {q:"<code>df[~df['sex'] == 'male']</code>가 에러 나는 이유는?",o:["~가 == 보다 먼저 계산돼서","male이 대문자가 아니라서","~는 숫자에만 써서","sex 열이 없어서"],a:0,e:'괄호가 없으면 "sex 열을 뒤집어라"가 먼저 실행돼요. <code>~(df["sex"] == "male")</code>처럼 조건을 괄호로 감싸요.'},
+ {q:"SQL에서 열을 고르는 자리와 행을 고르는 자리를 짝지으면?",o:['열 = WHERE, 행 = SELECT','열 = SELECT, 행 = WHERE','열 = FROM, 행 = GROUP BY','둘 다 SELECT'],a:1,e:'SELECT는 열을 이름으로, WHERE는 행을 조건으로 골라요. "열은 이름으로, 행은 조건으로" 원칙 그대로예요.'},
+ {q:"<code>WHERE AVG(fare) > 20</code>이 에러 나는 이유는?",o:['AVG 철자가 틀려서','WHERE는 GROUP BY보다 먼저 실행돼서 아직 평균이 없으니까','20이 너무 작아서','fare가 문자열이라서'],a:1,e:'실행 순서는 FROM → WHERE → GROUP BY → HAVING. WHERE 시점엔 승객 한 줄 한 줄뿐이라 평균을 물어볼 수 없어요. 그래서 HAVING에 써요.'},
+ {q:"WHERE와 HAVING이 판단하는 대상을 바르게 짝지은 것은?",o:['WHERE = 그룹 하나, HAVING = 줄 하나','WHERE = 줄 하나(승객 한 명), HAVING = 그룹 하나(바구니)','둘 다 줄 하나','둘 다 그룹 하나'],a:1,e:'반 평균 비유로 WHERE는 학생 한 명, HAVING은 반 하나를 판단해요.'},
+ {q:"SQL에 <code>WHERE age > 20</code>과 <code>HAVING AVG(fare) > 20</code>을 같이 쓰면, 평균은 누구로 계산할까?",o:['8명 전부','WHERE를 통과한 6명만','HAVING을 통과한 사람만','20살 이하만'],a:1,e:'WHERE가 먼저 Palsson과 Moran을 빼고, 남은 6명으로 바구니를 나눠 평균을 내요. 그래서 3등석 평균이 10.55가 아니라 7.74가 돼요.'},
+ {q:"SQL의 HAVING을 판다스로 옮기면?",o:["df.having(...)","groupby 결과 r에 다시 불 인덱스: r[r > 20]","groupby 앞에 df[조건]","pivot_table(having=...)"],a:1,e:'판다스는 쓴 순서대로 실행돼서, 묶고 평균 낸 결과에 평범하게 한 번 더 거르면 그게 HAVING이에요. groupby 앞의 조건은 WHERE예요.'}
+];
+let qi=0,score=0;
+function qRender(){
+  const el=$('#quiz');
+  if(qi>=Q.length){
+    const msg=score===Q.length?'만점! 판다스랑 SQL 번역가 인정 🎉':score>=Q.length*0.75?'거의 다 왔어요. 틀린 건 STEP 5와 Q&A에서 한 번만 더 보면 끝!':score>=Q.length*0.5?'괜찮아요! groupby 실험실에서 count/size, reset_index를 직접 눌러보세요.':'처음엔 다 헷갈려요. STEP 3부터 천천히 다시 눌러보고 재도전!';
+    el.innerHTML=`<div class="done"><div class="scalar">${score} / ${Q.length}</div><p>${msg}</p><button class="btn" type="button" id="qre">다시 풀기</button></div>`;
+    $('#qre').onclick=()=>{qi=0;score=0;qRender()};return;
+  }
+  const q=Q[qi];
+  el.innerHTML=`<div class="qhead"><span class="mono" style="color:var(--muted)">Q${qi+1} / ${Q.length} · 맞힌 개수 ${score}</span><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div></div>
+   <div class="q">${q.q}</div><div class="opts">${q.o.map((o,i)=>`<button type="button" class="opt" data-i="${i}">${/^(df|pd|\(|r\.)/.test(o)?`<code>${esc(o)}</code>`:esc(o)}</button>`).join('')}</div><div id="qfb"></div>`;
+  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i, ok=i===q.a; if(ok)score++;
+    el.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(+x.dataset.i===q.a)x.classList.add('right')});
+    if(!ok)b.classList.add('wrong');
+    $('#qfb').innerHTML=`<div class="fb ${ok?'ok':'no'}"><b>${ok?'정답!':'아쉬워요'}</b>${q.e}</div><div style="margin-top:10px"><button type="button" class="btn" id="qn">${qi===Q.length-1?'결과 보기':'다음 문제 →'}</button></div>`;
+    $('#qn').onclick=()=>{qi++;qRender()}; $('#qn').focus();
+  });
+}
+qRender();
+</script>
+</body>
+</html>
