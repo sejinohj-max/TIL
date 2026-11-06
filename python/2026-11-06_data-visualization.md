@@ -2,7 +2,7 @@
 
 ## 📚 오늘 배운 것: 데이터 시각화
 
-👉 정리 아티팩트: [데이터 시각화 노트](https://sejinohj-max.github.io/TIL/artifacts/visualization/data-visualization.html)
+👉 정리 아티팩트: [데이터 시각화 노트](https://sejinohj-max.github.io/TIL/artifacts/python/data-visualization.html)
 
 - EDA는 CRISP-DM의 앞 세 단계(비즈니스 이해 → 데이터 이해 → 데이터 준비)에 걸쳐 있고, 그래프와 수치 통계량 두 방향으로 데이터를 확인하는 과정
 - 변수 종류(수치형/범주형)와 전달 목적(추이·비교·분포·관계·비율)에 따라 차트를 고름
