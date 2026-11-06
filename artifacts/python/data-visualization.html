@@ -1,0 +1,305 @@
+<title>데이터 시각화 노트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;800&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 그래프 용지 위의 실험 노트 — 좁은 본문 칼럼 + 섹션마다 표/도식/계산기 */
+:root{
+  --bg:#f5f7f9; --surface:#ffffff; --fg:#1c2733; --muted:#5d6b78; --line:#d6dee5; --grid:#e6ecf1;
+  --accent:#0f7a8a; --accent-soft:#dff1f3; --warn:#b5522f; --warn-soft:#f8e6df;
+  --f-display:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11181f; --surface:#18222b; --fg:#e3eaf0; --muted:#97a6b3; --line:#2b3a46; --grid:#1a252e;
+  --accent:#4cc3d2; --accent-soft:#163b42; --warn:#f08b64; --warn-soft:#3d2219; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11181f; --surface:#18222b; --fg:#e3eaf0; --muted:#97a6b3; --line:#2b3a46; --grid:#1a252e;
+  --accent:#4cc3d2; --accent-soft:#163b42; --warn:#f08b64; --warn-soft:#3d2219; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(32px,6vw,48px);line-height:1.2;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:800;font-size:24px;margin:0;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .no{font-family:var(--f-mono);font-size:14px;color:var(--accent);font-weight:500}
+h3{font-family:var(--f-display);font-weight:800;font-size:17px;margin:8px 0 0}
+p{margin:0;max-width:65ch}
+section{display:flex;flex-direction:column;gap:16px}
+.lede{color:var(--muted);font-size:17px}
+code,.mono{font-family:var(--f-mono);font-size:.9em}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:3px}
+pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.6}
+pre code{background:none;padding:0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12.5px;letter-spacing:.04em;background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td.mono{white-space:nowrap}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:6px;padding:12px 16px;font-size:15px}
+.note b{color:var(--warn)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.split>*{min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.panel .k{font-family:var(--f-mono);font-size:12px;color:var(--accent);letter-spacing:.06em}
+@media (max-width:560px){.split{grid-template-columns:1fr}}
+/* tools */
+.tool{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.tool label{font-size:13px;color:var(--muted)}
+.tool input[type=text]{width:100%;font-family:var(--f-mono);font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg)}
+.tool input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font-family:var(--f-mono);font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--bg)}
+.stat .l{font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
+.stat .v{font-family:var(--f-mono);font-size:16px;font-variant-numeric:tabular-nums}
+svg text{font-family:var(--f-mono)}
+.svgwrap{overflow-x:auto}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){rect.bar{transition:height .25s,y .25s}}
+</style>
+
+<main>
+<header>
+  <span class="eyebrow">Data Science Lv1 · 2026.11.06</span>
+  <h1>데이터 시각화 노트</h1>
+  <p class="lede">EDA에서 그래프를 왜 그리는지, 변수 종류에 따라 어떤 차트를 고르는지, 그리고 matplotlib·seaborn·워드클라우드·folium을 어떻게 쓰는지 정리했다.</p>
+</header>
+
+<section>
+  <h2><span class="no">01</span>EDA와 CRISP-DM</h2>
+  <p>EDA(탐색적 데이터 분석)는 요약·시각화·통계로 데이터를 들여다보면서 숨은 패턴과 관계, 품질 문제를 찾는 과정이다. CRISP-DM의 6단계 중 앞의 세 단계(Business Understanding → Data Understanding → Data Preparation)에 걸쳐 있다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>단계</th><th>EDA가 하는 일</th></tr>
+    <tr><td>Business Understanding</td><td>목표·성공지표 정의, KPI가 데이터로 도달 가능한지 검토, 타당성(feasibility) 확인</td></tr>
+    <tr><td>Data Understanding</td><td>변수의 의미·단위·범위 파악, 단변량/다변량 분포와 관계 확인, 결측·이상치·오류·중복 발견</td></tr>
+    <tr><td>Data Preparation</td><td>정제, 파생변수 생성, 병합, 포맷 정리</td></tr>
+  </table></div>
+  <p>EDA의 두 도구는 <b>그래프</b>(히스토그램, 산점도, 박스플롯 …)와 <b>수치 통계량</b>(min·max·mean·std·사분위수·p-value …)이다. 같은 질문을 이미지와 숫자 두 방향에서 확인한다.</p>
+</section>
+
+<section>
+  <h2><span class="no">02</span>변수 종류 → 차트 고르기</h2>
+  <div class="split">
+    <div class="panel"><span class="k">수치형 · 정량</span>
+      <p><b>이산형</b> 판매량, 매출액, 나이<br><b>연속형</b> 온도, 키, 몸무게</p>
+      <p>숫자 요약: min, max, mean, std, 사분위수</p>
+      <p>차트: 히스토그램, 밀도(KDE), 박스플롯</p></div>
+    <div class="panel"><span class="k">범주형 · 정성</span>
+      <p><b>명목형</b> 성별, 시도, 흡연여부<br><b>순서형</b> 연령대, 매출등급</p>
+      <p>숫자 요약: 범주별 빈도수, 비율</p>
+      <p>차트: 막대그래프, 원형 차트</p></div>
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>보여주고 싶은 것</th><th>차트</th><th>예</th></tr>
+    <tr><td>시간에 따른 변화</td><td>선형 차트</td><td>분기별 매출, 연도별 GDP</td></tr>
+    <tr><td>항목 간 비교</td><td>막대 차트</td><td>영화별 평점</td></tr>
+    <tr><td>연속형 분포</td><td>히스토그램, KDE</td><td>승객 나이 분포</td></tr>
+    <tr><td>두 변수의 관계</td><td>산점도</td><td>키 vs 몸무게</td></tr>
+    <tr><td>전체 중 비율</td><td>원형 차트</td><td>곤충 종류 비율</td></tr>
+    <tr><td>중앙값·사분위·이상치</td><td>박스플롯</td><td>나이의 이상치</td></tr>
+    <tr><td>두 범주의 교차 집계, 상관계수</td><td>히트맵</td><td>승선항 × 객실등급</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2><span class="no">03</span>matplotlib 기본기</h2>
+  <p>도움말은 <code>help(plt.plot)</code>, Jupyter에서는 <code>plt.plot?</code> 또는 <b>Shift+Tab</b>. 공식 문서는 버전을 골라서 본다.</p>
+<pre><code>import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 4))                 # 가로, 세로 (인치)
+plt.plot(x, y, 'go--', ms=8, mfc='r')      # 색 g · 마커 o · 선 --
+plt.xlim(10, 70); plt.ylim(0, 300)         # 구간 확대/축소
+plt.grid(True)
+plt.annotate('peak', xy=(2, 10), xytext=(5, 20),
+             arrowprops={'color': 'red'})  # 텍스트, 가리킬 점, 글자 위치, 화살표
+plt.title('apt vs kw'); plt.xlabel('apt'); plt.ylabel('kw')
+plt.legend(); plt.show()</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>옵션</th><th>값</th></tr>
+    <tr><td>색상</td><td class="mono">b g r c m y k w</td></tr>
+    <tr><td>선 종류</td><td class="mono">-  실선 · --  파선 · -.  1점쇄선 · :  점선</td></tr>
+    <tr><td>마커</td><td class="mono">.  ,  o  v  ^  *</td></tr>
+    <tr><td>마커 세부</td><td class="mono">ms 크기 · mec 테두리색 · mfc 채움색</td></tr>
+  </table></div>
+  <h3>subplot</h3>
+  <p><code>plt.subplot(행, 열, 위치)</code>. 위치는 왼쪽 위부터 1로 센다. <code>subplot(2,2,3)</code>은 2×2 격자의 왼쪽 아래 칸.</p>
+</section>
+
+<section>
+  <h2><span class="no">04</span>시각화의 함정</h2>
+  <p>같은 데이터라도 축을 어떻게 잡느냐에 따라 결론이 달라 보인다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>세로축</th><th>읽히는 결론</th></tr>
+    <tr><td>실제 임금, 일반 눈금</td><td>상사 임금이 훨씬 높고 격차도 커진다</td></tr>
+    <tr><td>실제 임금, 로그 눈금</td><td>근로자 임금이 상대적으로 더 빨리 오른다</td></tr>
+    <tr><td>첫해 = 100으로 환산</td><td>근로자의 증가율이 훨씬 높다</td></tr>
+  </table></div>
+  <ul>
+    <li>막대그래프의 y축이 0에서 시작하지 않으면 작은 차이가 크게 보인다 (여론조사 그래프 예시).</li>
+    <li>값 하나가 너무 커서 축을 끊을 때는 물결선으로 생략을 표시해야 오해가 없다.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="no">05</span>도수분포표와 히스토그램</h2>
+  <p>수치 데이터를 겹치지 않는 구간(계급, bin)으로 나누고 구간마다 개수(도수)를 센다. 구간은 "이상 ~ 미만"으로 잡아 중복을 막고, 도수의 합은 데이터 개수와 같아야 한다. 히스토그램은 이 표를 그림으로 옮긴 것이다.</p>
+  <p>bin 크기를 바꾸면 모양이 달라진다. 너무 넓으면 특징이 뭉개지고, 너무 좁으면 노이즈가 많아진다. 아래에서 수업 예시 데이터(사용자별 서비스 이용 시간)로 직접 바꿔 보자.</p>
+  <div class="tool">
+    <label for="hist-data">데이터 (쉼표로 구분)</label>
+    <input type="text" id="hist-data" value="50, 60, 65, 71, 73, 78, 81, 84, 89, 94">
+    <div class="seg" role="group" aria-label="bin 너비">
+      <button type="button" data-w="5">bin 너비 5</button>
+      <button type="button" data-w="10" aria-pressed="true">bin 너비 10</button>
+      <button type="button" data-w="20">bin 너비 20</button>
+    </div>
+    <div class="svgwrap"><svg id="hist" viewBox="0 0 600 220" width="100%" role="img" aria-label="히스토그램"></svg></div>
+    <p class="mono" style="font-size:13px;color:var(--muted)">경계값 60은 60~70 구간에 들어간다 (왼쪽 포함, 오른쪽 미포함).</p>
+  </div>
+  <h3>히스토그램 vs 막대그래프</h3>
+  <p>히스토그램은 연속형 수치 데이터의 분포라서 막대가 붙어 있고 x축이 숫자 구간이다. 막대그래프는 범주형 데이터 비교라서 막대가 떨어져 있고 순서를 바꿔도 된다.</p>
+</section>
+
+<section>
+  <h2><span class="no">06</span>사분위수, IQR, 박스플롯</h2>
+  <p>데이터를 크기순으로 늘어놓고 4등분한 지점이 Q1(25%), Q2(중앙값, 50%), Q3(75%)다. <b>IQR = Q3 − Q1</b>은 가운데 50%가 퍼진 폭이다. <code>df.describe()</code>의 25%·50%·75% 행이 바로 이 값이다.</p>
+  <div class="split">
+    <div class="panel"><span class="k">FENCE</span>
+      <p>lower fence = max(min, Q1 − 1.5×IQR)<br>upper fence = min(max, Q3 + 1.5×IQR)</p></div>
+    <div class="panel"><span class="k">WHISKER · OUTLIER</span>
+      <p>수염 끝 = fence 안쪽에 있는 실제 데이터의 최솟값/최댓값. fence 밖의 점은 이상치로 따로 찍힌다.</p></div>
+  </div>
+  <p>수업 예시: Q1=21, Q3=35 → IQR=14 → 위쪽 한계 35+21=<b>56</b>, 아래쪽 21−21=<b>0</b>. 최댓값 80은 이상치.</p>
+  <div class="tool">
+    <label for="box-data">데이터 (쉼표로 구분) — 수업 연습문제로 채워 둠</label>
+    <input type="text" id="box-data" value="5, 7, 8, 12, 13, 14, 18, 21, 25, 30">
+    <div class="stats" id="box-stats"></div>
+    <div class="svgwrap"><svg id="box" viewBox="0 0 600 130" width="100%" role="img" aria-label="박스플롯"></svg></div>
+    <p style="font-size:13.5px;color:var(--muted)">계산 방식은 <code>np.percentile</code> 기본값(선형 보간)과 같다. 손으로 계산하는 교과서 방식(중앙값 기준으로 반씩 나누기)을 쓰면 Q1=8, Q3=21처럼 조금 다르게 나올 수 있다.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">07</span>seaborn</h2>
+  <p>matplotlib 위에 만든 통계 시각화 라이브러리. DataFrame을 <code>data=</code>로 넘기고 컬럼 이름만 적으면 된다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>함수</th><th>하는 일</th></tr>
+    <tr><td class="mono">histplot</td><td>히스토그램 (<code>bins=</code>, <code>kde=True</code>로 밀도선 추가)</td></tr>
+    <tr><td class="mono">kdeplot</td><td>밀도 곡선</td></tr>
+    <tr><td class="mono">boxplot</td><td>박스플롯</td></tr>
+    <tr><td class="mono">distplot</td><td>히스토그램 + 밀도 (수업 예제)</td></tr>
+    <tr><td class="mono">jointplot</td><td>산점도 + 양 축 분포</td></tr>
+    <tr><td class="mono">pairplot</td><td>모든 수치 변수 쌍의 산점도 격자</td></tr>
+    <tr><td class="mono">countplot</td><td>범주별 개수 세서 막대로</td></tr>
+    <tr><td class="mono">barplot</td><td>범주별 <b>평균</b> 막대 + 오차막대</td></tr>
+    <tr><td class="mono">heatmap</td><td>표 형태 값(집계표, 상관행렬)을 색으로</td></tr>
+  </table></div>
+  <h3>hue: 범주 한 차원 더하기</h3>
+<pre><code>tips = sns.load_dataset("tips")
+sns.scatterplot(x="total_bill", y="tip", hue="time", data=tips)  # sex, smoker, day 로도
+tips["tip_rate"] = tips["tip"] / tips["total_bill"]                # 파생변수
+sns.boxplot(x="time", y="tip_rate", data=tips)                    # 점심/저녁 비교</code></pre>
+  <h3>pivot → heatmap</h3>
+<pre><code>temp1 = titanic.groupby(['Embarked', 'Pclass'], as_index=False)['PassengerId'].count()
+temp2 = temp1.pivot(index='Embarked', columns='Pclass', values='PassengerId')
+sns.heatmap(temp2, annot=True, fmt='d')   # fmt='d' 면 1.3e+02 대신 127로 표시</code></pre>
+  <div class="note"><b>실습하다 막히면</b><br>
+    · <code>distplot</code>은 최신 seaborn에서 지원 종료 예정이라 경고가 뜬다. <code>sns.histplot(x, bins=16, kde=True, stat='density')</code>로 대체.<br>
+    · pandas 2.0부터 <code>pivot('Embarked','Pclass','PassengerId')</code>처럼 위치 인자로 쓰면 에러. <code>index=, columns=, values=</code>를 적어야 한다.<br>
+    · 상관 히트맵은 <code>sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm')</code>. Date와 Month처럼 0.98이 나오는 쌍은 사실상 같은 정보다.</div>
+</section>
+
+<section>
+  <h2><span class="no">08</span>워드클라우드와 folium</h2>
+  <div class="split">
+    <div class="panel"><span class="k">WORDCLOUD</span>
+      <p>단어 빈도를 글자 크기로. 한글은 <code>font_path</code> 지정 필수. 전처리로 문장부호·불용어·조사("합니다", "하세요") 제거, <code>Counter</code>로 빈도 세기, 이미지 + numpy로 mask를 주면 모양을 바꿀 수 있다.</p></div>
+    <div class="panel"><span class="k">FOLIUM</span>
+      <p>위경도 데이터로 인터랙티브 지도. <code>folium.Map(location=[위도, 경도], zoom_start=15)</code>로 초기 화면, <code>folium.Marker</code>로 점 찍기. 공공데이터포털(data.go.kr)에서 위경도 포함 데이터를 구할 수 있다.</p></div>
+  </div>
+<pre><code>m = folium.Map(location=[37.5665, 126.9780], zoom_start=14)
+for _, row in df.iterrows():
+    folium.Marker([row['lat'], row['lot']], popup=row['s_name']).add_to(m)
+m</code></pre>
+</section>
+
+<footer>오늘 TASK: Titanic 시각화 분석으로 인사이트 도출 · 여러 문서로 워드클라우드 · 위경도 오픈데이터로 지도 시각화</footer>
+</main>
+
+<script>
+(function(){
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const parse = s => s.split(/[,\s]+/).map(Number).filter(v => isFinite(v) && v !== '' ).filter((v,i,a)=>true);
+  function nums(id){ return document.getElementById(id).value.split(/[,\s]+/).filter(t=>t!=='').map(Number).filter(Number.isFinite); }
+  const NS='http://www.w3.org/2000/svg';
+  function el(tag, attrs, text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e; }
+
+  // histogram
+  let binW = 10;
+  function drawHist(){
+    const svg=document.getElementById('hist'); svg.innerHTML='';
+    const d=nums('hist-data'); if(!d.length) return;
+    const lo=Math.floor(Math.min(...d)/binW)*binW, hi=(Math.floor(Math.max(...d)/binW)+1)*binW;
+    const nb=Math.round((hi-lo)/binW), counts=new Array(nb).fill(0);
+    d.forEach(v=>counts[Math.min(nb-1,Math.floor((v-lo)/binW))]++);
+    const maxC=Math.max(...counts), L=40,R=580,T=16,B=180, w=(R-L)/nb;
+    const yS=c=>B-(c/maxC)*(B-T);
+    for(let c=0;c<=maxC;c++){
+      svg.appendChild(el('line',{x1:L,x2:R,y1:yS(c),y2:yS(c),stroke:css('--grid'),'stroke-width':1}));
+      svg.appendChild(el('text',{x:L-8,y:yS(c)+4,'text-anchor':'end','font-size':11,fill:css('--muted')},c));
+    }
+    counts.forEach((c,i)=>{
+      svg.appendChild(el('rect',{class:'bar',x:L+i*w+1,y:yS(c),width:w-2,height:B-yS(c),fill:css('--accent'),rx:1}));
+    });
+    const step = nb>12?2:1;
+    for(let i=0;i<=nb;i+=step) svg.appendChild(el('text',{x:L+i*w,y:B+18,'text-anchor':'middle','font-size':11,fill:css('--muted')},lo+i*binW));
+    svg.appendChild(el('line',{x1:L,x2:R,y1:B,y2:B,stroke:css('--fg'),'stroke-width':1}));
+  }
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+    binW=+b.dataset.w; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawHist();
+  }));
+  document.getElementById('hist-data').addEventListener('input',drawHist);
+
+  // boxplot
+  function pct(s,p){ const pos=(s.length-1)*p, f=Math.floor(pos), c=Math.ceil(pos); return s[f]+(s[c]-s[f])*(pos-f); }
+  const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
+  function drawBox(){
+    const svg=document.getElementById('box'); svg.innerHTML='';
+    const st=document.getElementById('box-stats'); st.innerHTML='';
+    const s=nums('box-data').sort((a,b)=>a-b); if(s.length<2) return;
+    const q1=pct(s,.25),q2=pct(s,.5),q3=pct(s,.75),iqr=q3-q1;
+    const lf=Math.max(s[0],q1-1.5*iqr), uf=Math.min(s[s.length-1],q3+1.5*iqr);
+    const inside=s.filter(v=>v>=q1-1.5*iqr&&v<=q3+1.5*iqr), out=s.filter(v=>v<q1-1.5*iqr||v>q3+1.5*iqr);
+    const wl=Math.min(...inside), wh=Math.max(...inside);
+    [['min',s[0]],['Q1',q1],['Q2',q2],['Q3',q3],['max',s[s.length-1]],['IQR',iqr],['Q1−1.5·IQR',q1-1.5*iqr],['Q3+1.5·IQR',q3+1.5*iqr],['이상치',out.length?out.join(', '):'없음']]
+      .forEach(([l,v])=>{ const d=document.createElement('div'); d.className='stat'; d.innerHTML='<div class="l"></div><div class="v"></div>'; d.children[0].textContent=l; d.children[1].textContent=typeof v==='number'?fmt(v):v; st.appendChild(d); });
+    const lo=Math.min(s[0],q1-1.5*iqr), hi=Math.max(s[s.length-1],q3+1.5*iqr), pad=(hi-lo)*.05||1;
+    const L=30,R=570, x=v=>L+(v-lo+pad)/(hi-lo+2*pad)*(R-L), cy=50;
+    const fg=css('--fg'), ac=css('--accent'), mu=css('--muted'), wa=css('--warn');
+    [q1-1.5*iqr,q3+1.5*iqr].forEach(f=>svg.appendChild(el('line',{x1:x(f),x2:x(f),y1:12,y2:88,stroke:mu,'stroke-dasharray':'3 3'})));
+    svg.appendChild(el('line',{x1:x(wl),x2:x(q1),y1:cy,y2:cy,stroke:fg}));
+    svg.appendChild(el('line',{x1:x(q3),x2:x(wh),y1:cy,y2:cy,stroke:fg}));
+    [wl,wh].forEach(v=>svg.appendChild(el('line',{x1:x(v),x2:x(v),y1:cy-12,y2:cy+12,stroke:fg,'stroke-width':2})));
+    svg.appendChild(el('rect',{x:x(q1),y:cy-22,width:Math.max(1,x(q3)-x(q1)),height:44,fill:css('--accent-soft'),stroke:ac,'stroke-width':1.5}));
+    svg.appendChild(el('line',{x1:x(q2),x2:x(q2),y1:cy-22,y2:cy+22,stroke:ac,'stroke-width':2.5}));
+    out.forEach(v=>svg.appendChild(el('circle',{cx:x(v),cy:cy,r:4,fill:'none',stroke:wa,'stroke-width':2})));
+    s.forEach(v=>svg.appendChild(el('circle',{cx:x(v),cy:104,r:2.5,fill:mu})));
+    [[wl,'수염'],[q1,'Q1'],[q2,'Q2'],[q3,'Q3'],[wh,'수염']].forEach(([v,t],i)=>{
+      svg.appendChild(el('text',{x:x(v),y:124,'text-anchor':'middle','font-size':10.5,fill:mu},fmt(v)));
+    });
+  }
+  document.getElementById('box-data').addEventListener('input',drawBox);
+  drawHist(); drawBox();
+  try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawHist();drawBox();}); }catch(e){}
+  new MutationObserver(()=>{drawHist();drawBox();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>
