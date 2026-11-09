@@ -1,305 +1,1513 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>데이터 시각화 노트</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;800&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: 그래프 용지 위의 실험 노트 — 좁은 본문 칼럼 + 섹션마다 표/도식/계산기 */
+/* Layout: 모눈종이 위 실험 노트 — 섹션마다 "직접 눌러보는" 그래프 카드 하나씩 */
 :root{
-  --bg:#f5f7f9; --surface:#ffffff; --fg:#1c2733; --muted:#5d6b78; --line:#d6dee5; --grid:#e6ecf1;
-  --accent:#0f7a8a; --accent-soft:#dff1f3; --warn:#b5522f; --warn-soft:#f8e6df;
+  --bg:#f4f7f9; --surface:#ffffff; --fg:#1c2733; --muted:#5d6b78; --line:#d4dde4; --grid:#e5ebf0;
+  --accent:#0f7a8a; --accent-soft:#dcf0f2;
+  --c1:#0f7a8a; --c2:#d26a1e; --c3:#6a5acd;
+  --good:#1f8a4c; --good-soft:#def3e6; --warn:#b5522f; --warn-soft:#f8e4dc;
   --f-display:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#11181f; --surface:#18222b; --fg:#e3eaf0; --muted:#97a6b3; --line:#2b3a46; --grid:#1a252e;
-  --accent:#4cc3d2; --accent-soft:#163b42; --warn:#f08b64; --warn-soft:#3d2219; color-scheme:dark}}
+  --bg:#10171e; --surface:#17212a; --fg:#e3eaf0; --muted:#97a6b3; --line:#2a3945; --grid:#19242d;
+  --accent:#4cc3d2; --accent-soft:#153a41; --c1:#4cc3d2; --c2:#f2a05f; --c3:#a89ff2;
+  --good:#5fd08f; --good-soft:#163526; --warn:#f08b64; --warn-soft:#3c2119; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#11181f; --surface:#18222b; --fg:#e3eaf0; --muted:#97a6b3; --line:#2b3a46; --grid:#1a252e;
-  --accent:#4cc3d2; --accent-soft:#163b42; --warn:#f08b64; --warn-soft:#3d2219; color-scheme:dark}
+  --bg:#10171e; --surface:#17212a; --fg:#e3eaf0; --muted:#97a6b3; --line:#2a3945; --grid:#19242d;
+  --accent:#4cc3d2; --accent-soft:#153a41; --c1:#4cc3d2; --c2:#f2a05f; --c3:#a89ff2;
+  --good:#5fd08f; --good-soft:#163526; --warn:#f08b64; --warn-soft:#3c2119; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:24px 24px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
-main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
-header{display:flex;flex-direction:column;gap:10px}
+main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:64px}
+header{display:flex;flex-direction:column;gap:12px}
 .eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
-h1{font-family:var(--f-display);font-weight:800;font-size:clamp(32px,6vw,48px);line-height:1.2;margin:0;text-wrap:balance}
-h2{font-family:var(--f-display);font-weight:800;font-size:24px;margin:0;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
-h2 .no{font-family:var(--f-mono);font-size:14px;color:var(--accent);font-weight:500}
-h3{font-family:var(--f-display);font-weight:800;font-size:17px;margin:8px 0 0}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(34px,7vw,52px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:800;font-size:clamp(22px,4vw,27px);line-height:1.3;margin:0;text-wrap:balance;display:flex;gap:12px;align-items:baseline}
+h2 .no{font-family:var(--f-mono);font-size:14px;color:var(--accent);font-weight:500;flex:none}
+h3{font-family:var(--f-display);font-weight:800;font-size:17px;margin:6px 0 0}
 p{margin:0;max-width:65ch}
-section{display:flex;flex-direction:column;gap:16px}
+section{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
 .lede{color:var(--muted);font-size:17px}
+.toc{display:flex;flex-wrap:wrap;gap:6px}
+.toc a{font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg);text-decoration:none}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
 code,.mono{font-family:var(--f-mono);font-size:.9em}
 code{background:var(--accent-soft);padding:1px 5px;border-radius:3px}
 pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.6}
 pre code{background:none;padding:0}
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
-table{border-collapse:collapse;width:100%;font-size:14.5px}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-weight:600;color:var(--muted);font-size:12.5px;letter-spacing:.04em;background:var(--bg)}
-tr:last-child td{border-bottom:none}
-td.mono{white-space:nowrap}
-ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+.say{background:var(--accent-soft);border-radius:6px;padding:12px 16px;font-size:15.5px}
+.say b{color:var(--accent)}
 .note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:6px;padding:12px 16px;font-size:15px}
 .note b{color:var(--warn)}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12.5px;background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td.mono{white-space:nowrap}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .split>*{min-width:0}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px}
-.panel .k{font-family:var(--f-mono);font-size:12px;color:var(--accent);letter-spacing:.06em}
-@media (max-width:560px){.split{grid-template-columns:1fr}}
-/* tools */
-.tool{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px}
-.tool label{font-size:13px;color:var(--muted)}
-.tool input[type=text]{width:100%;font-family:var(--f-mono);font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg)}
-.tool input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:600px){.split{grid-template-columns:1fr}}
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.lab-h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.lab-h .tag{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+.lab-h .hint{font-size:12.5px;color:var(--muted)}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button{font-family:var(--f-mono);font-size:13px;padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button,.btn{font-family:var(--f-body);font-size:13.5px;padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button.m{font-family:var(--f-mono)}
+.seg button:hover,.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
 .seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
-.stat{border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--bg)}
-.stat .l{font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
-.stat .v{font-family:var(--f-mono);font-size:16px;font-variant-numeric:tabular-nums}
-svg text{font-family:var(--f-mono)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row label{font-size:13px;color:var(--muted)}
+input[type=text]{width:100%;font-family:var(--f-mono);font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg)}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:140px}
+.out{font-family:var(--f-mono);font-size:13.5px;background:var(--bg);border:1px dashed var(--line);border-radius:4px;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.caption{font-size:14.5px;min-height:3.2em}
+.caption b{color:var(--accent)}
 .svgwrap{overflow-x:auto}
-footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
-@media (prefers-reduced-motion:no-preference){rect.bar{transition:height .25s,y .25s}}
+svg{display:block;max-width:100%;height:auto}
+svg .ax{stroke:var(--fg);stroke-width:1}
+svg .gr{stroke:var(--line);stroke-width:1}
+svg .t{fill:var(--muted);font-size:11px;font-family:var(--f-mono)}
+svg .tb{fill:var(--fg);font-size:12.5px;font-family:var(--f-body);font-weight:600}
+svg .tw{fill:var(--surface);font-size:13px;font-family:var(--f-mono);font-weight:500}
+svg .tf{fill:var(--fg);font-size:13px;font-family:var(--f-mono);font-weight:500}
+.f1{fill:var(--c1)} .f2{fill:var(--c2)} .f3{fill:var(--c3)} .fm{fill:var(--muted)} .fs{fill:var(--accent-soft)} .fw{fill:var(--warn)} .fb{fill:var(--bg)} .fsurf{fill:var(--surface)}
+.s1{stroke:var(--c1);fill:none;stroke-width:2.5} .s2{stroke:var(--c2);fill:none;stroke-width:2.5} .sw{stroke:var(--warn);fill:none;stroke-width:2} .sm{stroke:var(--muted);fill:none} .sf{stroke:var(--fg);fill:none;stroke-width:1.5}
+/* picker */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
+.qgrid button{text-align:left;font-family:var(--f-body);font-size:14px;line-height:1.4;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
+.qgrid button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.pick-out{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:center}
+@media (max-width:600px){.pick-out{grid-template-columns:1fr}}
+.pick-name{font-family:var(--f-display);font-weight:800;font-size:22px}
+/* grid for subplot */
+.spgrid{display:grid;gap:6px;max-width:320px}
+.spgrid button{aspect-ratio:4/3;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:4px;font-family:var(--f-mono);font-size:18px;cursor:pointer}
+.spgrid button[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+/* wordcloud */
+.cloud{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;padding:18px 8px;min-height:180px;background:var(--bg);border-radius:6px}
+.cloud span{font-family:var(--f-display);font-weight:800;line-height:1.1}
+.cloud .w1{color:var(--c1)} .cloud .w2{color:var(--c2)} .cloud .w3{color:var(--c3)} .cloud .w4{color:var(--muted)}
+.cloud .stop{color:var(--warn);text-decoration:line-through;text-decoration-thickness:2px}
+/* quiz */
+.quiz{display:flex;flex-direction:column;gap:14px}
+.qitem{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.qitem p{font-weight:600}
+.qitem .seg button.ok{background:var(--good);border-color:var(--good);color:var(--surface)}
+.qitem .seg button.no{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.qfb{font-size:14px;color:var(--muted);min-height:1.5em}
+.score{font-family:var(--f-mono);font-size:14px;color:var(--accent)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+footer{color:var(--muted);font-size:13.5px;border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:no-preference){
+  svg .anim{transition:all .35s ease}
+  .cloud span{transition:font-size .3s}
+}
+.locgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:240px}
+.locgrid button,.chips button{font-family:var(--f-mono);font-size:12.5px;padding:6px 4px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--fg);cursor:pointer;line-height:1.25}
+.locgrid button[aria-pressed="true"],.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-width:42px}
+.fsim{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media (max-width:640px){.fsim{grid-template-columns:1fr}}
+.codeview{font-family:var(--f-mono);font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 0;overflow-x:auto}
+.codeview div{padding:3px 12px;white-space:pre;color:var(--muted);border-left:3px solid transparent}
+.codeview div.done{color:var(--fg)}
+.codeview div.cur{color:var(--fg);background:var(--accent-soft);border-left-color:var(--accent);font-weight:500}
+.codeview div.cm{font-style:italic}
+.axctl{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
+.axk{font-size:13.5px;color:var(--muted);white-space:nowrap}
+.axk b{color:var(--accent);font-family:var(--f-mono)}
+@media (max-width:480px){.axctl{grid-template-columns:1fr}}
+.qhead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.qcat{font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.qitem p.qq{font-weight:600;margin:0}
+.qnum{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.qnum input{width:9em;font-family:var(--f-mono);font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--fg)}
+.qnum input.ok{border-color:var(--good);background:var(--good-soft)}
+.qnum input.no{border-color:var(--warn);background:var(--warn-soft)}
+.qfb a{color:var(--accent)}
+.qfb.good{color:var(--good)} .qfb.bad{color:var(--fg)}
+.qfb:empty{display:none}
+.qitem svg{max-width:420px}
+.pvkey{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14.5px}
+.pvchip{display:inline-block;font-family:var(--f-mono);font-size:12px;font-weight:500;padding:1px 8px;border-radius:4px;color:var(--surface);margin-right:4px}
+.pvchip.p1{background:var(--c1)} .pvchip.p2{background:var(--c2)} .pvchip.p3{background:var(--c3)}
+.pvwrap{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.1fr);gap:10px;align-items:center}
+@media (max-width:640px){.pvwrap{grid-template-columns:1fr}.pvarrow{transform:rotate(90deg)}}
+.pvarrow{font-size:22px;color:var(--accent);text-align:center;line-height:1.1}
+.pvcap{font-size:12.5px;color:var(--muted);margin:0 0 4px}
+.pvt td,.pvt th{font-family:var(--f-mono);font-size:13px;padding:5px 10px;text-align:center}
+.pvt th.h1,.pvt td.h1{color:var(--c1);font-weight:600} .pvt th.h2,.pvt td.h2{color:var(--c2);font-weight:600} .pvt th.h3,.pvt td.h3{color:var(--c3);font-weight:600}
+.pvt tr.pvr{cursor:pointer}
+.pvt tr.pvr:hover td{background:var(--bg)}
+.pvt .hit{background:var(--accent-soft)!important;outline:2px solid var(--accent);outline-offset:-2px}
+.pvt td.cell{cursor:pointer}
 </style>
 
 <main>
 <header>
-  <span class="eyebrow">Data Science Lv1 · 2026.11.06</span>
+  <span class="eyebrow">Data Science Lv1 · 2026.11.06 수업</span>
   <h1>데이터 시각화 노트</h1>
-  <p class="lede">EDA에서 그래프를 왜 그리는지, 변수 종류에 따라 어떤 차트를 고르는지, 그리고 matplotlib·seaborn·워드클라우드·folium을 어떻게 쓰는지 정리했다.</p>
+  <p class="lede">숫자 표만 봐서는 안 보이던 게 그래프로 그리면 보인다. 어떤 그래프를 언제 쓰는지, 그리고 그래프가 어떻게 사람을 속일 수 있는지를 직접 눌러 보며 정리했다.</p>
+  <nav class="toc" aria-label="목차">
+    <a href="#why">왜 그리나</a><a href="#pick">차트 고르기</a><a href="#plt">matplotlib</a><a href="#nb">노트북 실습</a><a href="#trap">시각화의 함정</a><a href="#hist">히스토그램</a><a href="#box">박스플롯</a><a href="#sns">seaborn</a><a href="#cloud">워드클라우드·지도</a><a href="#quiz">복습 퀴즈</a>
+  </nav>
 </header>
 
-<section>
-  <h2><span class="no">01</span>EDA와 CRISP-DM</h2>
-  <p>EDA(탐색적 데이터 분석)는 요약·시각화·통계로 데이터를 들여다보면서 숨은 패턴과 관계, 품질 문제를 찾는 과정이다. CRISP-DM의 6단계 중 앞의 세 단계(Business Understanding → Data Understanding → Data Preparation)에 걸쳐 있다.</p>
-  <div class="tablewrap"><table>
-    <tr><th>단계</th><th>EDA가 하는 일</th></tr>
-    <tr><td>Business Understanding</td><td>목표·성공지표 정의, KPI가 데이터로 도달 가능한지 검토, 타당성(feasibility) 확인</td></tr>
-    <tr><td>Data Understanding</td><td>변수의 의미·단위·범위 파악, 단변량/다변량 분포와 관계 확인, 결측·이상치·오류·중복 발견</td></tr>
-    <tr><td>Data Preparation</td><td>정제, 파생변수 생성, 병합, 포맷 정리</td></tr>
-  </table></div>
-  <p>EDA의 두 도구는 <b>그래프</b>(히스토그램, 산점도, 박스플롯 …)와 <b>수치 통계량</b>(min·max·mean·std·사분위수·p-value …)이다. 같은 질문을 이미지와 숫자 두 방향에서 확인한다.</p>
-</section>
-
-<section>
-  <h2><span class="no">02</span>변수 종류 → 차트 고르기</h2>
-  <div class="split">
-    <div class="panel"><span class="k">수치형 · 정량</span>
-      <p><b>이산형</b> 판매량, 매출액, 나이<br><b>연속형</b> 온도, 키, 몸무게</p>
-      <p>숫자 요약: min, max, mean, std, 사분위수</p>
-      <p>차트: 히스토그램, 밀도(KDE), 박스플롯</p></div>
-    <div class="panel"><span class="k">범주형 · 정성</span>
-      <p><b>명목형</b> 성별, 시도, 흡연여부<br><b>순서형</b> 연령대, 매출등급</p>
-      <p>숫자 요약: 범주별 빈도수, 비율</p>
-      <p>차트: 막대그래프, 원형 차트</p></div>
+<!-- 01 -->
+<section id="why">
+  <h2><span class="no">01</span>평균이 같아도 모양은 다르다</h2>
+  <p>두 반의 시험 평균이 똑같이 50점이다. 숫자 하나만 보면 두 반은 같아 보이지만, 점을 찍어 보면 전혀 다른 반이다.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">점 찍어 보기</span><span class="hint">예시 데이터</span></div>
+    <div class="svgwrap"><svg id="dots" viewBox="0 0 640 170" role="img" aria-label="평균이 같은 두 반의 점수 분포"></svg></div>
+    <div class="say"><b>이게 EDA(탐색적 데이터 분석)를 하는 이유다.</b> 요약 숫자(평균, 표준편차)와 그래프를 같이 봐야 데이터의 진짜 모양, 이상한 값, 빠진 값이 보인다.</div>
   </div>
-  <div class="tablewrap"><table>
-    <tr><th>보여주고 싶은 것</th><th>차트</th><th>예</th></tr>
-    <tr><td>시간에 따른 변화</td><td>선형 차트</td><td>분기별 매출, 연도별 GDP</td></tr>
-    <tr><td>항목 간 비교</td><td>막대 차트</td><td>영화별 평점</td></tr>
-    <tr><td>연속형 분포</td><td>히스토그램, KDE</td><td>승객 나이 분포</td></tr>
-    <tr><td>두 변수의 관계</td><td>산점도</td><td>키 vs 몸무게</td></tr>
-    <tr><td>전체 중 비율</td><td>원형 차트</td><td>곤충 종류 비율</td></tr>
-    <tr><td>중앙값·사분위·이상치</td><td>박스플롯</td><td>나이의 이상치</td></tr>
-    <tr><td>두 범주의 교차 집계, 상관계수</td><td>히트맵</td><td>승선항 × 객실등급</td></tr>
-  </table></div>
-</section>
-
-<section>
-  <h2><span class="no">03</span>matplotlib 기본기</h2>
-  <p>도움말은 <code>help(plt.plot)</code>, Jupyter에서는 <code>plt.plot?</code> 또는 <b>Shift+Tab</b>. 공식 문서는 버전을 골라서 본다.</p>
-<pre><code>import matplotlib.pyplot as plt
-
-plt.figure(figsize=(8, 4))                 # 가로, 세로 (인치)
-plt.plot(x, y, 'go--', ms=8, mfc='r')      # 색 g · 마커 o · 선 --
-plt.xlim(10, 70); plt.ylim(0, 300)         # 구간 확대/축소
-plt.grid(True)
-plt.annotate('peak', xy=(2, 10), xytext=(5, 20),
-             arrowprops={'color': 'red'})  # 텍스트, 가리킬 점, 글자 위치, 화살표
-plt.title('apt vs kw'); plt.xlabel('apt'); plt.ylabel('kw')
-plt.legend(); plt.show()</code></pre>
-  <div class="tablewrap"><table>
-    <tr><th>옵션</th><th>값</th></tr>
-    <tr><td>색상</td><td class="mono">b g r c m y k w</td></tr>
-    <tr><td>선 종류</td><td class="mono">-  실선 · --  파선 · -.  1점쇄선 · :  점선</td></tr>
-    <tr><td>마커</td><td class="mono">.  ,  o  v  ^  *</td></tr>
-    <tr><td>마커 세부</td><td class="mono">ms 크기 · mec 테두리색 · mfc 채움색</td></tr>
-  </table></div>
-  <h3>subplot</h3>
-  <p><code>plt.subplot(행, 열, 위치)</code>. 위치는 왼쪽 위부터 1로 센다. <code>subplot(2,2,3)</code>은 2×2 격자의 왼쪽 아래 칸.</p>
-</section>
-
-<section>
-  <h2><span class="no">04</span>시각화의 함정</h2>
-  <p>같은 데이터라도 축을 어떻게 잡느냐에 따라 결론이 달라 보인다.</p>
-  <div class="tablewrap"><table>
-    <tr><th>세로축</th><th>읽히는 결론</th></tr>
-    <tr><td>실제 임금, 일반 눈금</td><td>상사 임금이 훨씬 높고 격차도 커진다</td></tr>
-    <tr><td>실제 임금, 로그 눈금</td><td>근로자 임금이 상대적으로 더 빨리 오른다</td></tr>
-    <tr><td>첫해 = 100으로 환산</td><td>근로자의 증가율이 훨씬 높다</td></tr>
-  </table></div>
-  <ul>
-    <li>막대그래프의 y축이 0에서 시작하지 않으면 작은 차이가 크게 보인다 (여론조사 그래프 예시).</li>
-    <li>값 하나가 너무 커서 축을 끊을 때는 물결선으로 생략을 표시해야 오해가 없다.</li>
-  </ul>
-</section>
-
-<section>
-  <h2><span class="no">05</span>도수분포표와 히스토그램</h2>
-  <p>수치 데이터를 겹치지 않는 구간(계급, bin)으로 나누고 구간마다 개수(도수)를 센다. 구간은 "이상 ~ 미만"으로 잡아 중복을 막고, 도수의 합은 데이터 개수와 같아야 한다. 히스토그램은 이 표를 그림으로 옮긴 것이다.</p>
-  <p>bin 크기를 바꾸면 모양이 달라진다. 너무 넓으면 특징이 뭉개지고, 너무 좁으면 노이즈가 많아진다. 아래에서 수업 예시 데이터(사용자별 서비스 이용 시간)로 직접 바꿔 보자.</p>
-  <div class="tool">
-    <label for="hist-data">데이터 (쉼표로 구분)</label>
-    <input type="text" id="hist-data" value="50, 60, 65, 71, 73, 78, 81, 84, 89, 94">
-    <div class="seg" role="group" aria-label="bin 너비">
-      <button type="button" data-w="5">bin 너비 5</button>
-      <button type="button" data-w="10" aria-pressed="true">bin 너비 10</button>
-      <button type="button" data-w="20">bin 너비 20</button>
+  <h3>EDA는 프로젝트의 어디쯤?</h3>
+  <p>데이터 분석 프로젝트의 표준 순서인 CRISP-DM 6단계 중 앞의 세 단계가 EDA의 무대다.</p>
+  <div class="lab">
+    <div class="split" style="align-items:center">
+      <div class="svgwrap"><svg id="crisp" viewBox="0 0 400 300" role="img" aria-label="CRISP-DM 6단계 순환도"></svg></div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:15px">
+        <p><b style="color:var(--accent)">① 비즈니스 이해</b><br>무엇을 알고 싶은가? 목표와 성공 지표를 정하고, 데이터로 답할 수 있는 질문인지 확인한다.</p>
+        <p><b style="color:var(--accent)">② 데이터 이해</b><br>컬럼 뜻·단위·범위를 보고, 분포와 관계를 그려 보고, 결측·이상치·중복을 찾는다.</p>
+        <p><b style="color:var(--accent)">③ 데이터 준비</b><br>정제하고, 파생변수를 만들고, 표를 합친다.</p>
+      </div>
     </div>
-    <div class="svgwrap"><svg id="hist" viewBox="0 0 600 220" width="100%" role="img" aria-label="히스토그램"></svg></div>
-    <p class="mono" style="font-size:13px;color:var(--muted)">경계값 60은 60~70 구간에 들어간다 (왼쪽 포함, 오른쪽 미포함).</p>
   </div>
-  <h3>히스토그램 vs 막대그래프</h3>
-  <p>히스토그램은 연속형 수치 데이터의 분포라서 막대가 붙어 있고 x축이 숫자 구간이다. 막대그래프는 범주형 데이터 비교라서 막대가 떨어져 있고 순서를 바꿔도 된다.</p>
 </section>
 
-<section>
-  <h2><span class="no">06</span>사분위수, IQR, 박스플롯</h2>
-  <p>데이터를 크기순으로 늘어놓고 4등분한 지점이 Q1(25%), Q2(중앙값, 50%), Q3(75%)다. <b>IQR = Q3 − Q1</b>은 가운데 50%가 퍼진 폭이다. <code>df.describe()</code>의 25%·50%·75% 행이 바로 이 값이다.</p>
+<!-- 02 -->
+<section id="pick">
+  <h2><span class="no">02</span>질문을 고르면 차트가 나온다</h2>
+  <p>차트는 "무엇을 알고 싶은가"로 고른다. 알고 싶은 질문을 눌러 보자.</p>
+  <div class="lab">
+    <div class="qgrid" id="qgrid" role="group" aria-label="질문 고르기"></div>
+    <div class="pick-out">
+      <div class="svgwrap"><svg id="pick-svg" viewBox="0 0 340 200" role="img" aria-label="선택한 차트 예시"></svg></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span class="pick-name" id="pick-name"></span>
+        <p id="pick-ex" style="font-size:14.5px;color:var(--muted)"></p>
+        <div class="out" id="pick-code"></div>
+      </div>
+    </div>
+  </div>
+  <h3>먼저 변수 종류부터</h3>
   <div class="split">
-    <div class="panel"><span class="k">FENCE</span>
-      <p>lower fence = max(min, Q1 − 1.5×IQR)<br>upper fence = min(max, Q3 + 1.5×IQR)</p></div>
-    <div class="panel"><span class="k">WHISKER · OUTLIER</span>
-      <p>수염 끝 = fence 안쪽에 있는 실제 데이터의 최솟값/최댓값. fence 밖의 점은 이상치로 따로 찍힌다.</p></div>
-  </div>
-  <p>수업 예시: Q1=21, Q3=35 → IQR=14 → 위쪽 한계 35+21=<b>56</b>, 아래쪽 21−21=<b>0</b>. 최댓값 80은 이상치.</p>
-  <div class="tool">
-    <label for="box-data">데이터 (쉼표로 구분) — 수업 연습문제로 채워 둠</label>
-    <input type="text" id="box-data" value="5, 7, 8, 12, 13, 14, 18, 21, 25, 30">
-    <div class="stats" id="box-stats"></div>
-    <div class="svgwrap"><svg id="box" viewBox="0 0 600 130" width="100%" role="img" aria-label="박스플롯"></svg></div>
-    <p style="font-size:13.5px;color:var(--muted)">계산 방식은 <code>np.percentile</code> 기본값(선형 보간)과 같다. 손으로 계산하는 교과서 방식(중앙값 기준으로 반씩 나누기)을 쓰면 Q1=8, Q3=21처럼 조금 다르게 나올 수 있다.</p>
+    <div class="lab"><span class="lab-h"><span class="tag">수치형 · 숫자로 잼</span></span>
+      <p>나이, 키, 온도, 매출액. 평균을 내는 게 의미가 있다.</p>
+      <p style="font-size:14px;color:var(--muted)">→ 히스토그램, 박스플롯, 산점도</p></div>
+    <div class="lab"><span class="lab-h"><span class="tag">범주형 · 이름표로 나눔</span></span>
+      <p>성별, 지역, 객실 등급, 연령대. 평균 대신 "몇 개인지" 센다.</p>
+      <p style="font-size:14px;color:var(--muted)">→ 막대그래프, 원형 차트</p></div>
   </div>
 </section>
 
-<section>
-  <h2><span class="no">07</span>seaborn</h2>
-  <p>matplotlib 위에 만든 통계 시각화 라이브러리. DataFrame을 <code>data=</code>로 넘기고 컬럼 이름만 적으면 된다.</p>
-  <div class="tablewrap"><table>
-    <tr><th>함수</th><th>하는 일</th></tr>
-    <tr><td class="mono">histplot</td><td>히스토그램 (<code>bins=</code>, <code>kde=True</code>로 밀도선 추가)</td></tr>
-    <tr><td class="mono">kdeplot</td><td>밀도 곡선</td></tr>
-    <tr><td class="mono">boxplot</td><td>박스플롯</td></tr>
-    <tr><td class="mono">distplot</td><td>히스토그램 + 밀도 (수업 예제)</td></tr>
-    <tr><td class="mono">jointplot</td><td>산점도 + 양 축 분포</td></tr>
-    <tr><td class="mono">pairplot</td><td>모든 수치 변수 쌍의 산점도 격자</td></tr>
-    <tr><td class="mono">countplot</td><td>범주별 개수 세서 막대로</td></tr>
-    <tr><td class="mono">barplot</td><td>범주별 <b>평균</b> 막대 + 오차막대</td></tr>
-    <tr><td class="mono">heatmap</td><td>표 형태 값(집계표, 상관행렬)을 색으로</td></tr>
-  </table></div>
-  <h3>hue: 범주 한 차원 더하기</h3>
-<pre><code>tips = sns.load_dataset("tips")
-sns.scatterplot(x="total_bill", y="tip", hue="time", data=tips)  # sex, smoker, day 로도
-tips["tip_rate"] = tips["tip"] / tips["total_bill"]                # 파생변수
-sns.boxplot(x="time", y="tip_rate", data=tips)                    # 점심/저녁 비교</code></pre>
-  <h3>pivot → heatmap</h3>
+<!-- 03 -->
+<section id="plt">
+  <h2><span class="no">03</span>matplotlib 놀이터</h2>
+  <p><code>plt.plot(x, y, 'ro--')</code>의 세 번째 글자 뭉치는 <b>색 + 마커 + 선 모양</b>을 붙여 쓴 것이다. 버튼을 눌러 조합해 보면 코드가 같이 바뀐다.</p>
+  <div class="lab">
+    <div class="row"><label style="min-width:3em">색</label><div class="seg" id="pg-color"></div></div>
+    <div class="row"><label style="min-width:3em">마커</label><div class="seg" id="pg-marker"></div></div>
+    <div class="row"><label style="min-width:3em">선</label><div class="seg" id="pg-line"></div></div>
+    <div class="row"><label for="pg-ms" style="min-width:3em">ms</label><input type="range" id="pg-ms" min="3" max="14" value="7"><span class="mono" id="pg-ms-v">7</span></div>
+    <div class="svgwrap"><svg id="pg-svg" viewBox="0 0 600 220" role="img" aria-label="스타일이 적용된 선 그래프"></svg></div>
+    <div class="out" id="pg-code"></div>
+  </div>
+  <pre><code>plt.figure(figsize=(8, 4))     # 도화지 크기 (가로, 세로)
+plt.plot(x, y, 'ro--', ms=7)
+plt.xlim(0, 10); plt.ylim(0, 12)   # 보여줄 범위
+plt.title('제목'); plt.xlabel('x'); plt.ylabel('y')
+plt.grid(True); plt.legend(); plt.show()</code></pre>
+  <h3>subplot: 한 도화지에 여러 그래프</h3>
+  <p><code>plt.subplot(행, 열, 번호)</code>. 번호는 왼쪽 위에서 오른쪽으로, 다음 줄로 센다. 칸을 눌러 보자.</p>
+  <div class="lab">
+    <div class="row"><label>행</label><div class="seg" id="sp-r"></div><label>열</label><div class="seg" id="sp-c"></div></div>
+    <div class="spgrid" id="sp-grid"></div>
+    <div class="out" id="sp-code"></div>
+  </div>
+</section>
+
+<!-- 04 notebook -->
+<section id="nb">
+  <h2><span class="no">04</span>노트북 실습: 1.03 Matplotlib</h2>
+  <p>수업 노트북의 코드를 하나씩 그대로 그려 봤다. 이 섹션의 숫자는 모두 노트북에 있는 데이터다. 버튼으로 옵션을 바꾸면 코드 한 줄이 그림을 어떻게 바꾸는지 보인다.</p>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">① 기본 선형 차트 · 연도별 GDP</span></div>
+    <div class="svgwrap"><svg id="nb-gdp" viewBox="0 0 600 240" role="img" aria-label="연도별 GDP 선 그래프"></svg></div>
+<pre><code>plt.plot(years, gdp, color='green', marker='v', linestyle='--')
+plt.title('GDP'); plt.ylabel('$')
+plt.savefig('viz_gdp.png')   # show() 보다 먼저!
+plt.show()</code></pre>
+    <div class="note"><b>노트북에서 놓치기 쉬운 것</b><br>노트북은 <code>plt.show()</code> 다음에 <code>plt.savefig()</code>를 불렀다. 출력에 <code>Figure ... with 0 Axes</code>가 찍힌 게 그 흔적이다. show()가 그림을 비우고 나서 저장하니 <b>빈 이미지</b>가 저장된다. 저장은 show() 전에 하자.</div>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">①-2 show()만 그런 게 아니다 · 도화지 시뮬레이터</span><span class="hint">상황을 고르고 한 줄씩 실행해 보자</span></div>
+    <p style="font-size:15px">pyplot은 <b>"지금 그리는 도화지(current figure)"</b> 하나를 기억해 두고, <code>plt.무엇()</code>을 부르면 전부 그 도화지에 그린다. 그래서 도화지를 <b>치우거나(show, close)</b>, <b>지우거나(clf)</b>, <b>새것으로 바꾸는(figure)</b> 줄 뒤에 savefig를 부르면 엉뚱한 그림이 저장된다.</p>
+    <div class="seg" id="fs-sc" role="group" aria-label="상황 고르기"></div>
+    <div class="fsim">
+      <div class="codeview" id="fs-code" aria-live="polite"></div>
+      <div class="svgwrap"><svg id="fs-svg" viewBox="0 0 600 210" role="img" aria-label="화면, 작업 중인 도화지, 저장된 파일 상태"></svg></div>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="fs-reset">처음부터</button>
+      <button type="button" class="btn" id="fs-prev">◀ 이전 줄</button>
+      <button type="button" class="btn" id="fs-next" style="border-color:var(--accent);color:var(--accent);font-weight:600">다음 줄 실행 ▶</button>
+    </div>
+    <p class="caption" id="fs-cap"></p>
+    <div class="tablewrap"><table>
+      <tr><th>함수</th><th>하는 일</th><th>바로 뒤에 plt.savefig()를 부르면</th></tr>
+      <tr><td class="mono">plt.show()</td><td>화면에 보여주고 도화지를 닫는다 (주피터·Colab)</td><td>빈 그림</td></tr>
+      <tr><td class="mono">plt.close()</td><td>도화지를 닫는다. <code>close('all')</code>은 전부</td><td>빈 그림</td></tr>
+      <tr><td class="mono">plt.clf()</td><td>도화지는 두고 내용만 싹 지운다 (clear figure)</td><td>빈 그림</td></tr>
+      <tr><td class="mono">plt.cla()</td><td>지금 칸(Axes) 하나만 지운다 (clear axes)</td><td>그 칸만 빈 그림</td></tr>
+      <tr><td class="mono">plt.figure()</td><td>새 도화지를 꺼내 "지금 도화지"로 바꾼다</td><td>새 도화지에 그린 것만</td></tr>
+      <tr><td class="mono">plt.subplot(…)</td><td>그릴 칸을 바꾼다</td><td>title 등은 마지막에 고른 칸에 붙음</td></tr>
+      <tr><td>셀이 끝날 때</td><td>주피터가 자동으로 show + 닫기</td><td>다음 셀에서는 빈 그림</td></tr>
+    </table></div>
+    <div class="say"><b>안전한 순서:</b> <code>plt.figure(figsize=…)</code> → <code>plot</code> → 제목·축·범례 → <code>savefig</code> → <code>show</code>, 그리고 한 셀 안에서 끝내기. 순서 걱정 없이 하고 싶으면 <code>fig, ax = plt.subplots()</code>로 도화지를 변수에 담아 두고 <code>fig.savefig()</code>로 저장하면 된다.</div>
+  </div>
+
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">② 계열별 선형 차트 · actual vs predicted</span><span class="hint">선을 켜고 끄고, 범례 위치를 골라 보자</span></div>
+    <div class="seg" id="ap-series" role="group" aria-label="보여줄 선">
+      <button type="button" class="m" data-k="a" aria-pressed="true">'g-' actual</button>
+      <button type="button" class="m" data-k="p" aria-pressed="true">'r-.' predicted</button>
+      <button type="button" class="m" data-k="e" aria-pressed="true">'b' error</button>
+    </div>
+    <div class="svgwrap"><svg id="nb-ap" viewBox="0 0 600 260" role="img" aria-label="실제값, 예측값, 오차 선 그래프"></svg></div>
+    <div class="split" style="align-items:start">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:13px;color:var(--muted)">plt.legend(loc=?) 숫자 = 위치</span>
+        <div class="locgrid" id="ap-loc"></div>
+        <div class="seg" id="ap-loc2"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <div class="out" id="ap-code"></div>
+        <p style="font-size:14px;color:var(--muted)"><code>error = actual − predicted</code>라서 0보다 아래면 예측이 실제보다 컸다는 뜻이다. 8번째(7번) 점에서 예측이 53이나 높게 빗나갔다.</p>
+        <p style="font-size:14px;color:var(--muted)">노트북 주석은 <code>'r-.'</code>을 "점선", <code>'b'</code>를 "파란색 점선"이라고 했는데, 실제로는 1점쇄선과 실선이다. 선 모양을 안 적으면 기본값은 실선이다.</p>
+      </div>
+    </div>
+<pre><code>actual = [j[1] for j in dataset]                         # 리스트 내포: 두 번째 값만
+error  = [(x - y) for x, y in zip(actual, predicted)]    # 짝지어 빼기
+xs     = [i for i, _ in enumerate(error)]                # 0, 1, 2, ... 9</code></pre>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">③ 그리드 + 구간 확대·축소 · apt vs kw</span></div>
+    <div class="seg" id="ak-mode" role="group" aria-label="축 범위">
+      <button type="button" class="m" data-m="auto" aria-pressed="true">자동 범위</button>
+      <button type="button" class="m" data-m="zoom">xlim(10, 70) · ylim(0, 300)</button>
+    </div>
+    <div class="svgwrap"><svg id="nb-ak" viewBox="0 0 600 260" role="img" aria-label="apt와 kw 산점도"></svg></div>
+    <p class="caption" id="ak-cap"></p>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">④ 데이터 강조 · annotate</span></div>
+    <div class="svgwrap"><svg id="nb-ann" viewBox="0 0 600 240" role="img" aria-label="두 곡선과 화살표 주석"></svg></div>
+<pre><code>plt.annotate('annotate', xy=(2, 1), xytext=(4, 1.5), arrowprops={'color':'green'})
+#              글자        화살표 끝(가리킬 점)  글자 위치</code></pre>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">⑤ 막대형 차트 · 영화 점수</span></div>
+    <div class="seg" id="mv-mode" role="group" aria-label="막대 종류">
+      <button type="button" class="m" data-m="bar" aria-pressed="true">plt.bar</button>
+      <button type="button" class="m" data-m="barh">plt.barh</button>
+      <button type="button" class="m" data-m="yel">color='yellow', width=0.3</button>
+    </div>
+    <div class="svgwrap"><svg id="nb-mv" viewBox="0 0 600 250" role="img" aria-label="영화 점수 막대그래프"></svg></div>
+    <div class="out" id="mv-code"></div>
+    <p style="font-size:14px;color:var(--muted)"><code>plt.xticks([i+0.1 ...], movies)</code>는 이름표를 막대 중심에서 0.1칸 오른쪽으로 민다. 그림에서 글자가 막대 가운데보다 살짝 오른쪽에 있는 이유다. 지금 버전에서는 이 줄이 없어도 이름표가 알아서 붙는다.</p>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">⑥ 히스토그램 · Counter로 10점 단위 세기</span><span class="hint">점수를 눌러 보자</span></div>
+    <div class="chips" id="gr-chips"></div>
+    <div class="out" id="gr-out">grade // 10 * 10 → 몇 점대인지</div>
+    <div class="svgwrap"><svg id="nb-gr" viewBox="0 0 600 230" role="img" aria-label="시험 점수 10점 단위 히스토그램"></svg></div>
+<pre><code>histogram = Counter(min(grade // 10 * 10, 90) for grade in grades)
+plt.bar([x + 5 for x in histogram.keys()], histogram.values(), 10, edgecolor=(0, 0, 0))</code></pre>
+    <p style="font-size:14px;color:var(--muted)"><code>//</code>는 몫만 남기는 나눗셈이라 83 // 10 * 10 = 80. <code>min(..., 90)</code>은 100점을 90점대에 넣어 준다(안 그러면 100점 혼자 칸이 생김). <code>x + 5</code>는 막대 가운데를 80이 아니라 85에 둬서 80~90 구간을 덮게 하고, <code>10</code>은 막대 폭이다.</p>
+  </div>
+
+  <div class="split">
+    <div class="lab">
+      <div class="lab-h"><span class="tag">⑦ 산포도 + 점 이름표</span></div>
+      <div class="svgwrap"><svg id="nb-hw" viewBox="0 0 300 230" role="img" aria-label="키와 몸무게 산점도"></svg></div>
+      <p style="font-size:14px;color:var(--muted)"><code>zip(labels, height, weight)</code>로 셋을 묶고 점마다 <code>annotate</code>. <code>xytext=(5, -5)</code>와 <code>textcoords='offset points'</code>는 "점에서 오른쪽 5, 아래 5포인트"라는 뜻이다.</p>
+    </div>
+    <div class="lab">
+      <div class="lab-h"><span class="tag">⑧ 원형 차트 · 곤충 비율</span></div>
+      <div class="seg" id="pie-mode" role="group" aria-label="원형 차트 옵션">
+        <button type="button" class="m" data-m="base" aria-pressed="true">기본</button>
+        <button type="button" class="m" data-m="col">colors</button>
+        <button type="button" class="m" data-m="exp">explode+shadow</button>
+      </div>
+      <div class="svgwrap"><svg id="nb-pie" viewBox="0 0 300 220" role="img" aria-label="곤충 비율 원형 차트"></svg></div>
+      <p style="font-size:14px;color:var(--muted)">첫 조각은 3시 방향에서 시작해 시계 <b>반대</b> 방향으로 돈다. <code>autopct='%.2f%%'</code>는 소수 둘째 자리 + % 기호.</p>
+    </div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">⑨ 박스플롯 · 세 그룹 비교</span><span class="hint">각 200개 · 평균은 내려가고 표준편차는 커짐</span></div>
+    <div class="svgwrap"><svg id="nb-bx" viewBox="0 0 600 260" role="img" aria-label="세 그룹 박스플롯"></svg></div>
+    <p style="font-size:14px">표준편차가 클수록 상자와 수염이 길어진다. 다만 이상치 점의 개수는 표준편차와 상관없이 비슷하다. 상자가 길어지면 울타리도 같이 넓어져서, 정규분포라면 항상 약 0.7%만 울타리 밖으로 나간다. <code>np.random.normal(평균, 표준편차, 개수)</code>로 만든 데이터라 실행할 때마다 모양이 조금씩 다르다(<code>seed(10)</code>을 고정하면 같아짐).</p>
+    <div class="note"><b>경고가 떴다면</b> Matplotlib 3.9부터 <code>boxplot(labels=...)</code>는 <code>tick_labels=...</code>로 이름이 바뀌었다.</div>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">⑨-2 seed는 뭐고, 고정하면 왜 같아질까?</span></div>
+    <p style="font-size:15px">컴퓨터는 진짜 무작위 숫자를 못 만든다. 정해진 계산식에 <b>시작 숫자 하나</b>를 넣고 결과를 계속 다시 넣어서 무작위처럼 보이는 숫자를 뽑는다. 이 시작 숫자가 <b>seed(씨앗)</b>다. 계산식은 늘 같으니 <b>씨앗이 같으면 나오는 숫자도 처음부터 끝까지 같다.</b></p>
+    <p style="font-size:15px">두꺼운 <b>난수표 책</b>이라고 생각하면 쉽다. seed는 "몇 쪽부터 읽을까"다. 안 정하면 컴퓨터가 시계를 보고 아무 쪽이나 펴고, <code>seed(10)</code>이면 항상 10쪽부터 읽는다.</p>
+    <div class="axctl">
+      <span class="axk">seed</span><div class="seg" id="sd-seed" role="group" aria-label="seed 고르기"><button type="button" class="m" data-v="10" aria-pressed="true">seed(10)</button><button type="button" class="m" data-v="42">seed(42)</button><button type="button" class="m" data-v="none">안 정함</button></div>
+    </div>
+    <div class="row"><button type="button" class="btn" id="sd-run" style="border-color:var(--accent);color:var(--accent);font-weight:600">▶ 코드 실행</button><span style="font-size:13px;color:var(--muted)">여러 번 눌러 보자</span></div>
+    <div class="out" id="sd-code" style="white-space:pre"></div>
+    <div class="tablewrap"><table id="sd-log"></table></div>
+    <p class="caption" id="sd-cap"></p>
+
+    <h3 style="margin:0">seed vs random_state</h3>
+    <p style="font-size:15px">둘 다 출발점 고정이고 <b>적용 범위</b>만 다르다. <code>np.random.seed()</code>는 교실 전체 조명 스위치(그 뒤 <b>모든</b> 랜덤에 영향), <code>random_state=</code>는 책상 스탠드(<b>그 함수 하나</b>만).</p>
+    <div class="row"><button type="button" class="btn" id="sd-insert" aria-pressed="false">중간에 랜덤 코드 한 줄 끼워 넣기</button></div>
+    <div style="display:grid;gap:12px">
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">전역 · np.random.seed</span></span><div class="out" id="sd-g" style="white-space:pre;line-height:1.6"></div><p style="font-size:14px" id="sd-gc"></p></div>
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">지역 · random_state / default_rng</span></span><div class="out" id="sd-l" style="white-space:pre;line-height:1.6"></div><p style="font-size:14px" id="sd-lc"></p></div>
+    </div>
+    <div class="tablewrap"><table>
+      <tr><th></th><th class="mono">np.random.seed(10)</th><th class="mono">random_state=42</th></tr>
+      <tr><td>어디에 쓰나</td><td>코드 맨 위에 한 번 실행</td><td>함수 안에 옵션으로</td></tr>
+      <tr><td>범위</td><td>그 뒤 모든 numpy 랜덤 (전역)</td><td>그 함수 하나 (지역)</td></tr>
+      <tr><td>주로 보는 곳</td><td>numpy로 데이터 만들 때</td><td><code>train_test_split</code>, <code>df.sample</code> 등</td></tr>
+    </table></div>
+    <p style="font-size:14.5px">왜 고정할까? 팀원이나 튜터님이 돌려도 <b>같은 결과</b>가 나와야 이야기가 통하고, 버그를 찾을 때도 결과가 매번 바뀌면 곤란하다. 42라는 숫자에 특별한 뜻은 없고 관례다. 요즘 numpy는 지역 방식인 <code>rng = np.random.default_rng(10)</code>을 권장한다.</p>
+  </div>
+
+  <div class="lab">
+    <div class="lab-h"><span class="tag">⑩ 이미지도 결국 숫자 배열</span><span class="hint">달 그림은 이 페이지에서 그린 예시</span></div>
+    <p style="font-size:15px"><code>plt.imread</code>로 읽은 사진은 <code>img.shape = (305, 367, 3)</code>인 숫자 배열이다. 세로 305칸 × 가로 367칸, 칸마다 R·G·B 세 숫자(0~255). 그래서 numpy와 OpenCV로 숫자를 바꾸면 사진이 바뀐다.</p>
+    <div class="seg" id="img-mode" role="group" aria-label="이미지 처리">
+      <button type="button" class="m" data-m="orig" aria-pressed="true">원본</button>
+      <button type="button" class="m" data-m="gray">흑백</button>
+      <button type="button" class="m" data-m="rot">45° 회전</button>
+      <button type="button" class="m" data-m="blur">블러</button>
+      <button type="button" class="m" data-m="bright">밝기</button>
+    </div>
+    <div class="row" id="img-bright-row" hidden><label for="img-f">factor</label><input type="range" id="img-f" min="0.3" max="2.5" step="0.1" value="1.5"><span class="mono" id="img-f-v">1.5</span></div>
+    <canvas id="img-cv" width="367" height="305" style="width:100%;max-width:367px;border-radius:4px;display:block" aria-label="이미지 처리 결과"></canvas>
+    <div class="out" id="img-code"></div>
+    <p class="caption" id="img-cap"></p>
+  </div>
+
+  <p>노트북 마지막 셀의 <code>sns.jointplot(x=a, y=b, kind="hex")</code>는 점이 1000개처럼 많을 때 산점도 대신 육각형 칸에 몇 개 들어갔는지 색 농도로 보여준다. 위·옆에는 각 변수의 히스토그램이 붙는다.</p>
+</section>
+
+<!-- 05 -->
+<section id="trap">
+  <h2><span class="no">05</span>시각화의 함정</h2>
+  <p>그래프는 거짓말을 하지 않는다. 그런데 <b>축을 어떻게 잡느냐</b>에 따라 같은 데이터가 정반대 이야기를 한다.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">함정 1 · 같은 임금, 세 가지 그림</span><span class="hint">상사 $100→$160, 근로자 $5→$30 (10년)</span></div>
+    <div class="seg" id="wage-mode" role="group" aria-label="세로축 방식">
+      <button type="button" data-m="raw" aria-pressed="true">실제 금액</button>
+      <button type="button" data-m="log">로그 눈금</button>
+      <button type="button" data-m="idx">첫해 = 100</button>
+    </div>
+    <div class="svgwrap"><svg id="wage" viewBox="0 0 600 260" role="img" aria-label="임금 추이 그래프"></svg></div>
+    <div class="legend"><span><i class="f1" style="background:var(--c1)"></i>상사</span><span><i style="background:var(--c2)"></i>근로자</span></div>
+    <p class="caption" id="wage-cap"></p>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">함정 2 · 막대는 0에서 시작해야 한다</span><span class="hint">후보 A 42.9%, B 38.0%</span></div>
+    <div class="seg" id="poll-mode" role="group" aria-label="y축 시작점">
+      <button type="button" data-s="0" aria-pressed="true">y축 0부터</button>
+      <button type="button" data-s="36">y축 36부터</button>
+    </div>
+    <div class="svgwrap"><svg id="poll" viewBox="0 0 600 230" role="img" aria-label="여론조사 막대그래프"></svg></div>
+    <p class="caption" id="poll-cap"></p>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">정리 · 축을 고른다 = 세 가지를 정한다</span></div>
+    <div class="svgwrap"><svg id="ax-anat" viewBox="0 0 640 230" role="img" aria-label="세로축의 세 가지 결정: 값, 눈금, 시작점"></svg></div>
+    <p style="font-size:15px">세 가지는 서로 따로 고를 수 있다. 아래에서 하나씩 바꿔 보면, 같은 임금 데이터가 조합마다 다른 이야기를 한다.</p>
+    <div class="axctl">
+      <span class="axk"><b>①</b> 어떤 값?</span><div class="seg" id="ax-v" role="group" aria-label="값"><button type="button" data-v="raw" aria-pressed="true">원래 금액 ($)</button><button type="button" data-v="idx">첫해 = 100 환산</button></div>
+      <span class="axk"><b>②</b> 눈금은?</span><div class="seg" id="ax-s" role="group" aria-label="눈금"><button type="button" data-v="lin" aria-pressed="true">일반 (같은 차이)</button><button type="button" data-v="log">로그 (같은 배수)</button></div>
+      <span class="axk"><b>③</b> 어디부터?</span><div class="seg" id="ax-z" role="group" aria-label="시작점"><button type="button" data-v="zero" aria-pressed="true">0부터</button><button type="button" data-v="zoom">위쪽만 확대</button></div>
+    </div>
+    <div class="svgwrap"><svg id="ax-chart" viewBox="0 0 600 260" role="img" aria-label="세 가지 선택이 적용된 임금 그래프"></svg></div>
+    <div class="out" id="ax-code" style="white-space:pre"></div>
+    <p class="caption" id="ax-cap"></p>
+    <div class="say"><b>그래프를 볼 때는 축부터 읽자.</b> ① 단위가 $인지 지수인지, ② 눈금 간격이 일정하게 더해지는지(50, 100, 150) 곱해지는지(10, 100, 1000), ③ 맨 아래가 0인지. 이 세 가지를 확인하고 나서 선을 본다.</div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section id="hist">
+  <h2><span class="no">06</span>히스토그램: 값들이 어디에 몰려 있나</h2>
+  <p>숫자들을 일정한 구간(bin)으로 나누고, 구간마다 몇 개 들어가는지 세서 막대로 쌓는다. 구간은 "이상 ~ 미만"이라서 30살은 30~40 칸에 들어간다.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">bin 너비 바꿔 보기</span><span class="hint">예시 데이터: 승객 200명의 나이</span></div>
+    <div class="row"><label for="bin-w">bin 너비</label><input type="range" id="bin-w" min="1" max="25" value="10"><span class="mono" id="bin-v">10살</span></div>
+    <div class="svgwrap"><svg id="hist-svg" viewBox="0 0 600 240" role="img" aria-label="나이 히스토그램"></svg></div>
+    <p class="caption" id="hist-cap"></p>
+    <h3 style="margin:0">도수분포표: 히스토그램의 원본 표</h3>
+    <p style="font-size:14.5px">히스토그램은 이 표를 그림으로 옮긴 것이다. 표의 <b>도수</b> 열이 막대 높이가 된다. 슬라이더를 움직이면 표도 같이 바뀐다.</p>
+    <div class="tablewrap" style="max-height:400px;overflow-y:auto"><table id="freq-tb"></table></div>
+    <div class="tablewrap"><table>
+      <tr><th>용어</th><th>뜻</th></tr>
+      <tr><td>계급 (bin)</td><td>겹치지 않게 나눈 구간. "이상 ~ 미만"이라 경계값은 오른쪽 칸으로 간다</td></tr>
+      <tr><td>도수</td><td>그 구간에 들어간 데이터 개수. 전부 더하면 데이터 개수(200)와 같아야 한다</td></tr>
+      <tr><td>상대도수</td><td>도수 ÷ 전체 개수. 전체 중 몇 %인지</td></tr>
+      <tr><td>누적도수</td><td>처음 구간부터 지금 구간까지 도수를 더한 값. "30살 미만은 몇 명?"에 바로 답한다</td></tr>
+    </table></div>
+<pre><code>bins = range(0, 81, 10)
+pd.cut(df['Age'], bins=bins, right=False).value_counts().sort_index()   # right=False → 이상~미만</code></pre>
+  </div>
+  <h3>히스토그램 vs 막대그래프, 헷갈리지 말기</h3>
+  <div class="split">
+    <div class="lab"><span class="lab-h"><span class="tag">히스토그램</span></span>
+      <svg id="vs-hist" viewBox="0 0 280 140" role="img" aria-label="히스토그램 예시"></svg>
+      <p style="font-size:14px">수치형 · 막대가 <b>붙어 있음</b> · x축은 숫자 구간이라 순서를 못 바꿈</p></div>
+    <div class="lab"><span class="lab-h"><span class="tag">막대그래프</span></span>
+      <svg id="vs-bar" viewBox="0 0 280 140" role="img" aria-label="막대그래프 예시"></svg>
+      <p style="font-size:14px">범주형 · 막대가 <b>떨어져 있음</b> · 순서를 바꿔도 의미가 같음</p></div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="box">
+  <h2><span class="no">07</span>박스플롯: 다섯 숫자로 그린 상자</h2>
+  <p>데이터를 줄 세운 다음 네 토막으로 자른다. 자른 지점이 Q1(25%), Q2(중앙값, 50%), Q3(75%)이다. 가운데 50%가 상자가 되고, <b>IQR = Q3 − Q1</b>이 상자의 길이다.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">4분위수 구하기 · 줄 세우고 네 토막</span><span class="hint">수업 연습문제 데이터</span></div>
+    <p style="font-size:15px">4분위수는 데이터를 <b>작은 순서로 줄 세운 다음</b>, 개수가 똑같이 4묶음이 되도록 자르는 세 지점이다. 각 묶음에 데이터의 25%씩 들어간다.</p>
+    <div class="axctl">
+      <span class="axk">데이터</span><div class="seg" id="q-data" role="group" aria-label="데이터 고르기"><button type="button" data-v="10" aria-pressed="true">10개 (짝수)</button><button type="button" data-v="11">11개 (홀수)</button></div>
+      <span class="axk">계산 방식</span><div class="seg" id="q-meth" role="group" aria-label="계산 방식"><button type="button" data-v="np" aria-pressed="true">np.percentile · describe()</button><button type="button" data-v="hand">손 계산 (반씩 나누기)</button></div>
+    </div>
+    <div class="svgwrap"><svg id="q-svg" viewBox="0 0 640 250" role="img" aria-label="줄 세운 데이터와 4분위수 위치"></svg></div>
+    <div class="tablewrap"><table id="q-steps"></table></div>
+    <div class="split">
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">세 지점의 이름</span></span>
+        <p style="font-size:14.5px"><b>Q1 (제1사분위수, 25%)</b> 아래에서 1/4 지점<br><b>Q2 (중앙값, 50%)</b> 딱 가운데<br><b>Q3 (제3사분위수, 75%)</b> 아래에서 3/4 지점<br><b>IQR = Q3 − Q1</b> 가운데 50%가 퍼진 폭</p></div>
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">df.describe() 에서 보이는 곳</span></span>
+        <div class="out" id="q-desc" style="white-space:pre;line-height:1.55"></div></div>
+    </div>
+    <p style="font-size:14px;color:var(--muted)">평균은 80 같은 큰 값 하나에 끌려가지만, 4분위수는 "몇 번째 자리인가"로 정해서 튀는 값에 잘 흔들리지 않는다. 그래서 박스플롯과 이상치 판단에 쓴다.</p>
+    <h3 style="margin:0">손 계산 vs 기계 계산, 어느 쪽을 따를까?</h3>
+    <p style="font-size:15px">둘 다 맞는 계산이다. 4분위수는 정의가 하나가 아니라서 통계학에서 쓰는 계산법만 9가지쯤 된다. 정답을 고르는 문제가 아니라 <b>어디에 쓰는지</b>로 고른다.</p>
+    <div class="split">
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">코드로 분석할 때</span></span>
+        <p style="font-size:14.5px"><b>도구가 주는 값을 그대로 쓴다.</b> <code>df.describe()</code>, <code>np.percentile</code>, matplotlib·seaborn 박스플롯, 엑셀 <code>QUARTILE.INC</code>가 모두 같은 방식(선형 보간)이라 결과가 서로 맞는다. 한 분석 안에서 방식을 섞지 않는 게 중요하다.</p></div>
+      <div class="lab" style="background:var(--bg)"><span class="lab-h"><span class="tag">과제·시험을 손으로 풀 때</span></span>
+        <p style="font-size:14.5px"><b>강사님이 알려준 방식을 따른다.</b> 채점 기준이 그 방식이다. 자료에 방식이 안 적혀 있으면 매니저님이나 강사님께 한 번 확인해 두자.</p></div>
+    </div>
+    <div class="lab" style="background:var(--bg)">
+      <div class="lab-h"><span class="tag">데이터가 많아지면 차이가 줄어든다</span><span class="hint">정규분포 예시 데이터를 200번씩 뽑아 낸 두 방식 Q1 차이의 평균</span></div>
+      <div class="svgwrap"><svg id="q-gap" viewBox="0 0 600 200" role="img" aria-label="데이터 개수에 따른 두 방식의 Q1 차이"></svg></div>
+      <p style="font-size:14px">연습문제처럼 10개일 땐 꽤 차이 나지만, 수백 개가 되면 거의 같아진다. 그리고 4분위수는 퍼진 정도와 이상치를 <b>대략</b> 보는 용도라, 방식이 달라도 결론은 거의 안 바뀐다.</p>
+    </div>
+    <div class="note"><b>예외: 값이 fence 경계에 걸칠 때</b><br>방식에 따라 그 값이 이상치가 되기도, 아니기도 한다. 이럴 땐 보고서에 "pandas 기본값(선형 보간) 기준"처럼 계산 방식을 한 줄 적는다. <code>np.percentile(x, 25, method='midpoint')</code>처럼 방식을 직접 고르는 옵션도 있지만, 지금은 기본값만 알면 충분하다.</div>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">상자 해부도</span></div>
+    <div class="svgwrap"><svg id="box-anat" viewBox="0 0 640 190" role="img" aria-label="박스플롯 각 부분 설명"></svg></div>
+    <p style="font-size:14.5px">상자에서 IQR의 1.5배까지가 "정상 범위(fence)"다. 수염은 그 안에 있는 <b>실제 데이터</b>의 끝까지만 뻗고, 그 밖의 점은 이상치로 따로 찍힌다.</p>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">IQR × 1.5 · 이상치 울타리 치기</span><span class="hint">수업 슬라이드 예시: Q1=21, Q3=35</span></div>
+    <p style="font-size:15px">상자 길이(IQR)를 재고, 그 <b>1.5배만큼 상자 양쪽으로 울타리(fence)</b>를 친다. 울타리 밖에 있는 값이 이상치다.</p>
+    <div class="row"><label for="fc-k">배수 k</label><input type="range" id="fc-k" min="0.5" max="3" step="0.1" value="1.5"><span class="mono" id="fc-k-v">1.5</span>
+      <button type="button" class="btn" data-k="1.5">1.5 (보통 이상치)</button><button type="button" class="btn" data-k="3">3 (극단 이상치)</button></div>
+    <div class="svgwrap"><svg id="fc-svg" viewBox="0 0 640 200" role="img" aria-label="상자와 울타리, 이상치 판정"></svg></div>
+    <div class="tablewrap"><table id="fc-steps"></table></div>
+    <h3 style="margin:0">왜 하필 1.5배?</h3>
+    <p style="font-size:15px">통계학자 Tukey가 정한 관례다. 데이터가 종 모양(정규분포)이라면, 1.5배 울타리 밖으로 나가는 값은 <b>0.7%</b> 정도뿐이다. "평범한 데이터라면 여기까지는 나올 수 있고, 이보다 멀면 수상하다"는 경험적인 선이다. 슬라이더를 움직이면 울타리 밖 비율이 같이 바뀐다.</p>
+    <div class="svgwrap"><svg id="fc-bell" viewBox="0 0 640 190" role="img" aria-label="정규분포에서 울타리 밖 비율"></svg></div>
+<h3 style="margin:0">코드에 숫자 넣어 보기 · Q1=21, Q2=30, Q3=35</h3>
+    <p style="font-size:15px">울타리 공식에 들어가는 건 <b>Q1과 Q3 두 개뿐</b>이다. Q2(중앙값 30)는 박스플롯 상자의 가운데 선을 그릴 때만 쓴다. 위 슬라이더로 배수를 바꾸면 코드 속 숫자도 같이 바뀐다.</p>
+    <div class="out" id="fc-code" style="white-space:pre;line-height:1.6"></div>
+    <p style="font-size:14.5px">마지막 줄은 <b>"나이가 아래 울타리보다 작거나(<code>|</code> = 또는) 위 울타리보다 큰 행만 골라라"</b>는 뜻이다. 예시 데이터에 돌려 보면:</p>
+    <div class="tablewrap"><table id="fc-df"></table></div>
+    <div class="note"><b>용어 주의</b> Q1·Q2·Q3는 <b>제1·2·3사분위수</b>다. "분기"는 1년을 넷으로 나눈 기간(1분기 = 1~3월)이라 다른 말이다.</div>
+    <p style="font-size:14.5px">실제 과제에서는 Q1·Q3를 직접 적지 않고 데이터에서 계산한다.</p>
+<pre><code>q1 = df['age'].quantile(0.25)
+q3 = df['age'].quantile(0.75)</code></pre>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">직접 계산해 보기</span><span class="hint">수업 연습문제로 채워 둠 · 숫자를 고쳐 보자</span></div>
+    <label for="box-data" style="font-size:13px;color:var(--muted)">데이터 (쉼표로 구분)</label>
+    <input type="text" id="box-data" value="5, 7, 8, 12, 13, 14, 18, 21, 25, 30">
+    <div class="row">
+      <button type="button" class="btn" data-preset="5, 7, 8, 12, 13, 14, 18, 21, 25, 30">연습문제</button>
+      <button type="button" class="btn" data-preset="5, 7, 8, 12, 13, 14, 18, 21, 25, 80">30 → 80으로 바꾸면?</button>
+    </div>
+    <div class="svgwrap"><svg id="box-svg" viewBox="0 0 640 140" role="img" aria-label="박스플롯"></svg></div>
+    <div class="tablewrap"><table id="box-steps"></table></div>
+    <p style="font-size:13px;color:var(--muted)"><code>np.percentile</code> 기본 방식(선형 보간)으로 계산했다. 손으로 반씩 나누는 교과서 방식은 값이 조금 다를 수 있다.</p>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="sns">
+  <h2><span class="no">08</span>seaborn: 한 줄로 더 많이</h2>
+  <p>matplotlib 위에 만든 도구라서 DataFrame과 컬럼 이름만 주면 알아서 그려 준다. 가장 쓸모 있는 옵션은 <code>hue</code>다. 범주별로 색을 나눠서 한 차원을 더 보여준다.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">hue 켜 보기</span><span class="hint">tips 데이터 모양을 흉내 낸 예시</span></div>
+    <div class="seg" id="hue-mode" role="group" aria-label="hue 선택">
+      <button type="button" class="m" data-h="none" aria-pressed="true">hue 없음</button>
+      <button type="button" class="m" data-h="time">hue="time"</button>
+      <button type="button" class="m" data-h="smoker">hue="smoker"</button>
+    </div>
+    <div class="svgwrap"><svg id="hue-svg" viewBox="0 0 600 260" role="img" aria-label="계산 금액과 팁 산점도"></svg></div>
+    <div class="legend" id="hue-legend"></div>
+    <div class="out" id="hue-code"></div>
+    <p class="caption" id="hue-cap"></p>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">pivot → heatmap</span><span class="hint">타이타닉 승선항 × 객실 등급 승객 수</span></div>
+    <div class="svgwrap"><svg id="heat" viewBox="0 0 440 230" role="img" aria-label="타이타닉 히트맵"></svg></div>
+    <p class="caption">사우샘프턴(S)에서 3등석으로 탄 사람이 353명으로 가장 많다. 셰르부르(C)는 1등석 비율이 높고, 퀸스타운(Q)은 거의 다 3등석이다.</p>
+  </div>
 <pre><code>temp1 = titanic.groupby(['Embarked', 'Pclass'], as_index=False)['PassengerId'].count()
 temp2 = temp1.pivot(index='Embarked', columns='Pclass', values='PassengerId')
-sns.heatmap(temp2, annot=True, fmt='d')   # fmt='d' 면 1.3e+02 대신 127로 표시</code></pre>
+sns.heatmap(temp2, annot=True, fmt='d')   # fmt='d' → 1.3e+02 대신 127</code></pre>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">pivot 쉽게 이해하기 · index, columns, values</span><span class="hint">긴 표를 눌러 보자</span></div>
+    <div class="pvkey">
+      <div><span class="pvchip p1">index</span> 왼쪽 <b>세로줄 이름표</b> (행)</div>
+      <div><span class="pvchip p2">columns</span> 위쪽 <b>가로줄 이름표</b> (열)</div>
+      <div><span class="pvchip p3">values</span> <b>칸 안에 채울 숫자</b></div>
+    </div>
+    <p style="font-size:15px">학교 시간표를 떠올리면 된다. 왼쪽에 <b>교시</b>(index), 위에 <b>요일</b>(columns), 칸 안에 <b>과목</b>(values). pivot은 길게 늘어선 표를 이런 시간표 모양으로 접는 일이다.</p>
+    <div class="axctl">
+      <span class="axk">index 자리에</span><div class="seg" id="pv-idx" role="group" aria-label="index로 쓸 컬럼"><button type="button" class="m" data-v="Embarked" aria-pressed="true">Embarked</button><button type="button" class="m" data-v="Pclass">Pclass</button></div>
+    </div>
+    <div class="pvwrap">
+      <div style="min-width:0"><p class="pvcap">groupby 결과 (temp1) · 9줄짜리 긴 표</p><div class="tablewrap"><table id="pv-long" class="pvt"></table></div></div>
+      <div class="pvarrow" aria-hidden="true">→<br><span class="mono" style="font-size:11px">pivot</span></div>
+      <div style="min-width:0"><p class="pvcap">pivot 결과 (temp2) · 3×3 넓은 표</p><div class="tablewrap"><table id="pv-wide" class="pvt"></table></div></div>
+    </div>
+    <div class="out" id="pv-code" style="white-space:pre"></div>
+    <p class="caption" id="pv-cap"></p>
+    <h3 style="margin:0">어떤 컬럼을 어디에 넣을까?</h3>
+    <div class="tablewrap"><table>
+      <tr><th>자리</th><th>넣을 컬럼</th><th>스스로 물어보기</th></tr>
+      <tr><td><span class="pvchip p1">index</span></td><td>범주형 (승선항, 지역, 요일…)</td><td>"표의 <b>줄</b>마다 무엇을 보고 싶나?"</td></tr>
+      <tr><td><span class="pvchip p2">columns</span></td><td>범주형 (객실 등급, 성별, 월…)</td><td>"그걸 <b>무엇별로 쪼개서</b> 옆으로 펼칠까?"</td></tr>
+      <tr><td><span class="pvchip p3">values</span></td><td>숫자형 (승객 수, 매출, 평균 나이…)</td><td>"칸 안에 <b>어떤 숫자</b>를 채울까?"</td></tr>
+    </table></div>
+    <p style="font-size:14.5px">index와 columns를 서로 바꾸면 표가 90도 돌아갈 뿐, 숫자는 같다. 보통 항목이 더 많은 쪽을 index(세로)로 두면 읽기 편하다.</p>
+    <div class="note"><b>에러가 난다면</b><br>
+      · <code>Index contains duplicate entries</code>: 같은 (index, columns) 조합이 두 줄 이상이라 한 칸에 숫자 두 개가 들어가려 한 것. 먼저 <code>groupby</code>로 묶거나, <code>pd.pivot_table(df, index=…, columns=…, values=…, aggfunc='mean')</code>처럼 합치는 방법을 정해 준다.<br>
+      · pandas 2.0부터는 <code>pivot('Embarked', 'Pclass', 'PassengerId')</code>처럼 이름 없이 쓰면 에러. <code>index=, columns=, values=</code>를 꼭 적는다.</div>
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>함수</th><th>한 줄 설명</th></tr>
+    <tr><td class="mono">histplot</td><td>히스토그램. <code>kde=True</code>면 부드러운 곡선 추가</td></tr>
+    <tr><td class="mono">boxplot</td><td>박스플롯. <code>x=</code>에 범주를 주면 그룹별 비교</td></tr>
+    <tr><td class="mono">countplot</td><td>범주별 <b>개수</b> 막대</td></tr>
+    <tr><td class="mono">barplot</td><td>범주별 <b>평균</b> 막대 + 오차막대(기본 95% 신뢰구간)</td></tr>
+    <tr><td class="mono">jointplot</td><td>산점도 + 위·옆에 각 변수의 분포</td></tr>
+    <tr><td class="mono">pairplot</td><td>수치 변수끼리 모든 쌍의 산점도 격자</td></tr>
+    <tr><td class="mono">heatmap</td><td>표의 값을 색 농도로</td></tr>
+  </table></div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">distplot은 왜 은퇴했나?</span><span class="hint">seaborn 0.11 (2020)부터 지원 종료 예정</span></div>
+    <p style="font-size:15px">아직 삭제된 건 아니고, 쓰면 <b>"더 이상 쓰지 말라"는 경고(deprecated)</b>가 뜨는 상태다. seaborn이 분포 그래프 함수를 새로 정리하면서 은퇴시켰다. 이유는 세 가지다.</p>
+    <div class="tablewrap"><table>
+      <tr><th>이유</th><th>무슨 뜻</th></tr>
+      <tr><td>① 한 함수가 너무 많은 일</td><td>히스토그램, 밀도 곡선, 러그, 통계 분포 맞추기를 혼자 다 해서 하나만 조절하기 불편했다 → 역할별로 쪼갬</td></tr>
+      <tr><td>② 사용법이 달랐다</td><td>다른 함수처럼 <code>data=, x=</code>로 컬럼 이름을 넘기는 방식이 어색했고, 특히 <b>hue가 없었다</b></td></tr>
+      <tr><td>③ 기본값이 헷갈렸다</td><td>y축 기본이 개수가 아니라 <b>밀도</b>라 "막대 높이가 왜 0.03이지?"가 됐다 → histplot은 기본이 개수</td></tr>
+    </table></div>
+    <div class="seg" id="dp-mode" role="group" aria-label="비교">
+      <button type="button" class="m" data-v="old" aria-pressed="true">sns.distplot(df['Age'])</button>
+      <button type="button" class="m" data-v="new">sns.histplot(data=df, x='Age', hue='Sex', kde=True)</button>
+    </div>
+    <div class="svgwrap"><svg id="dp-svg" viewBox="0 0 600 230" role="img" aria-label="distplot과 histplot 비교"></svg></div>
+    <p class="caption" id="dp-cap"></p>
+    <div class="tablewrap"><table>
+      <tr><th>하고 싶은 것</th><th>새 함수</th></tr>
+      <tr><td>히스토그램</td><td class="mono">histplot</td></tr>
+      <tr><td>밀도 곡선</td><td class="mono">kdeplot</td></tr>
+      <tr><td>누적 분포</td><td class="mono">ecdfplot</td></tr>
+      <tr><td>위 셋을 한 번에 + 그룹별로 칸 나누기</td><td class="mono">displot</td></tr>
+    </table></div>
+<pre><code># 슬라이드 방식 (경고 뜸)
+sns.distplot(df['Age'])
+
+# 같은 그림을 지금 방식으로
+sns.histplot(df['Age'], kde=True, stat='density')   # kde=True 곡선, stat='density' y축을 밀도로</code></pre>
+    <div class="note"><b>철자 주의</b> <code>displot</code>(t 없음)은 새로 생긴 함수, <code>distplot</code>(t 있음)이 은퇴한 함수다.</div>
+  </div>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">barplot의 검은 선 = 신뢰구간</span><span class="hint">슬라이드 73쪽 · 타이타닉 승선항별 평균 운임</span></div>
+    <p style="font-size:15px">막대 높이는 그룹의 <b>평균</b>이다. 그런데 이 평균은 891명이라는 <b>표본</b>에서 낸 값이라, 다른 승객들로 다시 뽑으면 조금 달라진다. 막대 위 검은 선은 "진짜 평균은 아마 이 범위 안"이라는 <b>불확실성의 폭</b>이다. seaborn barplot은 기본으로 <b>95% 신뢰구간</b>을 그린다.</p>
+    <div class="seg" id="ci-mode" role="group" aria-label="errorbar 옵션">
+      <button type="button" class="m" data-v="ci" aria-pressed="true">기본 (95% 신뢰구간)</button>
+      <button type="button" class="m" data-v="sd">errorbar='sd'</button>
+      <button type="button" class="m" data-v="none">errorbar=None</button>
+    </div>
+    <div class="svgwrap"><svg id="ci-svg" viewBox="0 0 600 270" role="img" aria-label="승선항별 평균 운임 막대와 오차막대"></svg></div>
+    <div class="row"><button type="button" class="btn" id="ci-draw">표본 다시 뽑아 평균 내기 ×20</button><button type="button" class="btn" id="ci-clear">점 지우기</button><span class="mono" id="ci-count" style="font-size:13px;color:var(--muted)"></span></div>
+    <div class="out" id="ci-code"></div>
+    <p class="caption" id="ci-cap"></p>
+    <div class="tablewrap"><table>
+      <tr><th>승선항</th><th>승객 수</th><th>평균 운임</th><th>95% 신뢰구간</th><th>읽는 법</th></tr>
+      <tr><td class="mono">S</td><td class="mono">644</td><td class="mono">27.1</td><td class="mono">약 24 ~ 30</td><td>사람이 많아 선이 짧다. 평균을 꽤 확신</td></tr>
+      <tr><td class="mono">C</td><td class="mono">168</td><td class="mono">60.0</td><td class="mono">약 47 ~ 73</td><td>비싼 1등석과 싼 표가 섞여 들쭉날쭉 + 사람 적음 → 선이 길다</td></tr>
+      <tr><td class="mono">Q</td><td class="mono">77</td><td class="mono">13.3</td><td class="mono">약 10 ~ 16</td><td>대부분 3등석이라 운임이 비슷비슷</td></tr>
+    </table></div>
+    <p style="font-size:14.5px">막대 높이만 보지 말고 <b>선이 서로 겹치는지</b>도 보자. 선이 많이 겹치면 "두 그룹 평균이 정말 다르다"고 자신 있게 말하기 어렵다. 선이 길어지는 이유는 두 가지다: 값이 들쭉날쭉할수록(표준편차가 클수록), 사람 수가 적을수록.</p>
+    <div class="note"><b>옛날 코드에서 ci= 를 보면</b> seaborn 0.12부터 <code>ci=95</code>, <code>ci=None</code>이 <code>errorbar=('ci', 95)</code>, <code>errorbar=None</code>으로 바뀌었다. 뜻은 같다. 표의 숫자는 타이타닉 train 데이터로 계산한 근사값이다(seaborn은 부트스트랩으로 계산해서 소수점이 조금 다를 수 있다).</div>
+  </div>
   <div class="note"><b>실습하다 막히면</b><br>
-    · <code>distplot</code>은 최신 seaborn에서 지원 종료 예정이라 경고가 뜬다. <code>sns.histplot(x, bins=16, kde=True, stat='density')</code>로 대체.<br>
-    · pandas 2.0부터 <code>pivot('Embarked','Pclass','PassengerId')</code>처럼 위치 인자로 쓰면 에러. <code>index=, columns=, values=</code>를 적어야 한다.<br>
-    · 상관 히트맵은 <code>sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm')</code>. Date와 Month처럼 0.98이 나오는 쌍은 사실상 같은 정보다.</div>
+    · <code>distplot</code>은 지원 종료 예정이라 경고가 뜬다 → <code>sns.histplot(x, kde=True, stat='density')</code><br>
+    · pandas 2.0부터 <code>pivot('Embarked','Pclass','PassengerId')</code>는 에러 → <code>index=, columns=, values=</code>를 적는다<br>
+    · 상관 히트맵: <code>sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm')</code></div>
 </section>
 
-<section>
-  <h2><span class="no">08</span>워드클라우드와 folium</h2>
-  <div class="split">
-    <div class="panel"><span class="k">WORDCLOUD</span>
-      <p>단어 빈도를 글자 크기로. 한글은 <code>font_path</code> 지정 필수. 전처리로 문장부호·불용어·조사("합니다", "하세요") 제거, <code>Counter</code>로 빈도 세기, 이미지 + numpy로 mask를 주면 모양을 바꿀 수 있다.</p></div>
-    <div class="panel"><span class="k">FOLIUM</span>
-      <p>위경도 데이터로 인터랙티브 지도. <code>folium.Map(location=[위도, 경도], zoom_start=15)</code>로 초기 화면, <code>folium.Marker</code>로 점 찍기. 공공데이터포털(data.go.kr)에서 위경도 포함 데이터를 구할 수 있다.</p></div>
+<!-- 09 -->
+<section id="cloud">
+  <h2><span class="no">09</span>워드클라우드와 지도</h2>
+  <p>워드클라우드는 많이 나온 단어를 크게 그린다. 그런데 전처리를 안 하면 "합니다", "정말" 같은 뜻 없는 말이 제일 크게 나온다. 불용어를 지워 보자.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">불용어 제거</span><span class="hint">예시: 수업 후기 단어 빈도</span></div>
+    <div class="seg" id="cloud-mode" role="group" aria-label="불용어 처리">
+      <button type="button" data-c="raw" aria-pressed="true">전처리 전</button>
+      <button type="button" data-c="mark">불용어 표시</button>
+      <button type="button" data-c="clean">전처리 후</button>
+    </div>
+    <div class="cloud" id="cloud-box" aria-live="polite"></div>
   </div>
-<pre><code>m = folium.Map(location=[37.5665, 126.9780], zoom_start=14)
+<pre><code>from collections import Counter
+words = [w for w in text.split() if w not in stopwords]   # 불용어 빼기
+wc = WordCloud(font_path='malgun.ttf', background_color='white')
+wc.generate_from_frequencies(Counter(words))              # 한글은 font_path 필수</code></pre>
+  <p>folium은 위도·경도만 있으면 확대·이동되는 지도를 만들어 준다. 아래는 마커가 찍히는 방식을 보여주는 그림이다. 점을 눌러 보자.</p>
+  <div class="lab">
+    <div class="lab-h"><span class="tag">folium 흉내</span><span class="hint">그림 예시 · 실제 지도 아님</span></div>
+    <div class="svgwrap"><svg id="map" viewBox="0 0 600 300" role="img" aria-label="서울 중심부 마커 예시"></svg></div>
+    <div class="out" id="map-out">마커를 누르면 popup이 뜬다</div>
+  </div>
+<pre><code>m = folium.Map(location=[37.5665, 126.9780], zoom_start=13)   # 처음 보여줄 중심과 확대
 for _, row in df.iterrows():
-    folium.Marker([row['lat'], row['lot']], popup=row['s_name']).add_to(m)
+    folium.Marker([row['lat'], row['lng']], popup=row['name']).add_to(m)
 m</code></pre>
 </section>
 
-<footer>오늘 TASK: Titanic 시각화 분석으로 인사이트 도출 · 여러 문서로 워드클라우드 · 위경도 오픈데이터로 지도 시각화</footer>
+<!-- 10 -->
+<section id="quiz">
+  <h2><span class="no">10</span>복습 퀴즈</h2>
+  <p>이 페이지에 나온 내용을 다섯 가지 유형으로 풀어 본다. 틀리면 해설과 함께 관련 섹션으로 가는 링크가 뜬다.</p>
+  <div class="lab quiz">
+    <div class="lab-h"><span class="score" id="quiz-score"></span>
+      <div class="row"><button type="button" class="btn" id="quiz-shuffle">순서 섞기</button><button type="button" class="btn" id="quiz-reset">다시 풀기</button></div></div>
+    <div class="seg" id="quiz-tabs" role="group" aria-label="문제 유형"></div>
+    <div id="quiz-box" class="quiz"></div>
+  </div>
+</section>
+
+<footer>
+  <span>오늘 TASK: Titanic 시각화로 인사이트 도출 · 여러 문서로 워드클라우드 · 위경도 오픈데이터로 지도 만들기</span>
+  <span>예시라고 적힌 그래프는 설명용으로 만든 데이터다. 타이타닉 히트맵 숫자는 train 데이터 기준.</span>
+</footer>
 </main>
 
 <script>
 (function(){
-  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const parse = s => s.split(/[,\s]+/).map(Number).filter(v => isFinite(v) && v !== '' ).filter((v,i,a)=>true);
-  function nums(id){ return document.getElementById(id).value.split(/[,\s]+/).filter(t=>t!=='').map(Number).filter(Number.isFinite); }
-  const NS='http://www.w3.org/2000/svg';
-  function el(tag, attrs, text){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; return e; }
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+function el(tag,a,txt){const e=document.createElementNS(NS,tag);if(a)for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
+function add(p,...k){k.forEach(c=>p.appendChild(c));return p}
+function clear(s){while(s.firstChild)s.removeChild(s.firstChild)}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function normal(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function segBind(id,attr,cb){const g=$(id);g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset[attr])}))}
+function yAxis(s,L,R,ticks,y,fmt){ticks.forEach(v=>{add(s,el('line',{x1:L,x2:R,y1:y(v),y2:y(v),class:'gr'}),el('text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'t'},fmt?fmt(v):v))})}
+const fmtN=v=>Number.isInteger(v)?String(v):(+v.toFixed(3)).toString();
 
-  // histogram
-  let binW = 10;
-  function drawHist(){
-    const svg=document.getElementById('hist'); svg.innerHTML='';
-    const d=nums('hist-data'); if(!d.length) return;
-    const lo=Math.floor(Math.min(...d)/binW)*binW, hi=(Math.floor(Math.max(...d)/binW)+1)*binW;
-    const nb=Math.round((hi-lo)/binW), counts=new Array(nb).fill(0);
-    d.forEach(v=>counts[Math.min(nb-1,Math.floor((v-lo)/binW))]++);
-    const maxC=Math.max(...counts), L=40,R=580,T=16,B=180, w=(R-L)/nb;
-    const yS=c=>B-(c/maxC)*(B-T);
-    for(let c=0;c<=maxC;c++){
-      svg.appendChild(el('line',{x1:L,x2:R,y1:yS(c),y2:yS(c),stroke:css('--grid'),'stroke-width':1}));
-      svg.appendChild(el('text',{x:L-8,y:yS(c)+4,'text-anchor':'end','font-size':11,fill:css('--muted')},c));
-    }
-    counts.forEach((c,i)=>{
-      svg.appendChild(el('rect',{class:'bar',x:L+i*w+1,y:yS(c),width:w-2,height:B-yS(c),fill:css('--accent'),rx:1}));
-    });
-    const step = nb>12?2:1;
-    for(let i=0;i<=nb;i+=step) svg.appendChild(el('text',{x:L+i*w,y:B+18,'text-anchor':'middle','font-size':11,fill:css('--muted')},lo+i*binW));
-    svg.appendChild(el('line',{x1:L,x2:R,y1:B,y2:B,stroke:css('--fg'),'stroke-width':1}));
-  }
-  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
-    binW=+b.dataset.w; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); drawHist();
-  }));
-  document.getElementById('hist-data').addEventListener('input',drawHist);
+/* 01 dots */
+(function(){
+  const s=$('dots'),A=[46,47,48,49,49,50,50,50,51,51,52,53,54,55,45],B=[12,18,25,30,38,44,50,50,56,62,70,75,82,88,50];
+  const x=v=>70+v*5.4;
+  [[A,'1반',45,'f1'],[B,'2반',115,'f2']].forEach(([d,n,y,c])=>{
+    add(s,el('text',{x:10,y:y+4,class:'tb'},n),el('line',{x1:70,x2:610,y1:y,y2:y,class:'gr'}));
+    const seen={};d.forEach(v=>{seen[v]=(seen[v]||0)+1;add(s,el('circle',{cx:x(v),cy:y-(seen[v]-1)*10,r:5,class:c,'fill-opacity':.85}))});
+    const sd=Math.sqrt(d.reduce((a,v)=>a+(v-50)**2,0)/d.length);
+    add(s,el('text',{x:610,y:y+22,'text-anchor':'end',class:'t'},'평균 50 · 표준편차 '+sd.toFixed(1)));
+  });
+  add(s,el('line',{x1:x(50),x2:x(50),y1:20,y2:150,class:'sw','stroke-dasharray':'4 4'}),el('text',{x:x(50),y:14,'text-anchor':'middle',class:'t'},'평균 50'));
+  [0,25,50,75,100].forEach(v=>add(s,el('text',{x:x(v),y:166,'text-anchor':'middle',class:'t'},v)));
+})();
 
-  // boxplot
-  function pct(s,p){ const pos=(s.length-1)*p, f=Math.floor(pos), c=Math.ceil(pos); return s[f]+(s[c]-s[f])*(pos-f); }
-  const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
-  function drawBox(){
-    const svg=document.getElementById('box'); svg.innerHTML='';
-    const st=document.getElementById('box-stats'); st.innerHTML='';
-    const s=nums('box-data').sort((a,b)=>a-b); if(s.length<2) return;
-    const q1=pct(s,.25),q2=pct(s,.5),q3=pct(s,.75),iqr=q3-q1;
-    const lf=Math.max(s[0],q1-1.5*iqr), uf=Math.min(s[s.length-1],q3+1.5*iqr);
-    const inside=s.filter(v=>v>=q1-1.5*iqr&&v<=q3+1.5*iqr), out=s.filter(v=>v<q1-1.5*iqr||v>q3+1.5*iqr);
-    const wl=Math.min(...inside), wh=Math.max(...inside);
-    [['min',s[0]],['Q1',q1],['Q2',q2],['Q3',q3],['max',s[s.length-1]],['IQR',iqr],['Q1−1.5·IQR',q1-1.5*iqr],['Q3+1.5·IQR',q3+1.5*iqr],['이상치',out.length?out.join(', '):'없음']]
-      .forEach(([l,v])=>{ const d=document.createElement('div'); d.className='stat'; d.innerHTML='<div class="l"></div><div class="v"></div>'; d.children[0].textContent=l; d.children[1].textContent=typeof v==='number'?fmt(v):v; st.appendChild(d); });
-    const lo=Math.min(s[0],q1-1.5*iqr), hi=Math.max(s[s.length-1],q3+1.5*iqr), pad=(hi-lo)*.05||1;
-    const L=30,R=570, x=v=>L+(v-lo+pad)/(hi-lo+2*pad)*(R-L), cy=50;
-    const fg=css('--fg'), ac=css('--accent'), mu=css('--muted'), wa=css('--warn');
-    [q1-1.5*iqr,q3+1.5*iqr].forEach(f=>svg.appendChild(el('line',{x1:x(f),x2:x(f),y1:12,y2:88,stroke:mu,'stroke-dasharray':'3 3'})));
-    svg.appendChild(el('line',{x1:x(wl),x2:x(q1),y1:cy,y2:cy,stroke:fg}));
-    svg.appendChild(el('line',{x1:x(q3),x2:x(wh),y1:cy,y2:cy,stroke:fg}));
-    [wl,wh].forEach(v=>svg.appendChild(el('line',{x1:x(v),x2:x(v),y1:cy-12,y2:cy+12,stroke:fg,'stroke-width':2})));
-    svg.appendChild(el('rect',{x:x(q1),y:cy-22,width:Math.max(1,x(q3)-x(q1)),height:44,fill:css('--accent-soft'),stroke:ac,'stroke-width':1.5}));
-    svg.appendChild(el('line',{x1:x(q2),x2:x(q2),y1:cy-22,y2:cy+22,stroke:ac,'stroke-width':2.5}));
-    out.forEach(v=>svg.appendChild(el('circle',{cx:x(v),cy:cy,r:4,fill:'none',stroke:wa,'stroke-width':2})));
-    s.forEach(v=>svg.appendChild(el('circle',{cx:x(v),cy:104,r:2.5,fill:mu})));
-    [[wl,'수염'],[q1,'Q1'],[q2,'Q2'],[q3,'Q3'],[wh,'수염']].forEach(([v,t],i)=>{
-      svg.appendChild(el('text',{x:x(v),y:124,'text-anchor':'middle','font-size':10.5,fill:mu},fmt(v)));
-    });
+/* 01 crisp */
+(function(){
+  const s=$('crisp'),names=['비즈니스 이해','데이터 이해','데이터 준비','모델링','평가','배포'],cx=200,cy=150,R=104;
+  add(s,el('circle',{cx,cy,r:R,class:'sm','stroke-dasharray':'3 5'}));
+  const pts=names.map((n,i)=>{const a=-Math.PI/2+i*Math.PI/3;return[cx+R*Math.cos(a),cy+R*Math.sin(a)]});
+  // EDA arc highlight
+  const a0=-Math.PI/2-.35,a1=-Math.PI/2+2*Math.PI/3+.35;
+  add(s,el('path',{d:`M${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)} A${R},${R} 0 0 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)}`,class:'s1','stroke-width':10,'stroke-opacity':.25,'stroke-linecap':'round'}));
+  pts.forEach(([x,y],i)=>{const on=i<3;
+    add(s,el('circle',{cx:x,cy:y,r:17,class:on?'f1':'fb',stroke:'currentColor',style:on?'':'stroke:var(--line)'}),
+      el('text',{x,y:y+5,'text-anchor':'middle',class:on?'tw':'tf'},i+1));
+    const ly=y+(y<cy-50?-24:y>cy+50?34:5),lx=x+(Math.abs(x-cx)<5?0:(x>cx?24:-24));
+    add(s,el('text',{x:lx,y:ly,'text-anchor':Math.abs(x-cx)<5?'middle':(x>cx?'start':'end'),class:'tb',style:on?'fill:var(--accent)':'fill:var(--muted)'},names[i]));
+  });
+  add(s,el('text',{x:cx,y:cy-4,'text-anchor':'middle',class:'tb'},'EDA는'),el('text',{x:cx,y:cy+14,'text-anchor':'middle',class:'tb',style:'fill:var(--accent)'},'①②③'));
+})();
+
+/* shared sample data */
+const r1=rng(7);
+const AGES=Array.from({length:200},()=>{let v=Math.round(29+normal(r1)*13);if(r1()<.06)v=Math.round(1+r1()*8);return Math.max(1,Math.min(74,v))});
+
+/* 02 picker */
+const mini={
+  line(s){const d=[12,15,14,19,23,27,26,31],L=40,R=325,T=18,B=165,x=i=>L+i*(R-L)/7,y=v=>B-(v/35)*(B-T);
+    yAxis(s,L,R,[0,10,20,30],y);let p='';d.forEach((v,i)=>p+=(i?'L':'M')+x(i)+','+y(v));add(s,el('path',{d:p,class:'s1'}));
+    d.forEach((v,i)=>{add(s,el('circle',{cx:x(i),cy:y(v),r:3.5,class:'f1'}));if(i%2==0)add(s,el('text',{x:x(i),y:B+16,'text-anchor':'middle',class:'t'},'Q'+(i+1)))})},
+  bar(s){const d=[['영화A',8.7],['영화B',7.2],['영화C',9.1],['영화D',6.5]],L=40,R=325,T=18,B=165,w=(R-L)/4,y=v=>B-(v/10)*(B-T);
+    yAxis(s,L,R,[0,5,10],y);d.forEach(([n,v],i)=>add(s,el('rect',{x:L+i*w+12,y:y(v),width:w-24,height:B-y(v),class:i==2?'f2':'f1',rx:2}),el('text',{x:L+i*w+w/2,y:B+16,'text-anchor':'middle',class:'t'},n),el('text',{x:L+i*w+w/2,y:y(v)-5,'text-anchor':'middle',class:'t'},v)))},
+  hist(s){histDraw(s,10,{L:40,R:325,T:18,B:165,small:true})},
+  scatter(s){const r=rng(3),L=40,R=325,T=18,B=165,x=v=>L+(v-150)/40*(R-L),y=v=>B-(v-40)/50*(B-T);
+    yAxis(s,L,R,[40,65,90],y);for(let i=0;i<34;i++){const h=152+r()*36,w=0.9*(h-100)-5+normal(r)*5;add(s,el('circle',{cx:x(h),cy:y(Math.max(41,Math.min(89,w))),r:4,class:'f1','fill-opacity':.75}))}
+    add(s,el('text',{x:R,y:B+16,'text-anchor':'end',class:'t'},'키 →'),el('text',{x:L+4,y:T+4,class:'t'},'↑ 몸무게'))},
+  pie(s){const d=[['나비',40,'f1'],['벌',25,'f2'],['개미',20,'f3'],['기타',15,'fm']],cx=120,cy=100,r=78;let a=0;
+    d.forEach(([n,v,c],i)=>{const a1=a+v/100*2*Math.PI;add(s,el('path',{d:arc(cx,cy,r,a,a1),class:c,stroke:'none'}));
+      add(s,el('rect',{x:230,y:40+i*28,width:12,height:12,class:c,rx:2}),el('text',{x:250,y:51+i*28,class:'tb'},n+' '+v+'%'));a=a1})},
+  box(s){const d=[22,25,27,28,30,31,33,34,35,38,40,80].sort((a,b)=>a-b);boxDraw(s,d,{L:30,R:320,cy:90,labels:true})},
+  heat(s){heatDraw(s,{x0:70,y0:20,cw:70,ch:46})}
+};
+function arc(cx,cy,r,a0,a1){const p=(a)=>[cx+r*Math.sin(a),cy-r*Math.cos(a)],[x0,y0]=p(a0),[x1,y1]=p(a1);return`M${cx},${cy}L${x0},${y0}A${r},${r} 0 ${a1-a0>Math.PI?1:0} 1 ${x1},${y1}Z`}
+const PICKS=[
+  ['시간에 따라 어떻게 변했지?','선 그래프','line','분기별 매출, 연도별 GDP처럼 순서가 있는 시간 축','plt.plot(x, y)'],
+  ['어느 쪽이 더 크지?','막대그래프','bar','영화별 평점, 지역별 매출 비교','plt.bar(x, y)  /  sns.barplot(x=, y=, data=)'],
+  ['값들이 어디에 몰려 있지?','히스토그램','hist','승객 나이 분포. 20~30대에 제일 많다','plt.hist(x, bins=10)  /  sns.histplot(x)'],
+  ['두 값이 같이 움직이나?','산점도','scatter','키가 클수록 몸무게도 무거운 경향','plt.scatter(x, y)'],
+  ['전체에서 몇 %지?','원형 차트','pie','곤충 종류 비율. 조각이 많으면 막대가 낫다','plt.pie(sizes, labels=labels, autopct="%.1f%%")'],
+  ['튀는 값이 있나?','박스플롯','box','혼자 동떨어진 80이 이상치로 찍힌다','sns.boxplot(x=df["age"])'],
+  ['두 범주를 교차하면?','히트맵','heat','승선항 × 객실 등급별 승객 수','sns.heatmap(table, annot=True, fmt="d")']
+];
+(function(){
+  const g=$('qgrid');
+  PICKS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.textContent=p[0];b.setAttribute('aria-pressed',i==0);b.addEventListener('click',()=>{g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));show(i)});g.appendChild(b)});
+  function show(i){const p=PICKS[i],s=$('pick-svg');clear(s);mini[p[2]](s);$('pick-name').textContent='→ '+p[1];$('pick-ex').textContent=p[3];$('pick-code').textContent=p[4]}
+  show(0);
+})();
+
+/* 03 playground */
+(function(){
+  const C={b:'#2563eb',g:'#16a34a',r:'#dc2626',c:'#0891b2',m:'#c026d3',k:'var(--fg)'},
+        MK={'o':'o','v':'v','^':'^','*':'*','.':'.','':'없음'},LS={'-':'','--':'9 6','-.':'9 4 2 4',':':'2 5','':'none'};
+  let st={c:'r',m:'o',l:'--'};
+  function mkSeg(id,obj,key,label){const g=$(id);Object.keys(obj).forEach(k=>{const b=document.createElement('button');b.type='button';b.className='m';b.textContent=label?label(k):(k||'없음');b.dataset.v=k;b.setAttribute('aria-pressed',k===st[key]);
+    if(key==='c'){b.style.borderLeft='4px solid '+obj[k]}
+    b.addEventListener('click',()=>{st[key]=k;g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()});g.appendChild(b)})}
+  mkSeg('pg-color',C,'c');mkSeg('pg-marker',MK,'m',k=>MK[k]);mkSeg('pg-line',LS,'l',k=>k||'없음');
+  $('pg-ms').addEventListener('input',e=>{$('pg-ms-v').textContent=e.target.value;draw()});
+  function marker(x,y,m,sz,col){const h=sz/2;
+    if(m==='o')return el('circle',{cx:x,cy:y,r:h,style:'fill:'+col});
+    if(m==='.')return el('circle',{cx:x,cy:y,r:Math.max(2,h/2.5),style:'fill:'+col});
+    if(m==='v')return el('path',{d:`M${x-h},${y-h*.8}L${x+h},${y-h*.8}L${x},${y+h}Z`,style:'fill:'+col});
+    if(m==='^')return el('path',{d:`M${x-h},${y+h*.8}L${x+h},${y+h*.8}L${x},${y-h}Z`,style:'fill:'+col});
+    if(m==='*'){let p='';for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?h*.45:h*1.15;p+=(i?'L':'M')+(x+rr*Math.cos(a))+','+(y+rr*Math.sin(a))}return el('path',{d:p+'Z',style:'fill:'+col})}
+    return null}
+  function draw(){const s=$('pg-svg');clear(s);const d=[2,4,3,6,5,8,7,9,8,10],L=40,R=580,T=16,B=190,x=i=>L+i*(R-L)/9,y=v=>B-(v/12)*(B-T),col=C[st.c],ms=+$('pg-ms').value*1.6;
+    yAxis(s,L,R,[0,4,8,12],y);d.forEach((v,i)=>add(s,el('text',{x:x(i),y:B+18,'text-anchor':'middle',class:'t'},i)));
+    if(st.l!==''){let p='';d.forEach((v,i)=>p+=(i?'L':'M')+x(i)+','+y(v));add(s,el('path',{d:p,fill:'none',style:'stroke:'+col,'stroke-width':2.5,'stroke-dasharray':LS[st.l]||'none'}))}
+    if(st.m!=='')d.forEach((v,i)=>{const m=marker(x(i),y(v),st.m,ms,col);if(m)add(s,m)});
+    $('pg-code').textContent=`plt.plot(x, y, '${st.c}${st.m}${st.l}', ms=${$('pg-ms').value})`+(st.l===''&&st.m===''?'   # 마커도 선도 없으면 아무것도 안 보인다!':'');
   }
-  document.getElementById('box-data').addEventListener('input',drawBox);
-  drawHist(); drawBox();
-  try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{drawHist();drawBox();}); }catch(e){}
-  new MutationObserver(()=>{drawHist();drawBox();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  draw();
+  // subplot
+  let R=2,Cc=2,sel=3;
+  function seg(id,cur,cb){const g=$(id);clear(g);[1,2,3].forEach(n=>{const b=document.createElement('button');b.type='button';b.className='m';b.textContent=n;b.setAttribute('aria-pressed',n===cur);b.addEventListener('click',()=>cb(n));g.appendChild(b)})}
+  function sp(){seg('sp-r',R,n=>{R=n;sel=Math.min(sel,R*Cc);sp()});seg('sp-c',Cc,n=>{Cc=n;sel=Math.min(sel,R*Cc);sp()});
+    const g=$('sp-grid');clear(g);g.style.gridTemplateColumns=`repeat(${Cc},1fr)`;
+    for(let i=1;i<=R*Cc;i++){const b=document.createElement('button');b.type='button';b.textContent=i;b.setAttribute('aria-pressed',i===sel);b.setAttribute('aria-label',i+'번 칸');b.addEventListener('click',()=>{sel=i;sp()});g.appendChild(b)}
+    const row=Math.ceil(sel/Cc),col=(sel-1)%Cc+1;$('sp-code').textContent=`plt.subplot(${R}, ${Cc}, ${sel})   # ${row}번째 줄, ${col}번째 칸`}
+  sp();
+})();
+
+/* 04 wage */
+(function(){
+  const boss=t=>100*Math.pow(1.6,t/10),wk=t=>5*Math.pow(6,t/10);
+  const CAP={raw:'<b>"상사 임금이 훨씬 많이 오르고, 격차도 벌어진다."</b> 상사는 $60 늘었고 근로자는 $25 늘었다. 금액으로 보면 맞는 말이다. 근로자 선은 바닥에 깔려 거의 안 오른 것처럼 보인다.',
+    log:'<b>"근로자 임금이 훨씬 빨리 오른다."</b> 로그 눈금에서는 같은 배수가 같은 높이다. 상사는 1.6배, 근로자는 6배가 됐으니 근로자 선이 더 가파르다. 비율로 보면 이것도 맞는 말이다.',
+    idx:'<b>"근로자 증가율이 압도적이다."</b> 둘 다 100에서 출발하게 맞추면 상사는 160, 근로자는 600이 된다. 출발점 차이가 사라지니 성장 속도만 보인다.'};
+  function draw(m){const s=$('wage');clear(s);const L=56,R=480,T=16,B=220,x=t=>L+t*(R-L)/10;let y,ticks,fmt=v=>'$'+v,fb=boss,fw=wk;
+    if(m==='raw'){y=v=>B-v/180*(B-T);ticks=[0,50,100,150]}
+    else if(m==='log'){const a=Math.log(4),b=Math.log(220);y=v=>B-(Math.log(v)-a)/(b-a)*(B-T);ticks=[5,10,20,50,100,200]}
+    else{y=v=>B-v/650*(B-T);ticks=[0,100,200,300,400,500,600];fmt=v=>v;fb=t=>boss(t);fw=t=>wk(t)*20}
+    yAxis(s,L,R,ticks,y,fmt);
+    [0,2,4,6,8,10].forEach(t=>add(s,el('text',{x:x(t),y:B+18,'text-anchor':'middle',class:'t'},t+'년')));
+    [[fb,'s1','f1','상사'],[fw,'s2','f2','근로자']].forEach(([f,sc,fc,n])=>{let p='';for(let t=0;t<=10;t+=.5)p+=(t?'L':'M')+x(t)+','+y(f(t));
+      add(s,el('path',{d:p,class:sc}),el('circle',{cx:x(10),cy:y(f(10)),r:4,class:fc}),el('text',{x:x(10)+8,y:y(f(10))+4,class:'tb',style:'fill:var(--'+(fc==='f1'?'c1':'c2')+')'},n+' '+(m==='idx'?Math.round(f(10)):'$'+Math.round(f(10)))))});
+    if(m==='log')add(s,el('text',{x:L+4,y:T+10,class:'t'},'↑ 눈금 간격이 2배·2.5배씩'));
+    $('wage-cap').innerHTML=CAP[m]}
+  segBind('wage-mode','m',draw);draw('raw');
+})();
+/* 04 poll */
+(function(){
+  function draw(st){st=+st;const s=$('poll');clear(s);const L=56,R=560,T=16,B=190,lo=st,hi=45,y=v=>B-(v-lo)/(hi-lo)*(B-T),bw=120;
+    const ticks=st===0?[0,10,20,30,40]:[36,38,40,42,44];yAxis(s,L,R,ticks,y,v=>v+'%');
+    [['후보 A',42.9,'f1',170],['후보 B',38.0,'f2',360]].forEach(([n,v,c,cx])=>add(s,el('rect',{x:cx-bw/2,y:y(v),width:bw,height:B-y(v),class:c+' anim',rx:2}),el('text',{x:cx,y:y(v)-6,'text-anchor':'middle',class:'tb'},v+'%'),el('text',{x:cx,y:B+18,'text-anchor':'middle',class:'t'},n)));
+    if(st!==0){add(s,el('path',{d:`M${L-6},${B-10} l6,-4 l6,4 M${L-6},${B-4} l6,-4 l6,4`,class:'sw','stroke-width':1.5}))}
+    const ratio=((42.9-lo)/(38-lo));
+    $('poll-cap').innerHTML=st===0?`실제 차이는 4.9%p. 막대 길이 비율도 <b>${ratio.toFixed(2)} : 1</b>로 비슷해 보인다. 정직한 그림이다.`
+      :`같은 숫자인데 A 막대가 B보다 <b>${ratio.toFixed(1)}배</b> 길어 보인다. A가 압도적으로 이기는 것 같은 착각을 준다. 축을 잘랐다면 물결선으로 생략을 꼭 표시해야 한다.`}
+  segBind('poll-mode','s',draw);draw(0);
+})();
+
+/* 05 histogram */
+function histDraw(s,w,o){clear(s);const {L,R,T,B,small}=o,lo=0,hi=Math.ceil(75/w)*w,nb=hi/w,c=new Array(nb).fill(0);
+  AGES.forEach(v=>c[Math.min(nb-1,Math.floor(v/w))]++);const mx=Math.max(...c),top=Math.ceil(mx/10)*10||10,y=v=>B-v/top*(B-T),bw=(R-L)/nb;
+  const tk=[];const step=top<=20?5:top<=50?10:top<=100?20:50;for(let v=0;v<=top;v+=step)tk.push(v);yAxis(s,L,R,tk,y);
+  const im=c.indexOf(mx);
+  c.forEach((v,i)=>add(s,el('rect',{x:L+i*bw+(bw>4?.5:0),y:y(v),width:Math.max(1,bw-(bw>4?1:0)),height:B-y(v),class:(!small&&i===im)?'f2':'f1'})));
+  const ls=Math.max(1,Math.ceil(nb/(small?5:10)));for(let i=0;i<=nb;i+=ls)add(s,el('text',{x:L+i*bw,y:B+16,'text-anchor':'middle',class:'t'},i*w));
+  add(s,el('line',{x1:L,x2:R,y1:B,y2:B,class:'ax'}));return{nb,im,mx}}
+(function(){
+  const inp=$('bin-w');
+  function renderFreq(w){const tb=$('freq-tb'),hi=Math.ceil(75/w)*w,nb=hi/w,c=new Array(nb).fill(0);AGES.forEach(v=>c[Math.min(nb-1,Math.floor(v/w))]++);
+    const mx=Math.max(...c),N=AGES.length;let cum=0,html='<tr><th>계급 (나이)</th><th>도수</th><th style="width:38%"></th><th>상대도수</th><th>누적도수</th></tr>';
+    c.forEach((v,i)=>{cum+=v;html+=`<tr${v===mx?' style="background:var(--accent-soft)"':''}><td class="mono">${i*w} 이상 ~ ${(i+1)*w} 미만</td><td class="mono" style="text-align:right">${v}</td><td><div style="height:10px;border-radius:2px;background:var(--${v===mx?'c2':'c1'});width:${v/mx*100}%"></div></td><td class="mono" style="text-align:right">${(v/N*100).toFixed(1)}%</td><td class="mono" style="text-align:right">${cum}</td></tr>`});
+    html+=`<tr><td><b>합계</b></td><td class="mono" style="text-align:right"><b>${N}</b></td><td></td><td class="mono" style="text-align:right">100%</td><td></td></tr>`;tb.innerHTML=html}
+  function go(){const w=+inp.value;$('bin-v').textContent=w+'살';const r=histDraw($('hist-svg'),w,{L:44,R:584,T:16,B:208});
+    let msg=`구간 ${r.nb}개. 가장 많은 칸은 <b>${r.im*w}~${(r.im+1)*w}살 (${r.mx}명)</b>.`;
+    if(w<=3)msg+=' 너무 잘게 쪼개서 들쭉날쭉하다. 전체 모양이 오히려 안 보인다.';
+    else if(w>=20)msg+=' 너무 크게 묶어서 특징이 뭉개졌다. 어린이 승객 무리도 사라졌다.';
+    else msg+=' 20~30대에 몰려 있고, 왼쪽 끝에 어린이 승객 작은 무리도 보인다.';
+    $('hist-cap').innerHTML=msg;renderFreq(w)}
+  inp.addEventListener('input',go);go();
+  const h=$('vs-hist'),hd=[3,7,12,9,5,2],bw=230/6;hd.forEach((v,i)=>add(h,el('rect',{x:30+i*bw,y:120-v*8,width:bw,height:v*8,class:'f1',stroke:'var(--surface)',style:'stroke:var(--surface)'})));
+  [0,10,20,30,40,50,60].forEach((v,i)=>add(h,el('text',{x:30+i*bw,y:135,'text-anchor':'middle',class:'t'},v)));
+  const b=$('vs-bar'),bd=[['서울',11],['부산',6],['대구',4],['광주',8]];bd.forEach(([n,v],i)=>add(b,el('rect',{x:30+i*60+10,y:120-v*8,width:36,height:v*8,class:'f2',rx:2}),el('text',{x:30+i*60+28,y:135,'text-anchor':'middle',class:'t'},n)));
+})();
+
+/* 06 boxplot */
+function pct(s,p){const pos=(s.length-1)*p,f=Math.floor(pos),c=Math.ceil(pos);return s[f]+(s[c]-s[f])*(pos-f)}
+function boxStats(s){const q1=pct(s,.25),q2=pct(s,.5),q3=pct(s,.75),iqr=q3-q1,lf=q1-1.5*iqr,uf=q3+1.5*iqr,inside=s.filter(v=>v>=lf&&v<=uf),out=s.filter(v=>v<lf||v>uf);
+  return{q1,q2,q3,iqr,lf,uf,wl:Math.min(...inside),wh:Math.max(...inside),out}}
+function boxDraw(s,d,o){const b=boxStats(d),{L,R,cy,labels}=o,lo=Math.min(d[0],b.lf),hi=Math.max(d[d.length-1],b.uf),pad=(hi-lo)*.04||1,x=v=>L+(v-lo+pad)/(hi-lo+2*pad)*(R-L);
+  [b.lf,b.uf].forEach(f=>add(s,el('line',{x1:x(f),x2:x(f),y1:cy-40,y2:cy+34,class:'sm','stroke-dasharray':'3 3'})));
+  add(s,el('line',{x1:x(b.wl),x2:x(b.q1),y1:cy,y2:cy,class:'sf'}),el('line',{x1:x(b.q3),x2:x(b.wh),y1:cy,y2:cy,class:'sf'}));
+  [b.wl,b.wh].forEach(v=>add(s,el('line',{x1:x(v),x2:x(v),y1:cy-12,y2:cy+12,class:'sf','stroke-width':2.5})));
+  add(s,el('rect',{x:x(b.q1),y:cy-22,width:Math.max(1,x(b.q3)-x(b.q1)),height:44,class:'fs anim',style:'stroke:var(--c1);stroke-width:1.5'}));
+  add(s,el('line',{x1:x(b.q2),x2:x(b.q2),y1:cy-22,y2:cy+22,class:'s1',style:'stroke-width:3'}));
+  b.out.forEach(v=>add(s,el('circle',{cx:x(v),cy,r:5,class:'sw','stroke-width':2.5})));
+  if(labels){[[b.q1,'Q1'],[b.q2,'Q2'],[b.q3,'Q3']].forEach(([v,t])=>add(s,el('text',{x:x(v),y:cy-28,'text-anchor':'middle',class:'t'},t)));
+    b.out.forEach(v=>add(s,el('text',{x:x(v),y:cy-12,'text-anchor':'middle',class:'t',style:'fill:var(--warn)'},'이상치')))}
+  return{b,x}}
+(function(){
+  const s=$('box-anat'),d=[18,21,22,24,26,27,29,31,33,35,37,40,62].sort((a,b)=>a-b),{b,x}=boxDraw(s,d,{L:40,R:600,cy:95});
+  const lab=(v,t,up,sub)=>{const yy=up?28:162;add(s,el('line',{x1:x(v),x2:x(v),y1:up?36:120,y2:up?66:150,class:'sm'}),el('text',{x:x(v),y:yy,'text-anchor':'middle',class:'tb'},t));if(sub)add(s,el('text',{x:x(v),y:yy+15,'text-anchor':'middle',class:'t'},sub))};
+  lab(b.wl,'수염 끝',false,'안쪽 최솟값');lab(b.q1,'Q1',true,'25%');lab(b.q2,'중앙값',false,'50%');lab(b.q3,'Q3',true,'75%');lab(b.wh,'수염 끝',false,'안쪽 최댓값');
+  add(s,el('text',{x:x(b.out[0]),y:28,'text-anchor':'middle',class:'tb',style:'fill:var(--warn)'},'이상치'),el('line',{x1:x(b.out[0]),x2:x(b.out[0]),y1:36,y2:86,class:'sw','stroke-width':1}));
+  add(s,el('text',{x:x(b.uf)+6,y:52,'text-anchor':'start',class:'t'},'fence'),el('text',{x:x(b.uf)+6,y:66,'text-anchor':'start',class:'t'},'Q3+1.5·IQR'));
+  const mid=(x(b.q1)+x(b.q3))/2;add(s,el('text',{x:(x(b.q2)+x(b.q3))/2,y:100,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},'IQR'));
+})();
+(function(){
+  const inp=$('box-data');
+  function go(){const s=$('box-svg');clear(s);const d=inp.value.split(/[,\s]+/).filter(t=>t!=='').map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+    const tb=$('box-steps');tb.innerHTML='';if(d.length<4){tb.innerHTML='<tr><td>숫자를 4개 이상 넣어 주세요.</td></tr>';return}
+    const {b,x}=boxDraw(s,d,{L:30,R:610,cy:70,labels:true});d.forEach(v=>add(s,el('circle',{cx:x(v),cy:122,r:3,class:'fm','fill-opacity':.7})));
+    const rows=[['① 줄 세우기',d.join(', ')],['② Q1 · Q2 · Q3',`${fmtN(b.q1)} · ${fmtN(b.q2)} · ${fmtN(b.q3)}`],['③ IQR = Q3 − Q1',`${fmtN(b.q3)} − ${fmtN(b.q1)} = ${fmtN(b.iqr)}`],
+      ['④ 정상 범위',`${fmtN(b.lf)} ~ ${fmtN(b.uf)}`],['⑤ 수염',`${fmtN(b.wl)} ~ ${fmtN(b.wh)}`],['⑥ 이상치',b.out.length?b.out.join(', '):'없음']];
+    rows.forEach(([a,v])=>{const tr=document.createElement('tr');const t1=document.createElement('td'),t2=document.createElement('td');t1.textContent=a;t2.textContent=v;t2.className='mono';t2.style.whiteSpace='normal';if(a.startsWith('⑥')&&b.out.length)t2.style.color='var(--warn)';tr.append(t1,t2);tb.appendChild(tr)})}
+  inp.addEventListener('input',go);document.querySelectorAll('[data-preset]').forEach(bt=>bt.addEventListener('click',()=>{inp.value=bt.dataset.preset;go()}));go();
+})();
+
+/* 07 hue */
+(function(){
+  const r=rng(11),P=Array.from({length:90},()=>{const din=r()<.62,smk=r()<.38,bill=Math.max(4,(din?20:14)+normal(r)*(din?8:5)),tip=Math.max(1,bill*.15+normal(r)*(smk?1.5:.7));return{bill:Math.min(50,bill),tip:Math.min(10,tip),din,smk}});
+  function draw(h){const s=$('hue-svg');clear(s);const L=44,R=584,T=14,B=220,x=v=>L+v/50*(R-L),y=v=>B-v/10*(B-T);
+    yAxis(s,L,R,[0,2,4,6,8,10],y,v=>'$'+v);[0,10,20,30,40,50].forEach(v=>add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},'$'+v)));
+    add(s,el('text',{x:R,y:B+34,'text-anchor':'end',class:'t'},'total_bill →'),el('text',{x:L+4,y:T+8,class:'t'},'↑ tip'));
+    P.forEach(p=>{const c=h==='none'?'f1':h==='time'?(p.din?'f3':'f2'):(p.smk?'f2':'f1');add(s,el('circle',{cx:x(p.bill),cy:y(p.tip),r:4.5,class:c,'fill-opacity':.75}))});
+    const lg=$('hue-legend');lg.innerHTML='';const items=h==='time'?[['Lunch','c2'],['Dinner','c3']]:h==='smoker'?[['No','c1'],['Yes','c2']]:[];
+    items.forEach(([n,c])=>{const sp=document.createElement('span');sp.innerHTML=`<i style="background:var(--${c})"></i>${n}`;lg.appendChild(sp)});
+    $('hue-code').textContent='sns.scatterplot(x="total_bill", y="tip"'+(h==='none'?'':`, hue="${h}"`)+', data=tips)';
+    $('hue-cap').innerHTML=h==='none'?'계산 금액이 클수록 팁도 많다. 여기까지는 점 색이 하나라 누가 누군지 모른다.':h==='time'?'<b>저녁(Dinner)</b> 점들이 오른쪽, 즉 계산 금액이 큰 쪽에 몰려 있다. 저녁 식사가 더 비싸다.':'흡연자(Yes) 점들이 선에서 위아래로 더 많이 흩어져 있다. 팁을 주는 패턴이 덜 일정하다.'}
+  segBind('hue-mode','h',draw);draw('none');
+})();
+/* 07 heatmap */
+function heatDraw(s,o){const rows=['C','Q','S'],cols=[1,2,3],V=[[85,17,66],[2,3,72],[127,164,353]],mx=353,{x0,y0,cw,ch}=o;
+  cols.forEach((c,j)=>add(s,el('text',{x:x0+j*cw+cw/2,y:y0+3*ch+18,'text-anchor':'middle',class:'t'},c+'등석')));
+  rows.forEach((rw,i)=>{add(s,el('text',{x:x0-10,y:y0+i*ch+ch/2+4,'text-anchor':'end',class:'t'},rw));
+    cols.forEach((c,j)=>{const v=V[i][j],op=.1+.88*Math.sqrt(v/mx);add(s,el('rect',{x:x0+j*cw+1,y:y0+i*ch+1,width:cw-2,height:ch-2,class:'f1','fill-opacity':op,rx:2}),el('text',{x:x0+j*cw+cw/2,y:y0+i*ch+ch/2+5,'text-anchor':'middle',class:op>.55?'tw':'tf'},v))})})}
+(function(){const s=$('heat');heatDraw(s,{x0:110,y0:10,cw:96,ch:58});add(s,el('text',{x:24,y:100,class:'t',transform:'rotate(-90 24 100)','text-anchor':'middle'},'Embarked'))})();
+
+/* 08 cloud */
+(function(){
+  const W=[['시각화',22,0],['그래프',18,0],['합니다',24,1],['데이터',17,0],['정말',19,1],['히스토그램',12,0],['박스플롯',12,0],['그리고',15,1],['이상치',10,0],['seaborn',10,0],['분포',9,0],['하세요',11,1],['축',9,0],['재미있었다',7,0],['지도',7,0],['matplotlib',8,0],['것',13,1],['산점도',6,0],['heatmap',6,0],['파이썬',6,0],['좀',9,1],['인사이트',5,0]];
+  function draw(m){const box=$('cloud-box');box.innerHTML='';const list=W.filter(w=>m!=='clean'||!w[2]),mx=Math.max(...list.map(w=>w[1]));
+    list.forEach((w,i)=>{const sp=document.createElement('span');sp.textContent=w[0];sp.style.fontSize=(13+(w[1]/mx)*34)+'px';sp.className=(m==='mark'&&w[2])?'stop':'w'+(i%4+1);box.appendChild(sp)})}
+  segBind('cloud-mode','c',draw);draw('raw');
+})();
+/* 08 map */
+(function(){
+  const s=$('map'),x=g=>(g-126.895)/(127.01-126.895)*600,y=a=>(37.595-a)/(37.595-37.505)*300;
+  add(s,el('rect',{x:0,y:0,width:600,height:300,class:'fb'}));
+  for(let i=1;i<6;i++)add(s,el('line',{x1:i*100,x2:i*100,y1:0,y2:300,class:'gr'}));for(let i=1;i<3;i++)add(s,el('line',{x1:0,x2:600,y1:i*100,y2:i*100,class:'gr'}));
+  const rv=[[126.895,37.548],[126.915,37.538],[126.94,37.526],[126.965,37.517],[126.99,37.513],[127.01,37.516]];
+  let p='';rv.forEach(([g,a],i)=>p+=(i?'L':'M')+x(g)+','+y(a));add(s,el('path',{d:p,class:'s1','stroke-width':16,'stroke-opacity':.3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  add(s,el('text',{x:x(126.955),y:y(37.511),class:'t',style:'fill:var(--accent)'},'한강'));
+  const M=[['서울시청',37.5663,126.9779],['경복궁',37.5796,126.9770],['N서울타워',37.5512,126.9882],['여의도공원',37.5257,126.9224]];
+  M.forEach(([n,a,g])=>{const gx=x(g),gy=y(a),gr=el('g',{tabindex:0,role:'button','aria-label':n,style:'cursor:pointer'});
+    add(gr,el('path',{d:`M${gx},${gy} c-9,-12 -13,-17 -13,-23 a13,13 0 1 1 26,0 c0,6 -4,11 -13,23z`,class:'f2'}),el('circle',{cx:gx,cy:gy-23,r:5,class:'fsurf'}),el('text',{x:gx+16,y:gy-18,class:'tb'},n));
+    const on=()=>{$('map-out').textContent=`folium.Marker([${a}, ${g}], popup='${n}')`};gr.addEventListener('click',on);gr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();on()}});s.appendChild(gr)});
+})();
+
+/* 04 notebook */
+(function(){
+  const vline=(s,x,T,B)=>add(s,el('line',{x1:x,x2:x,y1:T,y2:B,class:'gr'}));
+  const tri=(x,y,h,col)=>el('path',{d:`M${x-h},${y-h*.8}L${x+h},${y-h*.8}L${x},${y+h}Z`,style:'fill:'+col});
+  const ytitle=(s,x,y,t)=>add(s,el('text',{x,y,class:'t',transform:`rotate(-90 ${x} ${y})`,'text-anchor':'middle'},t));
+  const MPL=['#1f77b4','#ff7f0e','#2ca02c','#d62728'];
+
+  /* ① GDP */
+  (function(){const s=$('nb-gdp'),yrs=[1950,1960,1970,1980,1990,2000,2010,2020],g=[300,543,1075,2862,5979,10289,14958,18320];
+    const L=66,R=580,T=34,B=210,x=i=>L+i*(R-L)/7,y=v=>B-v/20000*(B-T);
+    yAxis(s,L,R,[0,5000,10000,15000,20000],y);let p='';g.forEach((v,i)=>p+=(i?'L':'M')+x(i)+','+y(v));
+    add(s,el('path',{d:p,fill:'none',style:'stroke:#16a34a','stroke-width':2.5,'stroke-dasharray':'9 6'}));
+    g.forEach((v,i)=>add(s,tri(x(i),y(v),6,'#16a34a'),el('text',{x:x(i),y:B+18,'text-anchor':'middle',class:'t'},yrs[i])));
+    add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'GDP'));ytitle(s,14,(T+B)/2,'$');
+    add(s,el('text',{x:x(7)-12,y:y(g[7])-6,'text-anchor':'end',class:'t'},'18,320'));
+  })();
+
+  /* ② actual vs predicted */
+  (function(){
+    const A=[100,256,152,140,150,183,175,203,152,198],P=[115,242,176,148,115,209,185,256,129,195],E=A.map((v,i)=>v-P[i]);
+    const S={a:{d:A,c:'#16a34a',dash:'none',n:'x',on:true},p:{d:P,c:'#dc2626',dash:'9 4 2 4',n:'y',on:true},e:{d:E,c:'#2563eb',dash:'none',n:'error',on:true}};
+    const LOC={0:['best',null],1:['upper right',['t','r']],2:['upper left',['t','l']],3:['lower left',['b','l']],4:['lower right',['b','r']],5:['right',['c','r']],6:['center left',['c','l']],7:['center right',['c','r']],8:['lower center',['b','c']],9:['upper center',['t','c']],10:['center',['c','c']]};
+    let loc=9;
+    const order=[2,9,1,6,10,7,3,8,4],grid=$('ap-loc'),g2=$('ap-loc2');
+    function mk(n,parent,txt){const b=document.createElement('button');b.type='button';b.className='m';b.dataset.loc=n;b.innerHTML=txt;b.addEventListener('click',()=>{loc=n;sync();draw()});parent.appendChild(b)}
+    order.forEach(n=>mk(n,grid,`<b>${n}</b><br>${LOC[n][0]}`));mk(0,g2,'0 best');mk(5,g2,'5 right');
+    function sync(){document.querySelectorAll('#ap-loc button,#ap-loc2 button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.loc===loc))}
+    $('ap-series').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;S[k].on=!S[k].on;b.setAttribute('aria-pressed',S[k].on);draw()}));
+    function draw(){const s=$('nb-ap');clear(s);const L=50,R=580,T=30,B=220,x=i=>L+i*(R-L)/9,y=v=>B-(v+70)/350*(B-T);
+      yAxis(s,L,R,[-50,0,50,100,150,200,250],y);for(let i=0;i<10;i++)add(s,el('text',{x:x(i),y:B+18,'text-anchor':'middle',class:'t'},i));
+      add(s,el('line',{x1:L,x2:R,y1:y(0),y2:y(0),class:'sm','stroke-dasharray':'2 3'}));
+      add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'actual vs predicted'),el('text',{x:(L+R)/2,y:B+34,'text-anchor':'middle',class:'t'},'mode'));
+      const on=Object.keys(S).filter(k=>S[k].on);
+      on.forEach(k=>{let p='';S[k].d.forEach((v,i)=>p+=(i?'L':'M')+x(i)+','+y(v));add(s,el('path',{d:p,fill:'none',style:'stroke:'+S[k].c,'stroke-width':2.2,'stroke-dasharray':S[k].dash}))});
+      if(on.length){const w=100,h=12+on.length*18,pos=LOC[loc][1]||['t','l'];
+        const lx=pos[1]==='l'?L+8:pos[1]==='r'?R-w-8:(L+R)/2-w/2,ly=pos[0]==='t'?T+6:pos[0]==='b'?B-h-6:(T+B)/2-h/2;
+        add(s,el('rect',{x:lx,y:ly,width:w,height:h,rx:3,class:'fsurf',style:'stroke:var(--line);fill-opacity:.92'}));
+        on.forEach((k,i)=>add(s,el('line',{x1:lx+10,x2:lx+34,y1:ly+15+i*18,y2:ly+15+i*18,style:'stroke:'+S[k].c,'stroke-width':2.2,'stroke-dasharray':S[k].dash}),el('text',{x:lx+42,y:ly+19+i*18,class:'tf',style:'font-size:12px'},S[k].n)))}
+      $('ap-code').textContent=`plt.legend(loc=${loc})   # '${LOC[loc][0]}'`+(loc===0?' → 데이터를 가장 덜 가리는 곳을 알아서':'')}
+    sync();draw();
+  })();
+
+  /* ③ apt vs kw */
+  (function(){const apt=[25,52,38,32,25,45,40,55,28,42],kw=[100,256,152,140,150,183,175,203,152,198];
+    function draw(m){const s=$('nb-ak');clear(s);const L=56,R=580,T=30,B=215;
+      const [x0,x1,y0,y1,xt,yt]=m==='zoom'?[10,70,0,300,[10,20,30,40,50,60,70],[0,50,100,150,200,250,300]]:[23.5,56.5,92,264,[25,30,35,40,45,50,55],[100,125,150,175,200,225,250]];
+      const x=v=>L+(v-x0)/(x1-x0)*(R-L),y=v=>B-(v-y0)/(y1-y0)*(B-T);
+      yAxis(s,L,R,yt,y);xt.forEach(v=>{vline(s,x(v),T,B);add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},v))});
+      apt.forEach((a,i)=>add(s,el('circle',{cx:x(a),cy:y(kw[i]),r:5.5,style:'fill:'+MPL[0]})));
+      add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'apt vs kw'),el('text',{x:(L+R)/2,y:B+36,'text-anchor':'middle',class:'t'},'apt'));ytitle(s,14,(T+B)/2,'kw');
+      $('ak-cap').innerHTML=m==='zoom'?'범위를 <b>넓혀서</b> 0부터 보여 주니 점들이 가운데에 모이고, 값들의 실제 크기가 실감 난다. 범위를 좁히면 확대, 넓히면 축소다.':'자동 범위는 데이터 최솟값~최댓값에 딱 맞춰 여백만 조금 둔다. 점들이 화면을 꽉 채운다. y축이 0이 아니라 92쯤에서 시작한다는 점도 보자(05 함정 2와 같은 이야기).'}
+    segBind('ak-mode','m',draw);draw('auto');
+  })();
+
+  /* ④ annotate */
+  (function(){const s=$('nb-ann'),L=50,R=580,T=16,B=205,x=v=>L+(v-.6)/(9.4-.6)*(R-L),y=v=>B-(v+1.2)/(3.2)*(B-T);
+    yAxis(s,L,R,[-1,-.5,0,.5,1,1.5,2],y);[2,4,6,8].forEach(v=>add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},v)));
+    let p1='',p2='';for(let v=1;v<=9.001;v+=.1){p1+=(v<1.05?'M':'L')+x(v)+','+y(v*.2);p2+=(v<1.05?'M':'L')+x(v)+','+y(Math.sin(v))}
+    add(s,el('path',{d:p1,fill:'none',style:'stroke:'+MPL[0],'stroke-width':2.2}),el('path',{d:p2,fill:'none',style:'stroke:'+MPL[1],'stroke-width':2.2}));
+    add(s,el('text',{x:x(9)+4,y:y(1.8)+4,class:'t'},'first'),el('text',{x:x(9)-30,y:y(Math.sin(9))+18,class:'t'},'second'));
+    const ax=x(2),ay=y(1),tx=x(4),ty=y(1.5);
+    add(s,el('line',{x1:tx,y1:ty,x2:ax+8,y2:ay-4,style:'stroke:#16a34a','stroke-width':2.5}));
+    const ang=Math.atan2(ay-ty,ax-tx),hx=ax,hy=ay;add(s,el('path',{d:`M${hx},${hy}L${hx-14*Math.cos(ang-.4)},${hy-14*Math.sin(ang-.4)}L${hx-14*Math.cos(ang+.4)},${hy-14*Math.sin(ang+.4)}Z`,style:'fill:#16a34a'}));
+    add(s,el('circle',{cx:ax,cy:ay,r:4,class:'fw'}),el('text',{x:ax-6,y:ay+18,'text-anchor':'middle',class:'t',style:'fill:var(--warn)'},'xy=(2, 1)'));
+    add(s,el('text',{x:tx,y:ty,class:'tb'},'annotate'),el('text',{x:tx,y:ty-16,class:'t',style:'fill:var(--accent)'},'xytext=(4, 1.5)'));
+  })();
+
+  /* ⑤ movies */
+  (function(){const mv=['cinema','avengers','squid game','007','iron man'],sc=[5,10,3,8,9];
+    const CODE={bar:"plt.bar(movies, score)",barh:"plt.barh(movies, score)",yel:"plt.bar(movies, score, color='yellow', width=0.3)"};
+    function draw(m){const s=$('nb-mv');clear(s);
+      if(m==='barh'){const L=100,R=580,T=30,B=215,h=(B-T)/5,x=v=>L+v/10.5*(R-L);[0,2,4,6,8,10].forEach(v=>{vline(s,x(v),T,B);add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},v))});
+        mv.forEach((n,i)=>{const cy=B-(i+.5)*h;add(s,el('rect',{x:L,y:cy-h*.4,width:x(sc[i])-L,height:h*.8,style:'fill:'+MPL[0]}),el('text',{x:L-8,y:cy-h*.1*0+4-.1*h,'text-anchor':'end',class:'t'},n))});
+        add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'score'));}
+      else{const L=50,R=580,T=30,B=210,w=(R-L)/5,y=v=>B-v/10.5*(B-T),bw=m==='yel'?.3:.8,col=m==='yel'?'#f2d40c':MPL[0];
+        yAxis(s,L,R,[0,2,4,6,8,10],y);
+        mv.forEach((n,i)=>{const cx=L+(i+.5)*w;add(s,el('rect',{x:cx-w*bw/2,y:y(sc[i]),width:w*bw,height:B-y(sc[i]),style:'fill:'+col}),el('text',{x:cx+w*.1,y:B+18,'text-anchor':'middle',class:'t'},n))});
+        add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'Movies'));ytitle(s,14,(T+B)/2,'score')}
+      $('mv-code').textContent=CODE[m]}
+    segBind('mv-mode','m',draw);draw('bar');
+  })();
+
+  /* ⑥ grades */
+  (function(){const G=[83,95,91,87,70,0,85,82,100,67,73,77,0],bin=g=>Math.min(Math.floor(g/10)*10,90),C={};G.forEach(g=>C[bin(g)]=(C[bin(g)]||0)+1);
+    let sel=null;const box=$('gr-chips');
+    G.forEach((g,i)=>{const b=document.createElement('button');b.type='button';b.textContent=g;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{sel=sel===i?null:i;box.querySelectorAll('button').forEach((x,j)=>x.setAttribute('aria-pressed',j===sel));draw()});box.appendChild(b)});
+    function draw(){const s=$('nb-gr');clear(s);const L=50,R=580,T=30,B=195,x=v=>L+(v+5)/110*(R-L),y=v=>B-v/5*(B-T);
+      yAxis(s,L,R,[0,1,2,3,4,5],y);for(let v=0;v<=100;v+=10)add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},v));
+      const hb=sel!=null?bin(G[sel]):null;
+      Object.keys(C).forEach(k=>{k=+k;add(s,el('rect',{x:x(k),y:y(C[k]),width:x(k+10)-x(k),height:B-y(C[k]),class:k===hb?'f2':'f1',style:'stroke:var(--fg);stroke-width:1'}),el('text',{x:x(k+5),y:y(C[k])-6,'text-anchor':'middle',class:'t'},C[k]+'명'))});
+      add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'Distribution of Exam 1 Grades'),el('text',{x:(L+R)/2,y:B+34,'text-anchor':'middle',class:'t'},'Decile'));ytitle(s,14,(T+B)/2,'# of Students');
+      if(sel!=null){const g=G[sel],a=Math.floor(g/10)*10;$('gr-out').textContent=`${g} // 10 * 10 = ${a}`+(a>90?`  →  min(${a}, 90) = 90`:`  →  min(${a}, 90) = ${a}`)+`  →  ${bin(g)}점대 칸`}
+      else $('gr-out').textContent='점수를 누르면 어느 칸으로 가는지 계산 과정이 나온다 (100점을 눌러 보자)'}
+    draw();
+  })();
+
+  /* ⑦ height weight */
+  (function(){const s=$('nb-hw'),H=[175,170,162,171,186,175,166,169,189,178],W=[70,65,61,63,78,64,60,64,88,76],Lb=['a','b','c','d','e','f','g','h','I','j'];
+    const L=40,R=290,T=12,B=195,x=v=>L+(v-158)/(192-158)*(R-L),y=v=>B-(v-56)/(92-56)*(B-T);
+    yAxis(s,L,R,[60,70,80,90],y);[160,170,180,190].forEach(v=>add(s,el('text',{x:x(v),y:B+16,'text-anchor':'middle',class:'t'},v)));
+    H.forEach((h,i)=>add(s,el('circle',{cx:x(h),cy:y(W[i]),r:4.5,style:'fill:'+MPL[0]}),el('text',{x:x(h)+6,y:y(W[i])+9,class:'tf',style:'font-size:11px'},Lb[i])));
+    add(s,el('text',{x:R,y:B+30,'text-anchor':'end',class:'t'},'height →'));
+  })();
+
+  /* ⑧ pie */
+  (function(){const V=[55,15,14,16],N=['butterflies','dragonflies','spiders','bees'],LC=['#ffb6c1','#c0c0c0','#add8e6','#d3d3d3'];
+    function draw(m){const s=$('nb-pie');clear(s);const cx=150,cy=108,r=78,cols=m==='base'?MPL:LC;let a=0;
+      const pt=(ang,rr,ox,oy)=>[cx+ox+rr*Math.cos(ang),cy+oy-rr*Math.sin(ang)];
+      const wedge=(a0,a1,ox,oy)=>{const [x0,y0]=pt(a0,r,ox,oy),[x1,y1]=pt(a1,r,ox,oy);return`M${cx+ox},${cy+oy}L${x0},${y0}A${r},${r} 0 ${a1-a0>Math.PI?1:0} 0 ${x1},${y1}Z`};
+      const parts=V.map(v=>{const a0=a,a1=a+v/100*2*Math.PI;a=a1;return[a0,a1]});
+      parts.forEach(([a0,a1],i)=>{const mid=(a0+a1)/2,e=m==='exp'?.07*r:0,ox=e*Math.cos(mid),oy=-e*Math.sin(mid);
+        if(m==='exp')add(s,el('path',{d:wedge(a0,a1,ox+3,oy+4),class:'fm','fill-opacity':.35}))});
+      parts.forEach(([a0,a1],i)=>{const mid=(a0+a1)/2,e=m==='exp'?.07*r:0,ox=e*Math.cos(mid),oy=-e*Math.sin(mid);
+        add(s,el('path',{d:wedge(a0,a1,ox,oy),style:'fill:'+cols[i]}));
+        const [tx,ty]=pt(mid,r*.6,ox,oy),[lx,ly]=pt(mid,r*1.14,ox,oy);
+        add(s,el('text',{x:tx,y:ty+4,'text-anchor':'middle',style:'font-size:10.5px;font-family:var(--f-mono);fill:'+(m==='base'?'#fff':'#222')},V[i].toFixed(2)+'%'),
+          el('text',{x:lx,y:ly+4,'text-anchor':Math.cos(mid)>.15?'start':Math.cos(mid)<-.15?'end':'middle',class:'t'},N[i]))})}
+    segBind('pie-mode','m',draw);draw('base');
+  })();
+
+  /* ⑨ boxplot groups */
+  (function(){const r=rng(10),G=[[100,10],[90,20],[80,30]].map(([m,sd])=>Array.from({length:200},()=>m+sd*normal(r)).sort((a,b)=>a-b));
+    const s=$('nb-bx'),L=56,R=580,T=30,B=215,lo=-20,hi=180,y=v=>B-(v-lo)/(hi-lo)*(B-T),w=(R-L)/3;
+    yAxis(s,L,R,[0,40,80,120,160],y);
+    G.forEach((d,i)=>{const b=boxStats(d),cx=L+(i+.5)*w,bw=56;
+      add(s,el('line',{x1:cx,x2:cx,y1:y(b.wl),y2:y(b.q1),class:'sf'}),el('line',{x1:cx,x2:cx,y1:y(b.q3),y2:y(b.wh),class:'sf'}));
+      [b.wl,b.wh].forEach(v=>add(s,el('line',{x1:cx-14,x2:cx+14,y1:y(v),y2:y(v),class:'sf'})));
+      add(s,el('rect',{x:cx-bw/2,y:y(b.q3),width:bw,height:y(b.q1)-y(b.q3),class:'fsurf',style:'stroke:var(--fg);stroke-width:1.5'}));
+      add(s,el('line',{x1:cx-bw/2,x2:cx+bw/2,y1:y(b.q2),y2:y(b.q2),style:'stroke:#ff7f0e','stroke-width':2.5}));
+      b.out.forEach(v=>add(s,el('circle',{cx,cy:y(Math.max(lo,Math.min(hi,v))),r:3.5,class:'sm','stroke-width':1.3})));
+      add(s,el('text',{x:cx,y:B+18,'text-anchor':'middle',class:'t'},'Group '+(i+1)),el('text',{x:cx,y:B+32,'text-anchor':'middle',class:'t'},['평균100 sd10','평균90 sd20','평균80 sd30'][i]))});
+    add(s,el('text',{x:(L+R)/2,y:16,'text-anchor':'middle',class:'tb'},'Boxplot of Three Different Groups'));ytitle(s,14,(T+B)/2,'Value');
+  })();
+
+  /* ⑩ image */
+  (function(){const cv=$('img-cv'),ctx=cv.getContext('2d'),Wd=367,Ht=305;
+    const src=document.createElement('canvas');src.width=Wd;src.height=Ht;const sc=src.getContext('2d');
+    sc.fillStyle='#0b1226';sc.fillRect(0,0,Wd,Ht);const r=rng(5);
+    for(let i=0;i<70;i++){sc.fillStyle=`rgba(255,255,240,${.3+r()*.7})`;sc.fillRect(r()*Wd,r()*Ht,r()<.15?2:1,r()<.15?2:1)}
+    const g=sc.createRadialGradient(165,140,10,183,152,105);g.addColorStop(0,'#fbf3d6');g.addColorStop(.8,'#d8cfa8');g.addColorStop(1,'#a99f7c');
+    sc.fillStyle=g;sc.beginPath();sc.arc(183,152,100,0,Math.PI*2);sc.fill();
+    [[150,120,18],[215,175,24],[200,105,10],[160,195,13],[235,130,8],[130,160,7]].forEach(([x,y,rr])=>{sc.fillStyle='rgba(120,110,80,.35)';sc.beginPath();sc.arc(x,y,rr,0,Math.PI*2);sc.fill();sc.fillStyle='rgba(255,250,230,.25)';sc.beginPath();sc.arc(x-2,y-2,rr*.7,0,Math.PI*2);sc.fill()});
+    const SRC=sc.getImageData(0,0,Wd,Ht);
+    const CODE={orig:'img = plt.imread("moon.JPG")   # img.shape → (305, 367, 3)',
+      gray:'img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)   # shape → (305, 367)',
+      rot:'M = cv2.getRotationMatrix2D(center, 45, 1.0)\nimg_rotated = cv2.warpAffine(img, M, (w, h))',
+      blur:'img_blur = cv2.GaussianBlur(img, (15, 15), 0)',
+      bright:'img_float = img.astype(np.float32) * factor\nimg_float = np.clip(img_float, 0, 255)'};
+    const CAP={orig:'칸 하나하나가 [R, G, B] 숫자 세 개다. 밤하늘 칸은 [11, 18, 38]처럼 작은 숫자, 달 칸은 250 가까운 큰 숫자.',
+      gray:'R·G·B 세 숫자를 <b>0.299R + 0.587G + 0.114B</b> 하나로 합친다. 사람 눈이 초록에 제일 민감해서 G 비중이 크다. 숫자가 3개에서 1개가 되니 shape의 마지막 3이 사라진다.',
+      rot:'가운데를 중심으로 45° 돌렸다. 크기 (w, h)는 그대로라 모서리가 잘리고, 빈 곳은 0(검정)으로 채워진다.',
+      blur:'칸마다 주변 칸들의 평균으로 바꾼다. (15, 15)는 평균 낼 범위 크기, 클수록 더 흐려진다. (여기선 비슷한 효과를 내는 평균 블러로 흉내 냈다.)',
+      bright:''};
+    let mode='orig';
+    function render(){const out=ctx.createImageData(Wd,Ht),s=SRC.data,o=out.data;
+      if(mode==='orig'){o.set(s)}
+      else if(mode==='gray'){for(let i=0;i<s.length;i+=4){const v=.299*s[i]+.587*s[i+1]+.114*s[i+2];o[i]=o[i+1]=o[i+2]=v;o[i+3]=255}}
+      else if(mode==='bright'){const f=+$('img-f').value;let cl=0;for(let i=0;i<s.length;i+=4){let hit=false;for(let c=0;c<3;c++){let v=s[i+c]*f;if(v>255){v=255;hit=true}o[i+c]=v}if(hit)cl++;o[i+3]=255}
+        CAP.bright=`모든 숫자에 ${f}를 곱한다. 255를 넘는 값은 <code>np.clip</code>이 255로 자른다. 지금 <b>${(cl/(Wd*Ht)*100).toFixed(1)}%</b>의 칸이 잘렸다`+(f>1.6?'. 달 표면이 하얗게 날아가 무늬가 사라지는 게 그 때문이다.':f<1?'. 1보다 작으면 어두워진다.':'.')}
+      else if(mode==='blur'){const tmp=new Float32Array(s.length),R=6;
+        for(let y=0;y<Ht;y++)for(let x=0;x<Wd;x++){let a=[0,0,0],n=0;for(let k=-R;k<=R;k++){const xx=Math.min(Wd-1,Math.max(0,x+k)),j=(y*Wd+xx)*4;a[0]+=s[j];a[1]+=s[j+1];a[2]+=s[j+2];n++}const j=(y*Wd+x)*4;tmp[j]=a[0]/n;tmp[j+1]=a[1]/n;tmp[j+2]=a[2]/n}
+        for(let y=0;y<Ht;y++)for(let x=0;x<Wd;x++){let a=[0,0,0],n=0;for(let k=-R;k<=R;k++){const yy=Math.min(Ht-1,Math.max(0,y+k)),j=(yy*Wd+x)*4;a[0]+=tmp[j];a[1]+=tmp[j+1];a[2]+=tmp[j+2];n++}const j=(y*Wd+x)*4;o[j]=a[0]/n;o[j+1]=a[1]/n;o[j+2]=a[2]/n;o[j+3]=255}}
+      if(mode==='rot'){ctx.fillStyle='#000';ctx.fillRect(0,0,Wd,Ht);ctx.save();ctx.translate(Wd/2,Ht/2);ctx.rotate(-Math.PI/4);ctx.drawImage(src,-Wd/2,-Ht/2);ctx.restore()}
+      else ctx.putImageData(out,0,0);
+      $('img-code').textContent=CODE[mode];$('img-code').style.whiteSpace='pre';$('img-cap').innerHTML=CAP[mode];$('img-bright-row').hidden=mode!=='bright'}
+    segBind('img-mode','m',m=>{mode=m;render()});$('img-f').addEventListener('input',e=>{$('img-f-v').textContent=(+e.target.value).toFixed(1);render()});render();
+  })();
+})();
+/* 04 figure simulator */
+(function(){
+  const SC=[
+    {n:'show → savefig',ok:false,L:["plt.plot(years, gdp)","plt.title('GDP')","plt.show()","plt.savefig('gdp.png')"],
+     S:[{f:[['A','line']],c:'A'},{f:[['A','full']],c:'A'},{f:[],c:null,scr:'full'},{f:[['B','empty']],c:'B',scr:'full',file:'empty'}],
+     N:['도화지 A가 없으니 하나 꺼내서 선을 그린다. A가 "지금 도화지".','같은 A에 제목을 붙인다.','A를 화면에 보여주고, 주피터는 A를 닫아 버린다. 이제 "지금 도화지"가 없다.','저장하려는데 지금 도화지가 없다. pyplot이 새 도화지 B를 꺼내 저장한다. <b>빈 그림이 저장됐다.</b> 출력의 "with 0 Axes"가 이 B다.']},
+    {n:'savefig → show',ok:true,L:["plt.plot(years, gdp)","plt.title('GDP')","plt.savefig('gdp.png')","plt.show()"],
+     S:[{f:[['A','line']],c:'A'},{f:[['A','full']],c:'A'},{f:[['A','full']],c:'A',file:'full'},{f:[],c:null,scr:'full',file:'full'}],
+     N:['A에 선을 그린다.','A에 제목을 붙인다.','A가 아직 살아 있을 때 저장한다. <b>제대로 저장됐다.</b>','보여주고 닫아도 파일은 이미 저장돼 있다.']},
+    {n:'close → savefig',ok:false,L:["plt.plot(years, gdp)","plt.close()","plt.savefig('gdp.png')"],
+     S:[{f:[['A','line']],c:'A'},{f:[],c:null},{f:[['B','empty']],c:'B',file:'empty'}],
+     N:['A에 선을 그린다.','close()는 A를 보여주지도 않고 바로 닫는다. 반복문에서 그림 수백 장을 만들 때 메모리를 아끼려고 쓴다.','지금 도화지가 없으니 새 B가 저장된다. <b>빈 그림.</b>']},
+    {n:'clf → savefig',ok:false,L:["plt.plot(years, gdp)","plt.clf()","plt.savefig('gdp.png')"],
+     S:[{f:[['A','line']],c:'A'},{f:[['A','empty']],c:'A'},{f:[['A','empty']],c:'A',file:'empty'}],
+     N:['A에 선을 그린다.','clf는 도화지 A는 그대로 두고 위에 그린 것만 전부 지운다. 같은 도화지를 다시 쓰고 싶을 때 쓴다.','지워진 A가 저장된다. <b>빈 그림.</b> (cla는 칸 하나만 지운다)']},
+    {n:'figure를 늦게',ok:false,L:["plt.plot(years, gdp)","plt.figure(figsize=(8, 4))","plt.title('GDP')","plt.savefig('gdp.png')"],
+     S:[{f:[['A','line']],c:'A'},{f:[['A','line'],['B','empty']],c:'B'},{f:[['A','line'],['B','title']],c:'B'},{f:[['A','line'],['B','title']],c:'B',file:'title'}],
+     N:['A에 선을 그린다.','figure()는 크기를 바꾸는 게 아니라 <b>새 도화지 B</b>를 꺼낸다. 이제 지금 도화지는 B.','제목은 B에 붙는다. 선은 A에, 제목은 B에 따로 있다.','B가 저장된다. <b>제목만 있고 선이 없는 그림.</b> 그래서 figsize는 맨 처음에 정해야 한다.']},
+    {n:'셀을 나누면',ok:false,L:["plt.plot(years, gdp)      # 셀 1","# (셀 1 끝: 자동으로 show)","plt.savefig('gdp.png')    # 셀 2"],cm:[1],
+     S:[{f:[['A','line']],c:'A'},{f:[],c:null,scr:'line'},{f:[['B','empty']],c:'B',scr:'line',file:'empty'}],
+     N:['셀 1에서 A에 선을 그린다.','show()를 안 써도 주피터·Colab은 셀이 끝날 때 자동으로 보여주고 닫는다.','셀 2에서 저장하면 새 B가 저장된다. <b>빈 그림.</b> 저장까지 한 셀 안에서 끝내자.']},
+    {n:'fig 변수로',ok:true,L:["fig, ax = plt.subplots()","ax.plot(years, gdp)","plt.show()","fig.savefig('gdp.png')"],
+     S:[{f:[['A','axes']],c:'A',h:'A'},{f:[['A','line']],c:'A',h:'A'},{f:[['A','line','held']],c:null,scr:'line',h:'A'},{f:[['A','line','held']],c:null,scr:'line',h:'A',file:'line'}],
+     N:['도화지 A를 만들어 fig라는 이름으로, 칸을 ax라는 이름으로 담아 둔다.','ax에 직접 선을 그린다.','화면에 보여주고 pyplot은 A를 놓아 버린다. 하지만 fig 변수가 A를 계속 붙잡고 있다.','"지금 도화지"를 찾지 않고 fig에게 직접 저장하라고 시킨다. <b>제대로 저장됐다.</b>']}
+  ];
+  let sc=0,step=-1;
+  const segEl=$('fs-sc');
+  SC.forEach((o,i)=>{const b=document.createElement('button');b.type='button';b.textContent=(o.ok?'✓ ':'✗ ')+o.n;b.setAttribute('aria-pressed',i===0);b.addEventListener('click',()=>{sc=i;step=-1;segEl.querySelectorAll('button').forEach((x,j)=>x.setAttribute('aria-pressed',j===i));render()});segEl.appendChild(b)});
+  function paper(s,x,y,w,h,kind,opt){opt=opt||{};
+    add(s,el('rect',{x,y,width:w,height:h,rx:3,class:'fsurf',style:`stroke:${opt.cur?'var(--accent)':'var(--line)'};stroke-width:${opt.cur?2.5:1.2}`+(opt.dash?';stroke-dasharray:5 4':'')}));
+    if(kind==='empty'){add(s,el('text',{x:x+w/2,y:y+h/2+4,'text-anchor':'middle',class:'t'},'(비어 있음)'));return}
+    const ax=x+12,ay=y+(kind==='full'||kind==='title'?20:10),aw=w-22,ah=y+h-10-ay;
+    add(s,el('rect',{x:ax,y:ay,width:aw,height:ah,fill:'none',class:'sm'}));
+    if(kind==='full'||kind==='title')add(s,el('text',{x:x+w/2,y:y+15,'text-anchor':'middle',class:'tb',style:'font-size:11px'},'GDP'));
+    if(kind==='line'||kind==='full'){const v=[.05,.08,.12,.2,.35,.55,.78,.95];let p='';v.forEach((t,i)=>p+=(i?'L':'M')+(ax+4+i*(aw-8)/7)+','+(ay+ah-4-t*(ah-8)));add(s,el('path',{d:p,fill:'none',style:'stroke:#16a34a','stroke-width':2,'stroke-dasharray':'5 3'}))}}
+  function render(){const o=SC[sc],cv=$('fs-code');cv.innerHTML='';
+    o.L.forEach((l,i)=>{const d=document.createElement('div');d.textContent=l;d.className=(i===step?'cur':i<step?'done':'')+((o.cm||[]).includes(i)?' cm':'');cv.appendChild(d)});
+    const st=step<0?{f:[],c:null}:o.S[step],s=$('fs-svg');clear(s);
+    const cols=[[8,'화면 (show)'],[200,'작업 중인 도화지'],[452,'저장된 파일']];
+    cols.forEach(([x,t])=>add(s,el('text',{x,y:14,class:'tb',style:'font-size:12px;fill:var(--muted)'},t)));
+    add(s,el('line',{x1:190,x2:190,y1:24,y2:200,class:'gr'}),el('line',{x1:442,x2:442,y1:24,y2:200,class:'gr'}));
+    if(st.scr)paper(s,8,40,170,110,st.scr);else add(s,el('text',{x:93,y:100,'text-anchor':'middle',class:'t'},'아직 없음'));
+    if(!st.f.length)add(s,el('text',{x:316,y:100,'text-anchor':'middle',class:'t'},'도화지 없음'));
+    const n=st.f.length,w=n>1?110:150;
+    st.f.forEach(([nm,k,flag],i)=>{const x=n>1?200+i*124:241,cur=st.c===nm,held=flag==='held';paper(s,x,48,w,100,k,{cur,dash:held});
+      add(s,el('text',{x:x+w/2,y:166,'text-anchor':'middle',class:'tb',style:'font-size:12px'},'도화지 '+nm));
+      if(cur)add(s,el('text',{x:x+w/2,y:184,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},'▲ 지금 도화지'));
+      if(held)add(s,el('text',{x:x+w/2,y:184,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},'fig 변수가 붙잡는 중'))});
+    if(st.file){paper(s,452,40,140,100,st.file);const good=st.file==='full'||st.file==='line';
+      add(s,el('text',{x:522,y:162,'text-anchor':'middle',class:'tb',style:'font-size:12px;fill:var(--'+(good?'good':'warn')+')'},good?'✓ gdp.png 정상':st.file==='title'?'✗ 제목만 있음':'✗ gdp.png 빈 그림'))}
+    else add(s,el('text',{x:522,y:100,'text-anchor':'middle',class:'t'},'아직 없음'));
+    $('fs-cap').innerHTML=step<0?'"다음 줄 실행"을 눌러 한 줄씩 진행해 보자.':o.N[step];
+    $('fs-prev').disabled=step<0;$('fs-next').disabled=step>=o.L.length-1}
+  $('fs-next').addEventListener('click',()=>{if(step<SC[sc].L.length-1){step++;render()}});
+  $('fs-prev').addEventListener('click',()=>{if(step>-1){step--;render()}});
+  $('fs-reset').addEventListener('click',()=>{step=-1;render()});
+  render();
+})();
+/* 05 axis builder */
+(function(){
+  /* anatomy */
+  (function(){const s=$('ax-anat'),X=150,T=30,B=190,y=v=>B-v/200*(B-T);
+    add(s,el('line',{x1:X,x2:X,y1:T-8,y2:B,class:'ax','stroke-width':2}),el('line',{x1:X,x2:330,y1:B,y2:B,class:'ax'}));
+    [0,50,100,150,200].forEach(v=>add(s,el('line',{x1:X-6,x2:X,y1:y(v),y2:y(v),class:'ax'}),el('text',{x:X-10,y:y(v)+4,'text-anchor':'end',class:'t'},v)));
+    let p='';[5,8,12,17,22,30].forEach((v,i)=>p+=(i?'L':'M')+(X+10+i*32)+','+y(v));add(s,el('path',{d:p,class:'s2'}));
+    p='';[100,110,120,132,145,160].forEach((v,i)=>p+=(i?'L':'M')+(X+10+i*32)+','+y(v));add(s,el('path',{d:p,class:'s1'}));
+    add(s,el('text',{x:X-44,y:(T+B)/2,class:'tb','text-anchor':'middle',transform:`rotate(-90 ${X-44} ${(T+B)/2})`},'시급 ($)'));
+    const call=(n,tx,ty,px,py,h,sub)=>{add(s,el('line',{x1:px,y1:py,x2:tx-6,y2:ty-4,class:'sm','stroke-dasharray':'3 3'}),el('circle',{cx:px,cy:py,r:4,class:'f1'}),
+      el('text',{x:tx,y:ty,class:'tb',style:'fill:var(--accent)'},n+' '+h),el('text',{x:tx,y:ty+17,class:'t'},sub))};
+    call('①',380,46,X-44,58,'어떤 값을 놓을까?','원래 금액($) vs 첫해=100 환산값');
+    add(s,el('path',{d:`M${X+4},${y(150)} q10,${(y(100)-y(150))/2} 0,${y(100)-y(150)}`,class:'sw','stroke-width':1.5}));
+    call('②',380,112,X+12,(y(150)+y(100))/2,'눈금 간격은?','+50씩 같은 차이 vs ×2씩 같은 배수');
+    call('③',380,178,X,B,'어디서 시작할까?','0부터 vs 데이터 근처부터 (plt.ylim)');
+  })();
+
+  const boss=t=>100*Math.pow(1.6,t/10),wk=t=>5*Math.pow(6,t/10);
+  let V='raw',S='lin',Z='zero';
+  const CAP={
+    'raw-lin-zero':'<b>"상사가 훨씬 많이 오르고 격차도 커진다."</b> 상사는 $60, 근로자는 $25 늘었다. 얼마를 더 받게 됐는지(금액)를 보여주는 그림.',
+    'raw-lin-zoom':'<b>근로자 선이 화면에서 아예 사라졌다.</b> 90~170만 보여주니 상사의 상승만 남고 크게 치솟는 것처럼 보인다. 범위를 고르는 것만으로 데이터를 숨길 수 있다.',
+    'raw-log-zero':'<b>"근로자 임금이 훨씬 빨리 오른다."</b> 로그 눈금은 같은 높이 = 같은 배수다. 근로자 6배, 상사 1.6배라 근로자 선이 더 가파르다. (로그는 0을 표시할 수 없어서 0부터는 불가능)',
+    'raw-log-zoom':'로그 눈금을 위쪽만 확대했다. 다시 근로자가 사라지고, 상사의 1.6배 상승이 꽤 가파르게 보인다.',
+    'idx-lin-zero':'<b>"근로자 증가율이 압도적이다."</b> 둘 다 100에서 출발하니 출발점 차이가 사라지고 성장 속도만 남는다. 근로자 600, 상사 160.',
+    'idx-lin-zoom':'100~200만 보여주니 근로자 선은 4년 만에 위로 뚫고 나가고, 상사의 60% 상승이 화면을 가득 채운다.',
+    'idx-log-zero':'환산값을 로그로 그리면 둘 다 같은 점에서 출발해 <b>기울기 = 성장률</b>만 비교된다. 성장률을 비교할 때 가장 정직한 조합. (로그는 0부터 불가능)',
+    'idx-log-zoom':'로그 눈금을 100~200으로 확대했다. 근로자 선은 금방 화면 밖으로 나간다.'};
+  function draw(){const s=$('ax-chart');clear(s);const L=60,R=520,T=16,B=218,x=t=>L+t*(R-L)/10,fb=V==='raw'?boss:t=>boss(t),fw=V==='raw'?wk:t=>wk(t)*20;
+    let lo,hi;if(Z==='zoom'){[lo,hi]=V==='raw'?[90,170]:[95,200]}else{[lo,hi]=S==='log'?(V==='raw'?[4,220]:[80,700]):(V==='raw'?[0,180]:[0,650])}
+    const y=S==='log'?v=>B-(Math.log(v)-Math.log(lo))/(Math.log(hi)-Math.log(lo))*(B-T):v=>B-(v-lo)/(hi-lo)*(B-T);
+    let ticks;if(S==='log'){ticks=[5,10,20,50,100,200,500].filter(v=>v>=lo&&v<=hi)}else{const st=(hi-lo)>300?100:(hi-lo)>100?50:20;ticks=[];for(let v=Math.ceil(lo/st)*st;v<=hi;v+=st)ticks.push(v)}
+    yAxis(s,L,R,ticks,y,V==='raw'?v=>'$'+v:v=>v);
+    [0,2,4,6,8,10].forEach(t=>add(s,el('text',{x:x(t),y:B+18,'text-anchor':'middle',class:'t'},t+'년')));
+    const cid='axclip';add(s,add(el('clipPath',{id:cid}),el('rect',{x:L,y:T,width:R-L,height:B-T})));
+    const lines=[];
+    [[fb,'s1','c1','상사'],[fw,'s2','c2','근로자']].forEach(([f,c,col,n])=>{let p='';for(let t=0;t<=10.001;t+=.25){const v=Math.max(f(t),S==='log'?1e-3:-1e9);p+=(t?'L':'M')+x(t)+','+y(v)}
+      add(s,el('path',{d:p,class:c,'clip-path':`url(#${cid})`}));
+      const end=f(10),vis=end>=lo&&end<=hi;
+      if(vis){add(s,el('circle',{cx:x(10),cy:y(end),r:4,style:'fill:var(--'+col+')'}));lines.push([y(end),n+' '+(V==='raw'?'$':'')+Math.round(end),col])}
+      else{const offTop=end>hi;add(s,el('text',{x:R-6,y:offTop?T+14:B-8,'text-anchor':'end',class:'tb',style:'fill:var(--'+col+')'},(offTop?'↑ ':'↓ ')+n+' 화면 밖'))}});
+    lines.sort((a,b)=>a[0]-b[0]);for(let i=1;i<lines.length;i++)if(lines[i][0]-lines[i-1][0]<16)lines[i][0]=lines[i-1][0]+16;
+    lines.forEach(([yy,t,col])=>add(s,el('text',{x:x(10)+8,y:yy+4,class:'tb',style:'fill:var(--'+col+')'},t)));
+    if(S==='log'&&Z==='zero')add(s,el('text',{x:L+6,y:B-6,class:'t',style:'fill:var(--warn)'},'로그 눈금엔 0이 없다 → 자동 범위'));
+    if(lo!==0&&S!=='log')add(s,el('path',{d:`M${L-6},${B-8} l6,-4 l6,4 M${L-6},${B-2} l6,-4 l6,4`,class:'sw','stroke-width':1.5}));
+    const code=[V==='raw'?"y = df['wage']":"y = df['wage'] / df['wage'].iloc[0] * 100   # 첫해 = 100",'plt.plot(df[\'year\'], y)'];
+    if(S==='log')code.push("plt.yscale('log')");
+    code.push(Z==='zoom'?`plt.ylim(${lo}, ${hi})`:(S==='log'?'# ylim(0, …) 불가능: log(0)은 정의되지 않음':`plt.ylim(0, ${hi})`));
+    $('ax-code').textContent=code.join('\n');$('ax-cap').innerHTML=CAP[V+'-'+S+'-'+Z]}
+  segBind('ax-v','v',v=>{V=v;draw()});segBind('ax-s','v',v=>{S=v;draw()});segBind('ax-z','v',v=>{Z=v;draw()});draw();
+})();
+/* 07 quartiles */
+(function(){
+  const DATA={10:[5,7,8,12,13,14,18,21,25,30],11:[5,7,8,12,13,14,18,21,25,30,33]};
+  let D='10',M='np';
+  const med=a=>{const n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2};
+  function draw(){const d=DATA[D],n=d.length,s=$('q-svg');clear(s);
+    const L=20,W=600,step=W/n,bw=Math.min(46,step-6),cx=i=>L+step*i+step/2,top=96;
+    let Q,steps;
+    if(M==='np'){Q=[.25,.5,.75].map(p=>{const pos=(n-1)*p,f=Math.floor(pos),c=Math.ceil(pos);return{pos,v:d[f]+(d[c]-d[f])*(pos-f),f,c,p}});
+      steps=Q.map((q,k)=>{const nm=['Q1','Q2','Q3'][k],frac=+(q.pos-q.f).toFixed(2);
+        return[`${nm}  위치 = (${n}−1) × ${q.p} = ${fmtN(q.pos)}`,frac===0?`${q.f}번 자리 값 그대로 → ${fmtN(q.v)}`:`${q.f}번(${d[q.f]})과 ${q.c}번(${d[q.c]}) 사이 ${Math.round(frac*100)}% 지점 → ${d[q.f]} + ${frac} × (${d[q.c]} − ${d[q.f]}) = ${fmtN(q.v)}`]})}
+    else{const h=Math.floor(n/2),lo=d.slice(0,h),hi=d.slice(n-h),pm=i=>i;const m=med(d),q1=med(lo),q3=med(hi);
+      const posMed=(n-1)/2,posQ1=(h-1)/2,posQ3=(n-h)+(h-1)/2;
+      Q=[{pos:posQ1,v:q1},{pos:posMed,v:m},{pos:posQ3,v:q3}];
+      steps=[[`Q2 (중앙값)`,n%2?`가운데 ${posMed}번 자리 → ${m}`:`가운데 두 값 (${d[n/2-1]} + ${d[n/2]}) ÷ 2 = ${fmtN(m)}`],
+        [`아래 절반 → Q1`,`[${lo.join(', ')}]${n%2?' (중앙값은 빼고)':''}의 중앙값 → ${fmtN(q1)}`],
+        [`위 절반 → Q3`,`[${hi.join(', ')}]의 중앙값 → ${fmtN(q3)}`]];
+      add(s,el('path',{d:`M${cx(0)-bw/2},${top+60} v8 H${cx(h-1)+bw/2} v-8`,class:'sm','stroke-width':1.5}),el('text',{x:(cx(0)+cx(h-1))/2,y:top+84,'text-anchor':'middle',class:'t'},'아래 절반'));
+      add(s,el('path',{d:`M${cx(n-h)-bw/2},${top+60} v8 H${cx(n-1)+bw/2} v-8`,class:'sm','stroke-width':1.5}),el('text',{x:(cx(n-h)+cx(n-1))/2,y:top+84,'text-anchor':'middle',class:'t'},'위 절반'))}
+    const xp=pos=>L+step/2+pos*step,edges=[L,xp(Q[0].pos),xp(Q[1].pos),xp(Q[2].pos),L+W];
+    for(let k=0;k<4;k++){add(s,el('rect',{x:edges[k],y:top-6,width:edges[k+1]-edges[k],height:58,class:k%2?'fb':'fs','fill-opacity':k%2?1:.7}));
+      add(s,el('text',{x:(edges[k]+edges[k+1])/2,y:top+(M==='hand'?112:76),'text-anchor':'middle',class:'tb',style:'fill:var(--accent);font-size:12px'},'25%'))}
+    d.forEach((v,i)=>{add(s,el('rect',{x:cx(i)-bw/2,y:top,width:bw,height:46,rx:4,class:'fsurf',style:'stroke:var(--line);stroke-width:1.2'}),
+      el('text',{x:cx(i),y:top+28,'text-anchor':'middle',class:'tf',style:'font-size:15px'},v),el('text',{x:cx(i),y:top-12,'text-anchor':'middle',class:'t',style:'font-size:10px'},i+'번'))});
+    Q.forEach((q,k)=>{const x=xp(q.pos),nm=['Q1','Q2','Q3'][k],col=k===1?'var(--c2)':'var(--c1)';
+      const onBox=Math.abs(q.pos-Math.round(q.pos))<1e-9;if(onBox)add(s,el('rect',{x:cx(Math.round(q.pos))-bw/2,y:top,width:bw,height:46,rx:4,fill:'none',style:`stroke:${col};stroke-width:2.5`}));else add(s,el('line',{x1:x,x2:x,y1:top-30,y2:top+56,style:`stroke:${col};stroke-width:2.5`}));add(s,el('line',{x1:x,x2:x,y1:top-30,y2:top-22,style:`stroke:${col};stroke-width:2.5`}),el('path',{d:`M${x-6},${top-38} L${x+6},${top-38} L${x},${top-30}Z`,style:'fill:'+col}),
+        el('text',{x,y:top-60,'text-anchor':'middle',class:'tb',style:'fill:'+col},nm),el('text',{x,y:top-44,'text-anchor':'middle',class:'tf',style:'font-size:12px'},fmtN(q.v)))});
+    s.setAttribute('viewBox','0 0 640 '+(M==='np'?212:250));add(s,el('text',{x:L,y:M==='np'?204:240,class:'t'},M==='np'?'↑ 위치가 칸과 칸 사이면, 두 값 사이를 비율대로 나눈다 (선형 보간)':'↑ 중앙값으로 반을 가르고, 각 절반의 중앙값을 다시 구한다'));
+    const tb=$('q-steps');tb.innerHTML='';steps.forEach(([a,b])=>{const tr=document.createElement('tr'),t1=document.createElement('td'),t2=document.createElement('td');t1.textContent=a;t1.className='mono';t1.style.whiteSpace='nowrap';t2.textContent=b;t2.className='mono';tr.append(t1,t2);tb.appendChild(tr)});
+    const iq=Q[2].v-Q[0].v,tr=document.createElement('tr');tr.innerHTML=`<td class="mono"><b>IQR</b></td><td class="mono">${fmtN(Q[2].v)} − ${fmtN(Q[0].v)} = <b>${fmtN(iq)}</b></td>`;tb.appendChild(tr);
+    const mean=d.reduce((a,b)=>a+b,0)/n,sd=Math.sqrt(d.reduce((a,v)=>a+(v-mean)**2,0)/(n-1)),npq=[.25,.5,.75].map(p=>{const pos=(n-1)*p,f=Math.floor(pos),c=Math.ceil(pos);return d[f]+(d[c]-d[f])*(pos-f)});
+    const f=v=>v.toFixed(6).padStart(11);
+    $('q-desc').textContent=`count ${f(n)}\nmean  ${f(mean)}\nstd   ${f(sd)}\nmin   ${f(d[0])}\n25%   ${f(npq[0])}   ← Q1\n50%   ${f(npq[1])}   ← Q2\n75%   ${f(npq[2])}   ← Q3\nmax   ${f(d[n-1])}`}
+  segBind('q-data','v',v=>{D=v;draw()});segBind('q-meth','v',v=>{M=v;draw()});draw();
+})();
+/* 07 quartile gap */
+(function(){const r=rng(21),pool=Array.from({length:300},()=>50+15*normal(r)),med=a=>{const n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2};
+  const N=[10,20,50,100,200,300],G=N.map(n=>{let sum=0;for(let k=0;k<200;k++){const d=Array.from({length:n},()=>50+15*normal(r)).sort((a,b)=>a-b),pos=(n-1)*.25,f=Math.floor(pos),c=Math.ceil(pos),np=d[f]+(d[c]-d[f])*(pos-f),hand=med(d.slice(0,Math.floor(n/2)));sum+=Math.abs(np-hand)}return sum/200});
+  const s=$('q-gap'),L=50,R=580,T=16,B=160,mx=Math.max(...G),top=Math.ceil(mx*2)/2||1,y=v=>B-v/top*(B-T),w=(R-L)/N.length;
+  const tk=[],stp=top>1?.5:.25;for(let v=0;v<=top+1e-9;v+=stp)tk.push(+v.toFixed(2));yAxis(s,L,R,tk,y);
+  G.forEach((g,i)=>{const x=L+i*w;add(s,el('rect',{x:x+w*.2,y:y(g),width:w*.6,height:Math.max(1,B-y(g)),class:i===0?'f2':'f1',rx:2}),el('text',{x:x+w/2,y:y(g)-6,'text-anchor':'middle',class:'t'},g.toFixed(2)),el('text',{x:x+w/2,y:B+18,'text-anchor':'middle',class:'t'},N[i]+'개'))});
+  add(s,el('text',{x:R,y:B+36,'text-anchor':'end',class:'t'},'데이터 개수 →'));
+})();
+/* 07 fence */
+(function(){
+  const Q1=21,Q3=35,IQR=Q3-Q1,PTS=[4,12,18,21,24,27,30,33,35,40,46,60,80];
+  const erf=x=>{const t=1/(1+.3275911*Math.abs(x)),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y};
+  const Phi=z=>.5*(1+erf(z/Math.SQRT2));
+  function draw(){const k=+$('fc-k').value;$('fc-k-v').textContent=k.toFixed(1);
+    const d=k*IQR,lo=Q1-d,hi=Q3+d,s=$('fc-svg');clear(s);
+    const L=30,R=610,x0=-50,x1=130,x=v=>L+(v-x0)/(x1-x0)*(R-L),cy=92;
+    add(s,el('line',{x1:L,x2:R,y1:cy+50,y2:cy+50,class:'gr'}));[-40,-20,0,20,40,60,80,100,120].forEach(v=>add(s,el('text',{x:x(v),y:cy+66,'text-anchor':'middle',class:'t'},v)));
+    add(s,el('rect',{x:x(lo),y:cy-30,width:x(hi)-x(lo),height:60,class:'fs','fill-opacity':.45}));
+    [[lo,'아래 울타리'],[hi,'위 울타리']].forEach(([v,t])=>add(s,el('line',{x1:x(v),x2:x(v),y1:cy-48,y2:cy+50,class:'sw','stroke-dasharray':'5 4'}),el('text',{x:x(v),y:cy-54,'text-anchor':'middle',class:'tb',style:'fill:var(--warn);font-size:12px'},t+' '+fmtN(+v.toFixed(2)))));
+    add(s,el('rect',{x:x(Q1),y:cy-18,width:x(Q3)-x(Q1),height:36,class:'fsurf',style:'stroke:var(--c1);stroke-width:2'}),el('text',{x:(x(Q1)+x(Q3))/2,y:cy+4,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},'IQR 14'));
+    const arr=(a,b,yy,t)=>{add(s,el('line',{x1:x(a),x2:x(b),y1:yy,y2:yy,class:'sm'}),el('path',{d:`M${x(a)+5},${yy-3}L${x(a)},${yy}L${x(a)+5},${yy+3}M${x(b)-5},${yy-3}L${x(b)},${yy}L${x(b)-5},${yy+3}`,class:'sm'}));if(x(b)-x(a)>50)add(s,el('text',{x:(x(a)+x(b))/2,y:yy-8,'text-anchor':'middle',class:'t',style:'font-size:10.5px'},t))};
+    arr(lo,Q1,cy-22,k.toFixed(1)+'×IQR='+fmtN(+d.toFixed(2)));arr(Q3,hi,cy-22,k.toFixed(1)+'×IQR='+fmtN(+d.toFixed(2)));
+    const out=[];PTS.forEach(v=>{const o=v<lo||v>hi;if(o)out.push(v);add(s,el('circle',{cx:x(v),cy:cy+36,r:o?6:4,class:o?'sw':'fm','stroke-width':o?2.5:0,'fill-opacity':o?0:.7}));if(o)add(s,el('text',{x:x(v),y:cy+24,'text-anchor':'middle',class:'t',style:'fill:var(--warn)'},v))});
+    const rows=[['① 상자 길이','IQR = Q3 − Q1 = 35 − 21 = 14'],[`② ${k.toFixed(1)}배 하기`,`14 × ${k.toFixed(1)} = ${fmtN(+d.toFixed(2))}`],['③ 위 울타리',`Q3 + ${fmtN(+d.toFixed(2))} = ${fmtN(+hi.toFixed(2))}`],['④ 아래 울타리',`Q1 − ${fmtN(+d.toFixed(2))} = ${fmtN(+lo.toFixed(2))}`],['⑤ 판정',out.length?`${fmtN(+lo.toFixed(2))} ~ ${fmtN(+hi.toFixed(2))} 밖에 있는 ${out.join(', ')} → 이상치`:'울타리 밖 값 없음 → 이상치 없음']];
+    const K=k.toFixed(1),D=fmtN(+d.toFixed(2)),LO=fmtN(+lo.toFixed(2)),HI=fmtN(+hi.toFixed(2));
+    $('fc-code').textContent=`q1 = 21\nq3 = 35\n\niqr   = q3 - q1            # 35 - 21 = 14\nlower = q1 - ${K} * iqr     # 21 - ${K} × 14 = 21 - ${D} = ${LO}\nupper = q3 + ${K} * iqr     # 35 + ${K} × 14 = 35 + ${D} = ${HI}\n\noutliers = df[(df['age'] < lower) | (df['age'] > upper)]\n#          df[(df['age'] < ${LO}) | (df['age'] > ${HI})]`;
+    const DF=[4,18,21,25,30,33,35,40,60,80];let dh='<tr><th>index</th><th>age</th><th>age &lt; '+LO+'</th><th>age &gt; '+HI+'</th><th>이상치?</th></tr>';
+    DF.forEach((v,i)=>{const a=v<lo,b=v>hi,o=a||b;dh+=`<tr${o?' style="background:var(--warn-soft)"':''}><td class="mono">${i}</td><td class="mono">${v}</td><td class="mono">${a?'True':'False'}</td><td class="mono">${b?'True':'False'}</td><td style="color:var(--${o?'warn':'muted'});font-weight:${o?600:400}">${o?'✓ 뽑힘':'—'}</td></tr>`});
+    $('fc-df').innerHTML=dh;
+    const tb=$('fc-steps');tb.innerHTML='';rows.forEach(([a,b])=>{const tr=document.createElement('tr'),t1=document.createElement('td'),t2=document.createElement('td');t1.textContent=a;t1.style.whiteSpace='nowrap';t2.textContent=b;t2.className='mono';if(a.startsWith('⑤')&&out.length)t2.style.color='var(--warn)';tr.append(t1,t2);tb.appendChild(tr)});
+    /* bell */
+    const b=$('fc-bell');clear(b);const BL=30,BR=610,BT=20,BB=150,zx=z=>BL+(z+4.2)/8.4*(BR-BL),pdf=z=>Math.exp(-z*z/2),zy=v=>BB-v*(BB-BT),zq=.6745,zf=zq+k*2*zq;
+    let p='';for(let z=-4.2;z<=4.2001;z+=.05)p+=(z<-4.19?'M':'L')+zx(z)+','+zy(pdf(z));
+    const tail=(a,c)=>{let q=`M${zx(a)},${BB}`;for(let z=a;z<=c+1e-9;z+=.05)q+=`L${zx(z)},${zy(pdf(z))}`;return q+`L${zx(c)},${BB}Z`};
+    if(zf<4.2){add(b,el('path',{d:tail(-4.2,-zf),class:'fw','fill-opacity':.5}),el('path',{d:tail(zf,4.2),class:'fw','fill-opacity':.5}))}
+    add(b,el('path',{d:tail(-zq,zq),class:'f1','fill-opacity':.25}),el('path',{d:p,class:'s1'}),el('line',{x1:BL,x2:BR,y1:BB,y2:BB,class:'ax'}));
+    [[-zq,'Q1'],[zq,'Q3']].forEach(([z,t])=>add(b,el('text',{x:zx(z),y:BB+16,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},t)));
+    [-zf,zf].forEach(z=>{if(Math.abs(z)<4.2)add(b,el('line',{x1:zx(z),x2:zx(z),y1:BT,y2:BB,class:'sw','stroke-dasharray':'5 4'}))});
+    const pct=2*(1-Phi(zf))*100;
+    add(b,el('text',{x:zx(0),y:BB+34,'text-anchor':'middle',class:'tb'},`울타리 밖: 전체의 ${pct<.01?pct.toFixed(4):pct.toFixed(2)}%  (양쪽 합)`));
+    add(b,el('text',{x:zx(0),y:BT+60,'text-anchor':'middle',class:'t',style:'fill:var(--accent)'},'가운데 50%'))}
+  $('fc-k').addEventListener('input',draw);document.querySelectorAll('[data-k]').forEach(bt=>bt.addEventListener('click',()=>{$('fc-k').value=bt.dataset.k;draw()}));draw();
+})();
+/* 10 quiz */
+(function(){
+  const F={
+    box(s){const L=20,R=400,x=v=>L+v/100*(R-L),cy=40;add(s,el('line',{x1:x(15),x2:x(30),y1:cy,y2:cy,class:'sf'}),el('line',{x1:x(55),x2:x(70),y1:cy,y2:cy,class:'sf'}),el('rect',{x:x(30),y:cy-16,width:x(55)-x(30),height:32,class:'fs',style:'stroke:var(--c1);stroke-width:1.5'}),el('line',{x1:x(42),x2:x(42),y1:cy-16,y2:cy+16,class:'s1'}));
+      [15,70].forEach(v=>add(s,el('line',{x1:x(v),x2:x(v),y1:cy-9,y2:cy+9,class:'sf'})));[84,93].forEach(v=>add(s,el('circle',{cx:x(v),cy,r:4.5,class:'sw','stroke-width':2})));[0,25,50,75,100].forEach(v=>add(s,el('text',{x:x(v),y:cy+36,'text-anchor':'middle',class:'t'},v)))},
+    hist(s){const c=[3,9,14,7,4,2],L=30,R=400,B=90,w=(R-L)/6;c.forEach((v,i)=>add(s,el('rect',{x:L+i*w,y:B-v*5.5,width:w-1,height:v*5.5,class:'f1'})));for(let i=0;i<=6;i++)add(s,el('text',{x:L+i*w,y:B+15,'text-anchor':'middle',class:'t'},i*10))},
+    scat(s){const r=rng(4),L=30,R=400,T=8,B=90;for(let i=0;i<26;i++){const a=r(),b=1-a+normal(r)*.08;add(s,el('circle',{cx:L+a*(R-L),cy:T+(1-Math.max(0,Math.min(1,b)))*(B-T),r:4,class:'f1','fill-opacity':.75}))}add(s,el('line',{x1:L,x2:R,y1:B,y2:B,class:'ax'}),el('line',{x1:L,x2:L,y1:T,y2:B,class:'ax'}),el('text',{x:R,y:B+14,'text-anchor':'end',class:'t'},'광고 횟수 →'),el('text',{x:L+4,y:T+8,class:'t'},'↑ 이탈률'))},
+    poll(s){const L=40,B=90,T=8,y=v=>B-(v-36)/9*(B-T);[36,40,44].forEach(v=>add(s,el('line',{x1:L,x2:380,y1:y(v),y2:y(v),class:'gr'}),el('text',{x:L-6,y:y(v)+4,'text-anchor':'end',class:'t'},v+'%')));add(s,el('rect',{x:110,y:y(42.9),width:70,height:B-y(42.9),class:'f1'}),el('rect',{x:240,y:y(38),width:70,height:B-y(38),class:'f2'}),el('text',{x:145,y:B+14,'text-anchor':'middle',class:'t'},'A 42.9%'),el('text',{x:275,y:B+14,'text-anchor':'middle',class:'t'},'B 38.0%'))},
+    dots(s){const A=[40,44,48,50,52,56,60],B=[10,25,40,50,60,75,90],x=v=>30+v*3.7;[[A,'가',28,'f1'],[B,'나',70,'f2']].forEach(([d,n,y,c])=>{add(s,el('text',{x:4,y:y+4,class:'tb'},n),el('line',{x1:30,x2:400,y1:y,y2:y,class:'gr'}));d.forEach(v=>add(s,el('circle',{cx:x(v),cy:y,r:5,class:c})))});add(s,el('line',{x1:x(50),x2:x(50),y1:10,y2:88,class:'sw','stroke-dasharray':'3 3'}))}
+  };
+  const Q=[
+    /* 차트 고르기 */
+    ['pick','mc','월별 쇼핑몰 방문자 수가 1년 동안 어떻게 변했는지 보고 싶다.',['선 그래프','원형 차트','박스플롯','히트맵'],0,'시간 순서가 있는 변화는 선으로 이어야 흐름이 보인다.','#pick'],
+    ['pick','mc','반 학생 30명의 시험 점수가 어느 구간에 몰려 있는지 보고 싶다.',['막대그래프','히스토그램','산점도','원형 차트'],1,'연속된 숫자를 구간으로 묶어 세는 게 히스토그램이다.','#hist'],
+    ['pick','mc','광고비를 많이 쓸수록 매출도 오르는지 알고 싶다.',['원형 차트','막대그래프','산점도','히스토그램'],2,'두 수치 변수의 관계는 산점도.','#pick'],
+    ['pick','mc','부서별 직원 수를 비교하고 싶다.',['히스토그램','막대그래프','선 그래프','박스플롯'],1,'부서는 범주형이라 막대그래프. 막대 사이를 띄운다.','#pick'],
+    ['pick','mc','직원 연봉에 혼자 튀는 값이 있는지 확인하고 싶다.',['원형 차트','선 그래프','박스플롯','히트맵'],2,'박스플롯은 울타리 밖 값을 점으로 따로 찍는다.','#box'],
+    ['pick','mc','승선항(3개) × 객실 등급(3개)별 승객 수를 한눈에 보고 싶다.',['히트맵','선 그래프','히스토그램','산점도'],0,'두 범주를 교차한 표는 pivot 후 heatmap.','#sns'],
+    /* OX */
+    ['ox','ox','median, Q2, describe()의 50%는 모두 같은 값이다.',null,0,'이름만 셋이다. IQR은 Q3 − Q1이라 다른 개념.','#box'],
+    ['ox','ox','히스토그램은 막대 순서를 바꿔도 의미가 같다.',null,1,'순서를 바꿔도 되는 건 범주형 막대그래프. 히스토그램 x축은 숫자 구간이라 순서가 고정이다.','#hist'],
+    ['ox','ox','로그 눈금 축은 0부터 시작할 수 있다.',null,1,'log(0)은 정의되지 않아서 로그 축에는 0이 없다.','#trap'],
+    ['ox','ox','plt.show() 다음에 plt.savefig()를 부르면 그래프가 잘 저장된다.',null,1,'show()가 도화지를 닫아서 빈 그림이 저장된다. savefig를 먼저.','#nb'],
+    ['ox','ox','plt.plot() 다음에 plt.figure(figsize=(8,4))를 부르면 방금 그린 그래프의 크기가 바뀐다.',null,1,'figure()는 새 도화지를 꺼낸다. figsize는 맨 처음에 정해야 한다.','#nb'],
+    ['ox','ox','막대그래프의 y축은 0부터 시작하는 게 원칙이다.',null,0,'0에서 시작하지 않으면 작은 차이가 크게 과장된다.','#trap'],
+    ['ox','ox','박스플롯의 수염은 항상 Q3 + 1.5×IQR 지점까지 뻗는다.',null,1,'수염은 울타리 안에 있는 실제 데이터의 끝까지만 뻗는다.','#box'],
+    ['ox','ox','IQR × 1.5 울타리 공식에는 Q2(중앙값)도 들어간다.',null,1,'Q1과 Q3만 쓴다. Q2는 상자 가운데 선을 그릴 때만.','#box'],
+    ['ox','ox','이상치는 찾으면 무조건 삭제해야 한다.',null,1,'입력 실수만 지운다. 진짜 값이고 예측에 중요한 "똘똘한" 이상치는 모델링까지 안고 간다.','#box'],
+    ['ox','ox','데이터가 많아질수록 손 계산과 np.percentile의 사분위수 차이는 줄어든다.',null,0,'10개면 1 정도 차이 나지만 수백 개면 거의 같아진다.','#box'],
+    ['ox','ox','워드클라우드를 만들 때 "합니다", "정말" 같은 불용어를 빼지 않으면 그런 말이 크게 나올 수 있다.',null,0,'빈도만 세니까 뜻 없는 말이 제일 크게 나온다. 전처리가 필요하다.','#cloud'],
+    /* 코드 읽기 */
+    ['code','mc',"plt.plot(x, y, 'ro--')에서 'o'는 무슨 뜻?",['빨간색','동그라미 마커','파선','선 굵기'],1,"r = 색(빨강), o = 마커(동그라미), -- = 선 모양(파선).",'#plt'],
+    ['code','mc','plt.subplot(2, 2, 3)이 그리는 칸은?',['왼쪽 위','오른쪽 위','왼쪽 아래','오른쪽 아래'],2,'왼쪽 위에서 오른쪽으로, 다음 줄로 센다. 3번은 2번째 줄 첫 칸.','#plt'],
+    ['code','mc','plt.legend(loc=9)의 범례 위치는?',['upper right','upper center','center','lower center'],1,'1 upper right, 2 upper left, … 9 upper center, 10 center.','#nb'],
+    ['code','mc',"sns.heatmap(table, annot=True, fmt='d')에서 fmt='d'가 하는 일은?",['날짜 형식으로','정수로 표시 (1.3e+02 대신 127)','색을 진하게','소수 둘째 자리까지'],1,"'d'는 정수(decimal integer) 형식.",'#sns'],
+    ['code','mc','경고 없이 distplot과 같은 그림(히스토그램 + 밀도 곡선)을 그리는 코드는?',["sns.histplot(x, kde=True, stat='density')",'sns.countplot(x=x)','sns.barplot(x=x)','plt.pie(x)'],0,'distplot은 지원 종료 예정. histplot에 kde=True.','#sns'],
+    ['code','mc','pandas 2.0에서 에러 없이 도는 pivot은?',["temp1.pivot('Embarked', 'Pclass', 'PassengerId')","temp1.pivot(index='Embarked', columns='Pclass', values='PassengerId')","temp1.pivot(['Embarked', 'Pclass'])","temp1.pivot()"],1,'2.0부터는 index=, columns=, values= 이름을 적어야 한다.','#sns'],
+    ['code','mc',"sns.scatterplot(x='total_bill', y='tip', hue='time', data=tips)의 hue는?",['점 크기','범주별로 색을 나눔','투명도','축 범위'],1,'hue로 범주 한 차원을 색으로 더한다.','#sns'],
+    ['code','mc','범주별 "평균"을 막대로 그리는 seaborn 함수는?',['countplot','barplot','histplot','kdeplot'],1,'countplot은 개수, barplot은 평균 + 오차막대.','#sns'],
+    ['code','mc','img.shape가 (305, 367, 3)인 사진을 cv2.COLOR_RGB2GRAY로 바꾸면 shape은?',['(305, 367, 3)','(305, 367)','(367, 305)','(305, 367, 1)'],1,'R·G·B 세 숫자가 밝기 하나로 합쳐져 마지막 3이 사라진다.','#nb'],
+    ['code','mc','그래프를 안전하게 저장하는 순서는?',['plot → show → savefig','plot → savefig → show','savefig → plot → show','show → plot → savefig'],1,'저장은 show()가 도화지를 닫기 전에.','#nb'],
+    ['code','mc',"df[(df['age'] < lower) | (df['age'] > upper)]에서 | 의 뜻은?",['그리고 (and)','또는 (or)','아니다 (not)','나누기'],1,'둘 중 하나라도 맞으면 뽑는다. 아래 울타리 밖 또는 위 울타리 밖.','#box'],
+    ['ox','ox','seaborn barplot 막대 위의 검은 선은 기본값으로 95% 신뢰구간이다.',null,0,'평균이 표본에 따라 흔들리는 폭. errorbar=로 바꿀 수 있다.','#sns'],
+    ['code','mc','barplot에서 막대 위 검은 선을 없애려면?',['errorbar=None','ci=True','hue=None',"errorbar='sd'"],0,"seaborn 0.12부터 errorbar=None (예전엔 ci=None). 'sd'는 표준편차로 바꾼다.",'#sns'],
+    ['see','mc','슬라이드 73쪽 barplot에서 C항의 검은 선이 가장 긴 이유는?',['C항 승객이 가장 많아서','운임이 들쭉날쭉하고 승객 수가 적어서','평균 운임이 가장 낮아서','색이 주황이라서'],1,'값이 들쭉날쭉할수록, 사람 수가 적을수록 평균이 불확실해서 신뢰구간이 길어진다.','#sns'],
+    ['ox','ox','np.random.seed(10)은 그 뒤에 나오는 모든 numpy 랜덤 숫자에 영향을 준다.',null,0,'전역 스위치다. 함수 하나만 고정하려면 random_state나 default_rng를 쓴다.','#nb'],
+    ['code','mc','train_test_split을 몇 번 실행해도 항상 같은 방식으로 나누려면?',['random_state=42','test_size=42','shuffle=False만 쓰면 된다','seed=None'],0,'random_state로 그 함수의 출발점을 고정한다. 42는 관례일 뿐 의미는 없다.','#nb'],
+    /* 계산 */
+    ['calc','num','Q1 = 21, Q3 = 35일 때 IQR은?',null,14,'35 − 21 = 14','#box',0],
+    ['calc','num','같은 데이터(Q1 = 21, Q3 = 35)의 위 울타리 Q3 + 1.5 × IQR은?',null,56,'35 + 1.5 × 14 = 35 + 21 = 56','#box',0],
+    ['calc','num','같은 데이터의 아래 울타리 Q1 − 1.5 × IQR은?',null,0,'21 − 21 = 0','#box',0],
+    ['calc','num','데이터 5, 7, 8, 12, 13, 14, 18, 21, 25, 30의 중앙값은?',null,13.5,'짝수 개라 가운데 두 값 (13 + 14) ÷ 2 = 13.5','#box',0],
+    ['calc','num','같은 데이터의 Q1을 np.percentile 방식으로 구하면? (위치 = (n−1) × 0.25)',null,9,'위치 2.25 → 8과 12 사이 25% 지점 → 8 + 0.25 × 4 = 9','#box',0],
+    ['calc','num','성적 히스토그램 코드에서 min(100 // 10 * 10, 90)의 값은?',null,90,'100 // 10 * 10 = 100, min(100, 90) = 90. 100점은 90점대 칸으로.','#nb',0],
+    ['calc','num','근로자 시급 $5 → $30을 "첫해 = 100"으로 환산하면 10년 뒤 값은?',null,600,'30 ÷ 5 × 100 = 600','#trap',0],
+    ['calc','num','A 42.9%, B 38%를 y축 36부터 그리면 A 막대는 B 막대의 약 몇 배 길이? (소수 첫째 자리까지)',null,3.45,'(42.9 − 36) ÷ (38 − 36) = 6.9 ÷ 2 ≈ 3.45배. 실제 비율은 1.13배.','#trap',0.06],
+    /* 그래프 보고 */
+    ['see','mc','이 박스플롯에서 이상치는 몇 개?',['0개','1개','2개','3개'],2,'수염 끝(울타리 안 마지막 값) 바깥에 따로 찍힌 동그라미가 이상치다.','#box',null,'box'],
+    ['see','mc','이 히스토그램에서 데이터가 가장 많이 몰린 구간은?',['0 이상 10 미만','10 이상 20 미만','20 이상 30 미만','50 이상 60 미만'],2,'가장 높은 막대의 구간. 구간은 이상~미만.','#hist',null,'hist'],
+    ['see','mc','이 산점도의 두 변수는 어떤 관계?',['양의 관계 (같이 증가)','음의 관계 (하나가 늘면 하나는 줄어듦)','관계 없음','알 수 없음'],1,'점들이 오른쪽 아래로 내려간다. 광고를 늘릴수록 이탈률이 줄어드는 모양.','#pick',null,'scat'],
+    ['see','mc','이 막대그래프의 문제는?',['색이 두 가지다','y축이 0에서 시작하지 않아 차이가 과장된다','범례가 없다','막대가 두 개뿐이다'],1,'y축이 36부터라 4.9%p 차이가 3배 넘게 커 보인다.','#trap',null,'poll'],
+    ['see','mc','두 반 가·나의 평균은 둘 다 50이다. 표준편차가 더 큰 반은?',['가','나','같다','알 수 없다'],1,'나 반의 점들이 평균에서 훨씬 멀리 흩어져 있다. 평균만 보면 같아 보이는 이유.','#why',null,'dots']
+  ];
+  const CAT={all:'전체',pick:'차트 고르기',ox:'OX',code:'코드 읽기',calc:'계산',see:'그래프 보고'};
+  let order=Q.map((_,i)=>i),tab='all',st={};
+  const tabs=$('quiz-tabs');
+  Object.keys(CAT).forEach(k=>{const b=document.createElement('button');b.type='button';b.dataset.k=k;b.setAttribute('aria-pressed',k===tab);b.addEventListener('click',()=>{tab=k;render()});tabs.appendChild(b)});
+  function score(){const all=Q.length,done=Object.keys(st).length,ok=Object.values(st).filter(v=>v.ok).length;$('quiz-score').textContent=`맞힘 ${ok} · 푼 문제 ${done} / ${all}`;
+    tabs.querySelectorAll('button').forEach(b=>{const k=b.dataset.k,ids=Q.map((q,i)=>i).filter(i=>k==='all'||Q[i][0]===k),c=ids.filter(i=>st[i]&&st[i].ok).length;b.textContent=`${CAT[k]} ${c}/${ids.length}`;b.setAttribute('aria-pressed',k===tab)})}
+  function fb(div,i){const q=Q[i],s=st[i];if(!s){div.textContent='';div.className='qfb';return}div.className='qfb '+(s.ok?'good':'bad');
+    const ans=q[1]==='num'?q[4]:q[1]==='ox'?['O','X'][q[4]]:q[3][q[4]];div.innerHTML='';const t=document.createElement('span');t.textContent=(s.ok?'정답! ':'정답은 '+ans+'. ')+q[5]+' ';div.appendChild(t);
+    if(!s.ok){const a=document.createElement('a');a.href=q[6];a.textContent='관련 섹션 보기 →';div.appendChild(a)}}
+  function render(){const box=$('quiz-box');box.innerHTML='';let n=0;
+    order.forEach(i=>{const q=Q[i];if(tab!=='all'&&q[0]!==tab)return;n++;
+      const it=document.createElement('div');it.className='qitem';const hd=document.createElement('div');hd.className='qhead';
+      const cat=document.createElement('span');cat.className='qcat';cat.textContent=CAT[q[0]];const p=document.createElement('p');p.className='qq';p.textContent=n+'. '+q[2];hd.append(cat,p);it.appendChild(hd);
+      if(q[8]){const sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox','0 0 420 110');sv.setAttribute('role','img');sv.setAttribute('aria-label','문제 그래프');F[q[8]](sv);it.appendChild(sv)}
+      const f=document.createElement('div');f.className='qfb';const s=st[i];
+      if(q[1]==='num'){const w=document.createElement('div');w.className='qnum';const inp=document.createElement('input');inp.type='text';inp.inputMode='decimal';inp.id='qn'+i;inp.placeholder='숫자 입력';inp.setAttribute('aria-label','답 입력');
+        const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='확인';
+        if(s){inp.value=s.v;inp.disabled=true;b.disabled=true;inp.classList.add(s.ok?'ok':'no')}
+        const go=()=>{if(st[i])return;const v=parseFloat(inp.value.replace(/,/g,''));if(!Number.isFinite(v)){inp.focus();return}st[i]={v:inp.value,ok:Math.abs(v-q[4])<=(q[7]||0)+1e-9};render()};
+        b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});w.append(inp,b);it.appendChild(w)}
+      else{const seg=document.createElement('div');seg.className='seg';const opts=q[1]==='ox'?['O','X']:q[3];
+        opts.forEach((o,oi)=>{const b=document.createElement('button');b.type='button';b.textContent=o;if(q[1]==='mc'&&q[0]==='code')b.className='m';
+          if(s){if(oi===q[4])b.classList.add('ok');else if(oi===s.v)b.classList.add('no')}
+          b.addEventListener('click',()=>{if(st[i])return;st[i]={v:oi,ok:oi===q[4]};render()});seg.appendChild(b)});it.appendChild(seg)}
+      fb(f,i);it.appendChild(f);box.appendChild(it)});score()}
+  $('quiz-reset').addEventListener('click',()=>{st={};render()});
+  $('quiz-shuffle').addEventListener('click',()=>{for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}render()});
+  render();
+})();
+/* 08 pivot */
+(function(){
+  const R=[['C',1,85],['C',2,17],['C',3,66],['Q',1,2],['Q',2,3],['Q',3,72],['S',1,127],['S',2,164],['S',3,353]];
+  let IDX='Embarked',sel=6;
+  function render(){const colName=IDX==='Embarked'?'Pclass':'Embarked',ix=IDX==='Embarked'?0:1,cx=1-ix;
+    const rows=[...new Set(R.map(r=>r[ix]))],cols=[...new Set(R.map(r=>r[cx]))];
+    const hc=n=>n===IDX?'h1':n===colName?'h2':'h3';
+    let lh=`<tr><th class="${hc('Embarked')}">Embarked</th><th class="${hc('Pclass')}">Pclass</th><th class="h3">PassengerId</th></tr>`;
+    R.forEach((r,i)=>lh+=`<tr class="pvr" data-i="${i}"><td class="${hc('Embarked')}${i===sel?' hit':''}">${r[0]}</td><td class="${hc('Pclass')}${i===sel?' hit':''}">${r[1]}</td><td class="h3${i===sel?' hit':''}">${r[2]}</td></tr>`);
+    $('pv-long').innerHTML=lh;
+    let wh=`<tr><th style="font-size:11px;color:var(--muted)"><span class="h1" style="color:var(--c1)">${IDX}</span> ╲ <span style="color:var(--c2)">${colName}</span></th>`+cols.map(c=>`<th class="h2">${c}</th>`).join('')+'</tr>';
+    rows.forEach(rv=>{wh+=`<tr><th class="h1">${rv}</th>`;cols.forEach(cv=>{const i=R.findIndex(r=>r[ix]===rv&&r[cx]===cv);wh+=`<td class="h3 cell${i===sel?' hit':''}" data-i="${i}">${R[i][2]}</td>`});wh+='</tr>'});
+    $('pv-wide').innerHTML=wh;
+    document.querySelectorAll('#pv-long tr.pvr,#pv-wide td.cell').forEach(e=>e.addEventListener('click',()=>{sel=+e.dataset.i;render()}));
+    $('pv-code').textContent=['temp2 = temp1.pivot('+(`index='${IDX}',`).padEnd(24)+'# 세로 이름표','                    '+(`columns='${colName}',`).padEnd(24)+'# 가로 이름표','                    '+("values='PassengerId')").padEnd(24)+'# 칸에 채울 숫자'].join('\n');
+    const r=R[sel];
+    $('pv-cap').innerHTML=`긴 표의 한 줄 <b>(${r[0]}, ${r[1]}, ${r[2]})</b>은 넓은 표에서 <b style="color:var(--c1)">${IDX}=${r[ix]}</b> 줄과 <b style="color:var(--c2)">${colName}=${r[cx]}</b> 칸이 만나는 곳에 <b style="color:var(--c3)">${r[2]}</b>으로 들어간다. 긴 표의 9줄이 넓은 표의 9칸이 된다.`}
+  segBind('pv-idx','v',v=>{IDX=v;render()});render();
+})();
+/* 08 distplot */
+(function(){
+  const r=rng(33),F=AGES.filter((_,i)=>i%2===0).map(v=>Math.max(1,Math.min(74,v-3+Math.round(normal(r)*2)))),M=AGES.filter((_,i)=>i%2===1).map(v=>Math.max(1,Math.min(74,v+3)));
+  const kde=(d,bw)=>z=>d.reduce((a,v)=>a+Math.exp(-0.5*((z-v)/bw)*((z-v)/bw)),0)/(d.length*bw*Math.sqrt(2*Math.PI));
+  function draw(m){const s=$('dp-svg');clear(s);const L=56,R=580,T=16,B=195,w=5,nb=16,x=v=>L+v/80*(R-L);
+    const cnt=d=>{const c=new Array(nb).fill(0);d.forEach(v=>c[Math.min(nb-1,Math.floor(v/w))]++);return c};
+    if(m==='old'){const c=cnt(AGES),N=AGES.length,dens=c.map(v=>v/(N*w)),top=.045,y=v=>B-v/top*(B-T);
+      yAxis(s,L,R,[0,.01,.02,.03,.04],y,v=>v.toFixed(2));dens.forEach((v,i)=>add(s,el('rect',{x:x(i*w)+.5,y:y(v),width:x(w)-x(0)-1,height:B-y(v),class:'f1','fill-opacity':.45})));
+      const k=kde(AGES,4);let p='';for(let z=0;z<=80;z+=1)p+=(z?'L':'M')+x(z)+','+y(k(z));add(s,el('path',{d:p,class:'s1'}));
+      add(s,el('text',{x:L+4,y:T+10,class:'t',style:'fill:var(--warn)'},'↑ y축 = 밀도 (0.03이 뭐지?)'));
+      $('dp-cap').innerHTML='히스토그램 + 밀도 곡선이 한 색으로 겹친다. y축이 <b>밀도</b>라 숫자가 0.01, 0.02처럼 작다. 남녀를 나눠 보려면 함수를 두 번 불러야 했다.'}
+    else{const cf=cnt(F),cm=cnt(M),top=Math.ceil(Math.max(...cf,...cm)/5)*5,y=v=>B-v/top*(B-T),st=top>20?10:5,tk=[];for(let v=0;v<=top;v+=st)tk.push(v);yAxis(s,L,R,tk,y);
+      [[cm,'f1','s1',M],[cf,'f2','s2',F]].forEach(([c,fc,sc,d])=>{c.forEach((v,i)=>add(s,el('rect',{x:x(i*w)+.5,y:y(v),width:x(w)-x(0)-1,height:B-y(v),class:fc,'fill-opacity':.4})));
+        const k=kde(d,4);let p='';for(let z=0;z<=80;z+=1)p+=(z?'L':'M')+x(z)+','+y(k(z)*d.length*w);add(s,el('path',{d:p,class:sc}))});
+      add(s,el('rect',{x:R-110,y:T+4,width:10,height:10,class:'f1'}),el('text',{x:R-95,y:T+13,class:'t'},'male'),el('rect',{x:R-55,y:T+4,width:10,height:10,class:'f2'}),el('text',{x:R-40,y:T+13,class:'t'},'female'),el('text',{x:L+4,y:T+10,class:'t',style:'fill:var(--good)'},'↑ y축 = 개수'));
+      $('dp-cap').innerHTML='<b>hue</b> 한 단어로 남녀가 색으로 나뉘어 겹쳐 그려진다. y축은 기본이 <b>개수</b>라 바로 읽힌다. 밀도가 필요하면 <code>stat=\'density\'</code>.'}
+    [0,10,20,30,40,50,60,70,80].forEach(v=>add(s,el('text',{x:x(v),y:B+18,'text-anchor':'middle',class:'t'},v)));add(s,el('text',{x:R,y:B+34,'text-anchor':'end',class:'t'},'Age (예시 데이터) →'))}
+  segBind('dp-mode','v',draw);draw('old');
+})();
+/* 08 confidence interval */
+(function(){
+  const G=[['S',27.08,35.89,644,'#1f77b4'],['C',59.95,83.91,168,'#ff7f0e'],['Q',13.28,14.19,77,'#2ca02c']];
+  let mode='ci',dots=[[],[],[]];const r=rng(77);
+  function draw(){const s=$('ci-svg');clear(s);const L=56,R=580,T=16,B=228,top=mode==='sd'?150:80,y=v=>B-Math.max(0,v)/top*(B-T),w=(R-L)/3;
+    const st=top>100?25:10,tk=[];for(let v=0;v<=top;v+=st)tk.push(v);yAxis(s,L,R,tk,y);
+    G.forEach(([n,m,sd,cnt,col],i)=>{const cx=L+(i+.5)*w,bw=w*.62,half=mode==='ci'?1.96*sd/Math.sqrt(cnt):sd;
+      add(s,el('rect',{x:cx-bw/2,y:y(m),width:bw,height:B-y(m),style:'fill:'+col,'fill-opacity':.85}));
+      dots[i].forEach((v,j)=>add(s,el('circle',{cx:cx-bw/2+8+(j%20)*(bw-16)/19,cy:y(v),r:2.8,class:'fsurf','fill-opacity':.9,style:'stroke:var(--fg);stroke-width:1;stroke-opacity:.6'})));
+      if(mode!=='none'){const a=m-half,b=m+half,yt=y(Math.min(b,top));add(s,el('line',{x1:cx,x2:cx,y1:yt,y2:y(a),class:'sf','stroke-width':3}),el('line',{x1:cx-8,x2:cx+8,y1:yt,y2:yt,class:'sf','stroke-width':2}));
+        add(s,el('text',{x:cx+12,y:Math.max(T+10,yt-4),class:'tb',style:'font-size:11.5px'},(b>top?'↑ ':'')+fmtN(+a.toFixed(1))+' ~ '+fmtN(+b.toFixed(1))))}
+      add(s,el('text',{x:cx,y:B+18,'text-anchor':'middle',class:'tb'},n),el('text',{x:cx,y:B+34,'text-anchor':'middle',class:'t'},cnt+'명'))});
+    ytitleCI(s,14,(T+B)/2,'Fare');
+    $('ci-code').textContent=mode==='ci'?'sns.barplot(x="Embarked", y="Fare", data=titanic)                 # 기본 = 95% 신뢰구간':mode==='sd'?'sns.barplot(x="Embarked", y="Fare", data=titanic, errorbar="sd")  # 표준편차':'sns.barplot(x="Embarked", y="Fare", data=titanic, errorbar=None)  # 선 없애기';
+    const n=dots[0].length;$('ci-count').textContent=n?`다시 뽑은 횟수: ${n}번`:'';
+    $('ci-cap').innerHTML=mode==='ci'?(n?'흰 점은 승객을 새로 뽑을 때마다 나온 평균이다. 대부분 <b>검은 선 안</b>에 떨어지고, C항 점들이 가장 넓게 흔들린다. 신뢰구간은 이 흔들림의 폭이다.':'"표본 다시 뽑기"를 눌러 보자. 평균이 어디쯤 흔들리는지 점으로 찍힌다.'):mode==='sd'?'표준편차는 <b>개별 승객 운임</b>이 퍼진 폭이다. 평균의 불확실성(신뢰구간)보다 훨씬 길다. 아래쪽이 0보다 작게(음수 운임) 나오는 건, 운임이 비싼 쪽으로만 길게 늘어진 분포라서 평균 ± 표준편차가 현실을 잘 못 나타낸다는 신호다.':'선을 없애면 깔끔하지만, C항 평균이 얼마나 불확실한지 정보가 사라진다.'}
+  function ytitleCI(s,x,y,t){add(s,el('text',{x,y,class:'t',transform:`rotate(-90 ${x} ${y})`,'text-anchor':'middle'},t))}
+  segBind('ci-mode','v',v=>{mode=v;draw()});
+  $('ci-draw').addEventListener('click',()=>{for(let k=0;k<20;k++)G.forEach(([n,m,sd,cnt],i)=>{if(dots[i].length<60)dots[i].push(m+normal(r)*sd/Math.sqrt(cnt))});if(mode==='none'){}draw()});
+  $('ci-clear').addEventListener('click',()=>{dots=[[],[],[]];draw()});draw();
+})();
+/* 04 seed */
+(function(){
+  let S='10',runs=[],ins=false;
+  const gen=(seed,n,skip)=>{const r=rng(seed);for(let i=0;i<(skip||0);i++)normal(r);return Array.from({length:n},()=>Math.round(100+10*normal(r)))};
+  function render(){
+    $('sd-code').textContent=(S==='none'?'# seed 안 정함 → 시계를 보고 아무 쪽이나\n':`np.random.seed(${S})\n`)+'np.random.normal(100, 10, 5).round()';
+    let h='<tr><th>실행</th><th>나온 숫자 5개</th><th></th></tr>';
+    runs.forEach((r,i)=>{const same=i>0&&r.join()===runs[0].join();h+=`<tr><td class="mono">${i+1}번째</td><td class="mono">[${r.join(', ')}]</td><td style="color:var(--${same?'good':i>0?'warn':'muted'})">${i===0?'':same?'1번째와 같음':'다름'}</td></tr>`});
+    if(!runs.length)h+='<tr><td colspan="3" style="color:var(--muted)">▶ 코드 실행을 눌러 보자</td></tr>';
+    $('sd-log').innerHTML=h;
+    $('sd-cap').innerHTML=!runs.length?'':S==='none'?'seed를 안 정하면 실행할 때마다 다른 쪽부터 읽어서 <b>매번 다른 숫자</b>가 나온다.':`seed(${S})이면 항상 같은 쪽부터 읽어서 몇 번을 실행해도 <b>똑같은 숫자</b>가 나온다. 다른 seed를 고르면 다른 숫자 줄이 나오지만, 그것도 매번 같다.`;
+    const a=gen(10,3),bG=gen(10,3,3+(ins?1:0)),bL=gen(7,3);
+    $('sd-g').textContent=`np.random.seed(10)\na = np.random.normal(100, 10, 3)  # [${a.join(', ')}]`+(ins?`\nnp.random.normal()               # ← 끼어든 줄`:'')+`\nb = np.random.normal(100, 10, 3)  # [${bG.join(', ')}]`;
+    $('sd-l').textContent=`rng_a = np.random.default_rng(10)\nrng_b = np.random.default_rng(7)\na = rng_a.normal(100, 10, 3)        # [${a.join(', ')}]`+(ins?`\nnp.random.normal()                  # ← 끼어든 줄`:'')+`\nb = rng_b.normal(100, 10, 3)        # [${bL.join(', ')}]`;
+    $('sd-gc').innerHTML=ins?'<b style="color:var(--warn)">b가 바뀌었다.</b> 끼어든 줄이 난수표 한 장을 먼저 읽어 버려서 뒤 숫자가 전부 밀렸다.':'지금은 b가 매번 같다. 버튼을 눌러 중간에 한 줄을 끼워 보자.';
+    $('sd-lc').innerHTML=ins?'<b style="color:var(--good)">b는 그대로다.</b> rng_b는 자기만의 출발점을 따로 갖고 있어서 다른 코드가 끼어들어도 영향을 안 받는다.':'각자 자기 난수표를 따로 갖고 있다.';
+    $('sd-insert').setAttribute('aria-pressed',ins);$('sd-insert').textContent=ins?'끼워 넣은 줄 빼기':'중간에 랜덤 코드 한 줄 끼워 넣기'}
+  segBind('sd-seed','v',v=>{S=v;runs=[];render()});
+  $('sd-run').addEventListener('click',()=>{const seed=S==='none'?Math.floor(Math.random()*1e9):+S;if(runs.length>=5)runs.shift();runs.push(gen(seed,5));render()});
+  $('sd-insert').addEventListener('click',()=>{ins=!ins;render()});render();
+})();
 })();
 </script>
+
+</body></html>
