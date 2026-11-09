@@ -2,7 +2,7 @@
 
 ## 📚 오늘 한 것
 
-👉 정리 아티팩트: [데이터 시각화 노트](https://sejinohj-max.github.io/TIL/artifacts/python/data-visualization.html)
+👉 정리 아티팩트: [데이터 시각화 노트](https://sejinohj-max.github.io/TIL/artifacts/python/data-visualization.html?v=1109)
 
 지난 금요일(11/06)에 만든 데이터 시각화 아티팩트를 **직접 눌러 보는 그래프 위주로 다시 만들고**, 수업 중 생긴 질문을 하나씩 풀면서 내용을 계속 보탰다.
 
