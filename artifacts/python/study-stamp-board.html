@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>study 함수 도장판</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 모눈종이 위 도장판. 상단 진행 현황 → 필터 → 도장 칸 격자(왼쪽) + 작업대(오른쪽, 넓은 화면에서 고정) */
+:root{
+  --bg:#eef2f6; --paper:#f8fafc; --surface:#ffffff; --fg:#18202e; --muted:#5b6578; --line:#d5dce6; --grid:#e1e7ef;
+  --ink:#c2362b; --ink-soft:#f7dedb;          /* 도장 인주 */
+  --doing:#b7791f; --doing-soft:#fbefd6; --skip:#7b8496; --skip-soft:#e8ebf0;
+  --g1:#2f6fd6; --g2:#7048b8; --g3:#0c8a66; --g4:#c2410c; --g5:#a16207; --g6:#0e7490;
+  --code-bg:#1d2433; --code-fg:#e8ecf3; --hi:#ffd166;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10151f; --paper:#151b27; --surface:#1b2231; --fg:#e6eaf2; --muted:#98a2b5; --line:#2c3547; --grid:#1d2533;
+  --ink:#ff7a6b; --ink-soft:#3d1f1d; --doing:#f2b84b; --doing-soft:#3a2f17; --skip:#8d96a8; --skip-soft:#252c3a;
+  --g1:#6ea2ff; --g2:#a98bf0; --g3:#4fd1a8; --g4:#ff9a62; --g5:#e3b341; --g6:#4cc6e0;
+  --code-bg:#0c1019; --code-fg:#e8ecf3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151f; --paper:#151b27; --surface:#1b2231; --fg:#e6eaf2; --muted:#98a2b5; --line:#2c3547; --grid:#1d2533;
+  --ink:#ff7a6b; --ink-soft:#3d1f1d; --doing:#f2b84b; --doing-soft:#3a2f17; --skip:#8d96a8; --skip-soft:#252c3a;
+  --g1:#6ea2ff; --g2:#a98bf0; --g3:#4fd1a8; --g4:#ff9a62; --g5:#e3b341; --g6:#4cc6e0;
+  --code-bg:#0c1019; --code-fg:#e8ecf3; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15.5px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;padding-block:28px 64px;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:clamp(34px,6.5vw,50px)}
+h2{font-size:22px}
+p{margin:0;max-width:68ch}
+code,.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}.small{font-size:13.5px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+
+.head{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:stretch}
+@media (max-width:820px){.head{grid-template-columns:1fr}}
+.intro{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.datacard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.datacard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.datacard div{display:flex;flex-direction:column}
+.datacard .k{font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
+.datacard .v{font-family:var(--f-display);font-size:20px}
+.board{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.ringrow{display:flex;gap:16px;align-items:center}
+.ring{flex:none}
+.ringtxt{display:flex;flex-direction:column;gap:2px}
+.ringtxt .big{font-family:var(--f-display);font-size:30px;line-height:1}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:88px minmax(0,1fr) 64px;gap:8px;align-items:center;font-size:12.5px}
+.bar .tr{height:8px;border-radius:4px;background:var(--grid);overflow:hidden;display:flex}
+.bar .tr i{display:block;height:100%}
+.bar .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.pace{font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.pace b{color:var(--fg)}
+
+.today{background:var(--paper);border:2px dashed var(--ink);border-radius:12px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.today .lab{font-family:var(--f-display);font-size:18px;color:var(--ink)}
+.today .pick{font-family:var(--f-mono);font-weight:600;font-size:16px}
+.today .why{flex:1 1 260px;font-size:13.5px}
+.todaychips{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 320px}
+.tchip{position:relative;font-family:var(--f-mono);font-size:13.5px;font-weight:600;padding:6px 12px 6px 22px;border-radius:999px;border:1.5px solid var(--ink);background:var(--surface);color:var(--fg);cursor:pointer}
+.tchip .fit{position:absolute;left:9px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%}
+.tchip.t-done{background:var(--ink);color:#fff}
+.tchip.t-skip{background:var(--skip-soft);border-color:var(--skip);color:var(--muted);text-decoration:line-through}
+
+.filters{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.frow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-family:var(--f-body);font-size:13.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.search{flex:1 1 200px;min-width:0;font-family:var(--f-mono);font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.flabel{font-size:12px;color:var(--muted);font-family:var(--f-mono);margin-right:2px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+.groups{display:flex;flex-direction:column;gap:18px;min-width:0}
+.ghead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ghead h2{display:flex;align-items:center;gap:8px}
+.ghead .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.cell{position:relative;text-align:left;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px 10px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-height:78px;overflow:hidden}
+.cell:hover{border-color:var(--fg)}
+.cell[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:1px}
+.cell .nm{font-family:var(--f-mono);font-weight:600;font-size:13.5px;overflow-wrap:anywhere;padding-right:4px}
+.cell .ht{font-size:11.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cell .fit{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%}
+.fit1{background:var(--g3)}.fit2{background:var(--doing)}.fit3{background:var(--skip)}
+.cell.s-doing{background:var(--doing-soft);border-color:var(--doing)}
+.cell.s-skip{background:var(--skip-soft)}
+.cell.s-skip .nm{text-decoration:line-through;color:var(--muted)}
+.cell.s-done{background:var(--ink-soft);border-color:var(--ink)}
+.stamp{position:absolute;right:6px;bottom:4px;width:46px;height:46px;border:2.5px solid var(--ink);border-radius:50%;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-14deg);font-family:var(--f-display);font-size:15px;line-height:1;opacity:.85;pointer-events:none}
+.stamp small{font-family:var(--f-mono);font-size:8.5px;margin-top:2px}
+.sbadge{font-family:var(--f-mono);font-size:10.5px;font-weight:600;align-self:flex-start;border-radius:4px;padding:0 5px;margin-top:auto}
+.s-doing .sbadge{background:var(--doing);color:#1b2230}
+.s-skip .sbadge{background:var(--skip);color:#fff}
+.empty{padding:20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px}
+
+.bench{position:sticky;top:max(12px,env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:960px){.bench{position:static;max-height:none}}
+.bench .nm{font-family:var(--f-mono);font-size:22px;font-weight:600;overflow-wrap:anywhere}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;color:#fff}
+.tag.lt{color:var(--fg);background:var(--bg);border:1px solid var(--line);font-weight:500}
+.hint{background:var(--paper);border-left:3px solid var(--g1);border-radius:0 8px 8px 0;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.hint pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:6px;padding:8px 10px;font-family:var(--f-mono);font-size:12.5px;overflow-x:auto;white-space:pre}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font-family:var(--f-body);font-size:13.5px;padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"][data-s="todo"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.seg button[aria-pressed="true"][data-s="doing"]{background:var(--doing);color:#1b2230;border-color:var(--doing)}
+.seg button[aria-pressed="true"][data-s="done"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.seg button[aria-pressed="true"][data-s="skip"]{background:var(--skip);color:#fff;border-color:var(--skip)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12.5px;color:var(--muted);font-family:var(--f-mono)}
+.field textarea,.field input{font-family:var(--f-body);font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);resize:vertical;width:100%}
+.field textarea.code{font-family:var(--f-mono);font-size:13px;background:var(--code-bg);color:var(--code-fg);border-color:var(--code-bg)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font-family:var(--f-body);font-size:14.5px;font-weight:500;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.saved{font-size:13px;color:var(--muted)}
+.btn.cpy{align-self:flex-start;font-size:13px;padding:5px 10px}
+.setup{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--paper);display:flex;flex-direction:column;gap:6px}
+.setup summary{cursor:pointer;font-size:13px;font-weight:600}
+.setup[open]{display:flex}
+.setup pre{margin:6px 0;background:var(--code-bg);color:var(--code-fg);border-radius:6px;padding:8px 10px;font-family:var(--f-mono);font-size:12.5px;overflow-x:auto;white-space:pre}
+.linkbtn{font:inherit;font-family:var(--f-mono);background:none;border:0;border-bottom:1.5px solid currentColor;color:inherit;cursor:pointer;padding:0}
+.notice{font-size:13px;background:var(--doing-soft);border:1px solid var(--doing);border-radius:8px;padding:8px 10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:thump .35s ease-out}}
+@keyframes thump{from{transform:rotate(-14deg) scale(1.6);opacity:0}to{transform:rotate(-14deg) scale(1);opacity:.85}}
+</style>
+</head>
+<body>
+
+<div class="wrap"><main>
+<div class="head">
+  <div class="intro">
+    <span class="eyebrow">Data Science Lv1 · study 데이터 2개월 프로젝트 · 2026.11.10 시작</span>
+    <h1>study 함수 도장판</h1>
+    <p>배운 함수를 <b>study 데이터 한 곳</b>에 하나씩 적용해 보고 도장을 찍어요. 칸을 누르면 오른쪽 작업대에 "이 데이터에서 던질 질문"과 시작 코드가 나와요. 내가 던진 질문, 코드, 결과를 적고 상태를 바꾸면 저장돼요. <b>도장은 평일에만</b>, 주말은 쉬는 날이에요.</p>
+    <div class="datacard" aria-label="study 데이터 요약">
+      <div><span class="k">행 × 열</span><span class="v">30,664 × 19</span></div>
+      <div><span class="k">정답 열</span><span class="v">survived</span></div>
+      <div><span class="k">클래스 비율</span><span class="v">97 : 3</span></div>
+      <div><span class="k">빈칸 최다</span><span class="v">Exam3_M3 29%</span></div>
+    </div>
+    <div class="legend"><span><i class="fit1"></i>study에 자연스럽게 맞음</span><span><i class="fit2"></i>조금 응용 필요</span><span><i class="fit3"></i>억지 · 패스 후보 (왜 안 맞는지 한 줄 적고 패스)</span></div>
+  </div>
+  <div class="board" aria-label="진행 현황">
+    <div class="ringrow">
+      <svg class="ring" id="ring" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="전체 진행률"></svg>
+      <div class="ringtxt"><span class="small muted">찍은 도장</span><span class="big" id="doneN">0</span><span class="small muted" id="doneOf"></span></div>
+    </div>
+    <div class="bars" id="gbars"></div>
+    <div class="pace" id="pace"></div>
+  </div>
+</div>
+
+<div class="today" id="today"></div>
+
+<div class="filters">
+  <div class="frow" id="gfilter"><span class="flabel">분류</span></div>
+  <div class="frow" id="sfilter"><span class="flabel">상태</span></div>
+  <div class="frow"><span class="flabel">찾기</span><input class="search" id="q" type="search" placeholder="함수 이름이나 키워드 (예: zip, 결측, 시험)" aria-label="함수 찾기"><label class="chip" style="cursor:pointer"><input type="checkbox" id="hide3" style="margin:0"> 패스 후보 숨기기</label></div>
+</div>
+
+<div class="layout">
+  <div class="groups" id="groups"></div>
+  <aside class="bench" id="bench" aria-live="polite"></aside>
+</div>
+
+<footer>
+  <span>저장한 기록은 이 페이지에 남아서 다음에 열어도 그대로예요. Claude에게 "도장판 기록 읽어줘"라고 하면 지금까지 적은 질문·코드·결과를 같이 보고 TIL이나 다음 과제를 정리해 줄 수 있어요.</span>
+  <span>study 요약 수치는 Study.공유.csv 전체(30,664행)로 계산한 값이에요. 정답 열 survived의 뜻은 데이터 설명서로 확인하세요.</span>
+</footer>
+</main></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const START=new Date('2026-11-10T00:00:00+09:00'), END=new Date('2027-01-10T00:00:00+09:00');
+
+const GROUPS=[
+ {k:'py',n:'파이썬 내장 함수',c:'--g1'},
+ {k:'pd',n:'pandas',c:'--g2'},
+ {k:'np',n:'NumPy',c:'--g3'},
+ {k:'viz',n:'시각화',c:'--g4'},
+ {k:'st',n:'통계 scipy',c:'--g5'},
+ {k:'ml',n:'ML 준비 sklearn',c:'--g6'}
+];
+/* [이름, 분류, 맞음정도(1 자연/2 응용/3 억지), 질문 아이디어, 시작 코드] */
+const F=[
+ ['abs','py',1,'Exam3에 있는 음수 점수의 크기는? M1→M3 점수 변화의 크기(방향 무시)는?',"abs(df['Exam3_M1'].min())"],
+ ['aiter','py',3,'비동기(async) 반복용이라 데이터 분석 노트북에선 쓸 일이 거의 없어요. 왜 안 맞는지 적고 패스.',''],
+ ['all','py',1,'모든 학생의 AGE가 3세 이상인가? 모든 행에 ID가 있나?',"all(a >= 3 for a in df['AGE'])"],
+ ['anext','py',3,'aiter와 짝인 비동기 함수예요. 패스 후보.',''],
+ ['any','py',1,'Exam3 점수 중 음수가 하나라도 있나? 100을 넘는 Exam1이 있나?',"any(x < 0 for x in df['Exam3_M1'].dropna())"],
+ ['ascii','py',2,'열 이름에 한글·특수문자가 섞였는지 확인. 파일 이름(Study.공유.csv)으로 해 보기.',"ascii('Study.공유.csv')"],
+ ['bin','py',3,'정수를 2진수 글자로. study엔 쓸 데가 없어요. Month 39를 바꿔 보고 패스.',"bin(39)"],
+ ['bool','py',2,'0/1 정답을 True/False로 보면? bool(0), bool(868)의 차이.',"bool(df['survived'].iloc[0])"],
+ ['breakpoint','py',2,'반복문으로 열을 돌다가 이상한 열에서 멈춰 값 살펴보기.',"for c in df.columns:\n    if df[c].isna().mean() > 0.25:\n        breakpoint()"],
+ ['bytearray','py',3,'바이트를 고치는 자료형. 분석엔 안 써요. 패스 후보.',''],
+ ['bytes','py',3,'CSV 첫 몇 바이트를 날것으로 보면 인코딩 감이 와요. 그 정도면 충분.',"open('Study.공유.csv','rb').read(40)"],
+ ['callable','py',1,'df.head는 함수, df.shape는 값. 괄호를 붙일지 말지 헷갈릴 때 확인.',"callable(df.head), callable(df.shape)"],
+ ['chr','py',3,'숫자→글자. study엔 안 맞아요. 패스 후보.',''],
+ ['classmethod','py',3,'클래스를 직접 만들 때 쓰는 장식자예요. 지금 단계에선 패스.',''],
+ ['compile','py',3,'코드를 문자열로 컴파일. 분석엔 안 써요.',''],
+ ['complex','py',3,'복소수. 시험 점수에 허수는 없어요.',''],
+ ['delattr','py',3,'객체 속성 삭제. 열 삭제는 df.drop을 써요.',''],
+ ['dict','py',1,'열 이름 → 결측치 개수 사전 만들기. 0/1 → 뜻 사전 만들기.',"dict(zip(df.columns, df.isna().sum()))"],
+ ['dir','py',1,'DataFrame이 가진 메서드는 뭐가 있지? 처음 보는 기능 찾기.',"[m for m in dir(df) if not m.startswith('_')][:30]"],
+ ['divmod','py',1,'Month 39는 몇 년 몇 개월?',"divmod(39, 12)  # (3, 3)"],
+ ['enumerate','py',1,'열마다 번호 붙여 출력. 몇 번째 열이 Exam인지.',"for i, c in enumerate(df.columns):\n    print(i, c)"],
+ ['eval','py',3,'문자열을 코드로 실행. 위험해서 거의 안 써요. 비슷한 df.eval은 pandas에 따로 있어요.',''],
+ ['exec','py',3,'eval과 같은 이유로 패스 후보.',''],
+ ['filter','py',1,'결측치가 20%를 넘는 열 이름만 골라내기.',"miss = df.isna().mean()\nlist(filter(lambda c: miss[c] > 0.2, df.columns))"],
+ ['float','py',2,'NaN은 사실 float이에요. 정수 열(AGE)과 NaN 있는 열의 자료형 차이 보기.',"float('nan'), df['StudyCnt_M1'].dtype"],
+ ['format','py',1,'클래스 비율을 "97.2%" 글자로. 행 수를 "30,664"로.',"format(0.97169, '.1%'), format(30664, ',')"],
+ ['frozenset','py',3,'바꿀 수 없는 집합. set으로 충분해요.',''],
+ ['getattr','py',2,'"mean", "median"을 문자열로 받아 같은 열에 차례로 적용.',"for f in ['mean', 'median', 'std']:\n    print(f, getattr(df['AGE'], f)())"],
+ ['globals','py',3,'전역 변수 목록. 디버깅용이라 패스 후보.',''],
+ ['hasattr','py',2,'열 이름 오타 찾기: StudyCnt_M2가 있나, StudyCntCnt_M2가 있나?',"hasattr(df, 'StudyCnt_M2'), hasattr(df, 'StudyCntCnt_M2')"],
+ ['hash','py',3,'해시값. 분석엔 직접 안 써요.',''],
+ ['help','py',1,'dropna의 subset, value_counts의 normalize 설명을 직접 읽기.',"help(pd.DataFrame.dropna)"],
+ ['hex','py',3,'16진수. study엔 안 맞아요.',''],
+ ['id','py',2,'df2 = df 와 df2 = df.copy()의 차이를 id로 확인.',"df2 = df\nid(df) == id(df2), id(df) == id(df.copy())"],
+ ['input','py',2,'기준 나이를 입력받아 그 나이 이상 학생 수 세기.',"age = int(input('기준 나이: '))\n(df['AGE'] >= age).sum()"],
+ ['int','py',1,'평균 나이 10.9를 정수로. round와 결과 비교.',"int(df['AGE'].mean()), round(df['AGE'].mean())"],
+ ['isinstance','py',2,'한 칸의 값이 float인지 확인. NaN도 float로 나와요.',"isinstance(df['Exam1_M2'].iloc[2], float)"],
+ ['issubclass','py',3,'클래스 상속 관계. 지금은 패스.',''],
+ ['iter','py',2,'열 이름을 하나씩 꺼내 쓰는 반복자 만들기 (next와 짝).',"it = iter(df.columns)\nnext(it), next(it)"],
+ ['len','py',1,'학생 수, 열 수, 소수 클래스(0) 수.',"len(df), len(df.columns), len(df[df['survived'] == 0])"],
+ ['list','py',1,'열 이름을 리스트로 꺼내 Exam 열만 골라 보기.',"cols = list(df.columns)\n[c for c in cols if c.startswith('Exam')]"],
+ ['locals','py',3,'지역 변수 목록. 디버깅용.',''],
+ ['map','py',1,'0/1 정답을 글자로 바꾸기. 점수 리스트 반올림.',"list(map(round, df['Exam1_M1'].dropna().head()))"],
+ ['max','py',1,'가장 나이 많은 학생, 가장 높은 Exam2 점수.',"max(df['AGE']), df['Exam2_M1'].max()"],
+ ['memoryview','py',3,'메모리 버퍼 다루기. 분석엔 안 써요.',''],
+ ['min','py',1,'가장 낮은 Exam3 점수(음수!).',"min(df['Exam3_M1'].dropna())"],
+ ['next','py',2,'조건에 맞는 첫 번째 학생 찾기: 처음 나오는 survived=0 학생의 ID.',"next(i for i, s in zip(df['ID'], df['survived']) if s == 0)"],
+ ['object','py',3,'모든 클래스의 뿌리. pandas의 object 자료형과 이름만 같아요.',''],
+ ['oct','py',3,'8진수. 패스 후보.',''],
+ ['open','py',2,'pandas 없이 CSV 첫 줄(열 이름)을 직접 읽어 보기.',"with open('Study.공유.csv', encoding='utf-8') as f:\n    print(f.readline())"],
+ ['ord','py',3,'글자→숫자. study엔 안 맞아요.',''],
+ ['pow','py',2,'분산을 손으로: 평균과의 차이를 제곱해서 평균.',"m = df['AGE'].mean()\nsum(pow(a - m, 2) for a in df['AGE']) / len(df)"],
+ ['print','py',1,'f-string으로 "0 클래스: 868명 (2.8%)" 출력.',"n0 = (df['survived'] == 0).sum()\nprint(f'0 클래스: {n0}명 ({n0/len(df):.1%})')"],
+ ['property','py',3,'클래스 만들 때 쓰는 장식자. 패스.',''],
+ ['range','py',1,'M1~M3 열 이름을 반복문으로 만들기.',"[f'Exam1_M{i}' for i in range(1, 4)]"],
+ ['repr','py',2,'열 이름 끝에 공백이 숨어 있는지 확인.',"[repr(c) for c in df.columns[:5]]"],
+ ['reversed','py',2,'M3 → M1 순서로 거꾸로 결측치 보기.',"for c in reversed(['Exam1_M1', 'Exam1_M2', 'Exam1_M3']):\n    print(c, df[c].isna().sum())"],
+ ['round','py',1,'클래스 비율을 소수 둘째 자리로.',"round(df['survived'].mean() * 100, 2)"],
+ ['set','py',1,'정답 클래스 종류, Month 값 종류.',"set(df['survived']), len(set(df['Month']))"],
+ ['setattr','py',3,'객체 속성 설정. 열 추가는 df["새열"] = 로 해요.',''],
+ ['slice','py',2,'자주 쓰는 행 범위를 이름 붙여 재사용.',"first10 = slice(0, 10)\ndf.iloc[first10]"],
+ ['sorted','py',1,'결측치가 많은 열부터 정렬.',"sorted(dict(df.isna().sum()).items(), key=lambda x: x[1], reverse=True)[:5]"],
+ ['staticmethod','py',3,'클래스 장식자. 패스.',''],
+ ['str','py',1,'숫자를 글자로 붙여 열 이름·제목 만들기.',"'Month ' + str(df['Month'].max())"],
+ ['sum','py',1,'survived=0 학생 수. 파이썬 sum과 pandas .sum() 속도 비교도.',"sum(df['survived'] == 0), (df['survived'] == 0).sum()"],
+ ['super','py',3,'클래스 상속용. 패스.',''],
+ ['tuple','py',1,'df.shape는 튜플. (행, 열)을 나눠 받기.',"rows, cols = df.shape"],
+ ['type','py',1,'df, df["AGE"], df["AGE"][0]은 각각 무슨 자료형?',"type(df), type(df['AGE']), type(df['AGE'][0])"],
+ ['vars','py',3,'객체의 속성 사전. 분석엔 안 써요.',''],
+ ['zip','py',1,'Exam1_M1과 Exam1_M3를 짝지어 점수 변화 계산 (11/10 수업!).',"[(b - a) for a, b in zip(df['Exam1_M1'], df['Exam1_M3'])][:5]"],
+ ['__import__','py',3,'import 문 내부 함수. 그냥 import를 써요.',''],
+
+ ['pd.read_csv','pd',1,'CSV 불러오기. encoding, 일부 열만(usecols) 불러오기.',"df = pd.read_csv('Study.공유.csv')"],
+ ['head / tail','pd',1,'맨 앞과 맨 뒤 5줄. 뒤쪽은 survived가 어떻게 생겼나?',"df.head(), df.tail()"],
+ ['shape','pd',1,'몇 행 몇 열?',"df.shape"],
+ ['info','pd',1,'열별 자료형과 non-null 개수.',"df.info()"],
+ ['describe','pd',1,'Exam2·3의 최댓값이 100을 넘는 걸 한 표로 확인.',"df.describe().T"],
+ ['isna / isnull','pd',1,'열별 결측치 개수와 비율.',"(df.isna().mean() * 100).round(1)"],
+ ['dropna','pd',1,'쓸 열 기준으로만 빈 행 빼기. 전체 dropna()와 행 수 비교.',"len(df.dropna()), len(df.dropna(subset=['Exam1_M1']))"],
+ ['fillna','pd',2,'StudyCnt의 빈칸은 0으로 채워도 될까? 뜻을 먼저 생각하고 채우기.',"df['StudyCntCnt_M2'].fillna(0)"],
+ ['value_counts','pd',1,'클래스 비율 97:3 직접 확인. AGE 분포도.',"df['survived'].value_counts(normalize=True) * 100"],
+ ['groupby','pd',1,'survived 0과 1의 평균 공부 지수 비교.',"df.groupby('survived')[['StudyIndex_M1', 'Exam1_M1']].mean()"],
+ ['agg','pd',1,'그룹별로 평균·중앙값·개수를 한 번에.',"df.groupby('survived')['StudyCnt_M1'].agg(['mean', 'median', 'count'])"],
+ ['sort_values','pd',1,'공부 횟수가 가장 많은 학생 10명.',"df.sort_values('StudyCnt_M1', ascending=False).head(10)"],
+ ['loc (조건)','pd',1,'survived=0인 학생만 뽑기.',"df.loc[df['survived'] == 0, ['ID', 'AGE', 'Exam1_M1']]"],
+ ['iloc','pd',1,'앞 3행, 4~6번째 열만.',"df.iloc[:3, 4:7]"],
+ ['query','pd',1,'10세 이상이면서 survived=0인 학생.',"df.query('AGE >= 10 and survived == 0')"],
+ ['isin','pd',1,'특정 나이들(10, 11, 12세)만 고르기.',"df[df['AGE'].isin([10, 11, 12])]"],
+ ['nunique / unique','pd',1,'Month 값은 몇 종류? AGE는?',"df['Month'].nunique(), sorted(df['AGE'].unique())[:10]"],
+ ['duplicated','pd',1,'ID가 중복된 행이 있나?',"df['ID'].duplicated().sum()"],
+ ['rename','pd',1,'헷갈리는 열 이름 StudyCntCnt_M2 → StudyCnt_M2로 통일. 이걸 실행한 뒤엔 다른 칸 코드의 StudyCntCnt_M2도 StudyCnt_M2로 바꿔서 실행해요.',"df = df.rename(columns={'StudyCntCnt_M2': 'StudyCnt_M2', 'StudyCntCnt_M3': 'StudyCnt_M3'})"],
+ ['drop','pd',1,'분석에 안 쓰는 ID 열 빼기.',"df.drop(columns=['ID'])"],
+ ['astype','pd',1,'survived를 범주형으로 바꿔 그래프 색이 두 개로 나오게.',"df['survived'].astype('category')"],
+ ['pd.cut','pd',1,'AGE를 연령대(어린이·청소년·성인)로 나누기.',"df['age_grp'] = pd.cut(df['AGE'], [0, 12, 19, 100], labels=['어린이', '청소년', '성인'])"],
+ ['pd.qcut','pd',1,'StudyIndex_M1을 4등분(사분위) 그룹으로.',"pd.qcut(df['StudyIndex_M1'], 4, labels=['하', '중하', '중상', '상'])"],
+ ['melt','pd',1,'M1~M3가 열에 박힌 넓은 표를 "시점" 열이 있는 긴 표로. 추이 그래프의 준비 단계.',"long = df.melt(id_vars=['ID', 'survived'], value_vars=['Exam1_M1', 'Exam1_M2', 'Exam1_M3'], var_name='시점', value_name='점수')"],
+ ['pivot_table','pd',1,'연령대 × survived별 평균 공부 지수 표.',"df.pivot_table(index='age_grp', columns='survived', values='StudyIndex_M1', aggfunc='mean', observed=False)"],
+ ['pd.crosstab','pd',1,'연령대별 survived 비율 (행 기준 %).',"pd.crosstab(df['age_grp'], df['survived'], normalize='index') * 100"],
+ ['pd.concat','pd',1,'언더샘플링: 줄인 1 그룹과 0 그룹 합치기.',"pd.concat([df[df['survived'] == 1].sample(868, random_state=42), df[df['survived'] == 0]])"],
+ ['merge','pd',2,'그룹 평균표를 원래 표에 붙여 "평균보다 높은가" 열 만들기.',"avg = df.groupby('age_grp', observed=False)['Exam1_M1'].mean().rename('grp_mean').reset_index()\ndf.merge(avg, on='age_grp')"],
+ ['sample','pd',1,'산점도용으로 3,000행만 무작위로. 언더샘플링에도.',"df.sample(n=3000, random_state=42)"],
+ ['apply','pd',1,'학생마다 M1~M3 시험1 평균 (빈칸 제외).',"df[['Exam1_M1', 'Exam1_M2', 'Exam1_M3']].apply(lambda r: r.mean(), axis=1)"],
+ ['Series.map','pd',1,'0/1을 뜻으로 바꾸기 (뜻은 설명서 확인 후).',"df['survived'].map({0: '0 그룹', 1: '1 그룹'})"],
+ ['mean(axis=1)','pd',1,'apply 없이 행 평균. apply와 결과·속도 비교.',"df[['Exam1_M1', 'Exam1_M2', 'Exam1_M3']].mean(axis=1)"],
+ ['열끼리 빼기','pd',1,'M1 → M3 점수 변화 열 만들기 (zip 버전과 비교).',"df['exam1_change'] = df['Exam1_M3'] - df['Exam1_M1']"],
+ ['corr','pd',1,'숫자 열끼리 상관계수. Exam1_M1과 M2는 얼마나 같이 움직이나?',"df.corr(numeric_only=True).round(2)"],
+ ['quantile','pd',1,'Exam2의 25·50·75% 지점.',"df['Exam2_M1'].quantile([.25, .5, .75])"],
+ ['clip','pd',2,'Exam3 음수를 0으로 자르면? 자르기 전후 평균 비교 (함부로 자르면 안 되는 이유).',"df['Exam3_M1'].clip(lower=0).mean(), df['Exam3_M1'].mean()"],
+ ['set_index / reset_index','pd',1,'ID를 인덱스로. groupby 결과를 다시 표로.',"df.set_index('ID').head()"],
+ ['idxmax / nlargest','pd',1,'공부 횟수 최다 학생의 행 번호, 상위 5명.',"df['StudyCnt_M1'].idxmax(), df.nlargest(5, 'StudyCnt_M1')"],
+
+ ['np.mean / median / std','np',1,'AGE의 평균·중앙값·표준편차를 NumPy로.',"np.mean(df['AGE']), np.median(df['AGE']), np.std(df['AGE'])"],
+ ['np.nanmean','np',1,'빈칸 있는 열 평균: np.mean은 nan, np.nanmean은 숫자.',"np.mean(df['Exam1_M2'].values), np.nanmean(df['Exam1_M2'].values)"],
+ ['np.percentile','np',1,'StudyIndex의 사분위. pandas quantile과 같은지.',"np.percentile(df['StudyIndex_M1'].dropna(), [25, 50, 75])"],
+ ['np.where','np',1,'Exam1_M1이 90 이상이면 "상", 아니면 "하".',"np.where(df['Exam1_M1'] >= 90, '상', '하')"],
+ ['np.select','np',1,'점수 구간 여러 개로 등급 매기기.',"np.select([df['Exam1_M1'] >= 95, df['Exam1_M1'] >= 85], ['A', 'B'], default='C')"],
+ ['np.log1p','np',2,'공부 횟수처럼 오른쪽 꼬리가 긴 값을 펴기. 히스토그램 전후 비교.',"np.log1p(df['StudyCnt_M1'])"],
+ ['np.clip','np',2,'pandas clip과 같은 일. 값을 범위 안으로.',"np.clip(df['Exam2_M1'], 0, 100)"],
+ ['np.histogram','np',1,'히스토그램 막대 높이를 숫자로 먼저 보기.',"np.histogram(df['AGE'], bins=10)"],
+ ['np.corrcoef','np',1,'두 시험 점수의 상관계수 (빈칸 뺀 뒤).',"d = df[['Exam1_M1', 'Exam2_M1']].dropna()\nnp.corrcoef(d['Exam1_M1'], d['Exam2_M1'])[0, 1]"],
+ ['np.isnan','np',1,'NumPy 배열에서 빈칸 세기.',"np.isnan(df['Exam3_M3'].values).sum()"],
+ ['np.unique','np',1,'정답 클래스와 개수를 한 번에.',"np.unique(df['survived'], return_counts=True)"],
+ ['np.random.choice','np',2,'0 그룹 학생 ID 5명 무작위 뽑기.',"np.random.seed(42)\nnp.random.choice(df.loc[df['survived'] == 0, 'ID'], 5)"],
+
+ ['sns.countplot','viz',1,'survived 개수 막대. 97:3 쏠림을 눈으로.',"sns.countplot(data=df, x='survived')"],
+ ['plt.bar + bar_label','viz',1,'클래스 비율 % 막대 + 숫자 라벨 + 70% 기준선 (11/10 수업 그대로).',"r = df['survived'].value_counts(normalize=True).sort_index() * 100\nbars = plt.bar(['0', '1'], r.values)\nplt.bar_label(bars, fmt='%.1f%%')\nplt.axhline(70, ls='--')"],
+ ['plt.hist / sns.histplot','viz',1,'AGE 분포. bins를 바꿔 보기. hue=survived로 겹쳐 보기.',"sns.histplot(data=df, x='AGE', bins=30, hue='survived', stat='density', common_norm=False)"],
+ ['sns.boxplot','viz',1,'survived별 StudyIndex_M1 분포 비교.',"sns.boxplot(data=df, x='survived', y='StudyIndex_M1')"],
+ ['sns.violinplot','viz',1,'상자그림의 모양 버전. 분포 모양까지.',"sns.violinplot(data=df, x='survived', y='StudyCnt_M1')"],
+ ['sns.scatterplot','viz',1,'Exam1_M1 vs Exam1_M3. 3만 점은 sample + alpha.',"sns.scatterplot(data=df.sample(3000, random_state=42), x='Exam1_M1', y='Exam1_M3', hue='survived', alpha=0.4)"],
+ ['sns.lineplot','viz',1,'melt한 긴 표로 M1→M3 평균 점수 추이, survived별 두 선.',"sns.lineplot(data=long, x='시점', y='점수', hue='survived')"],
+ ['sns.barplot','viz',1,'연령대별 평균 공부 지수 + 오차막대.',"sns.barplot(data=df, x='age_grp', y='StudyIndex_M1', hue='survived')"],
+ ['sns.heatmap (상관)','viz',1,'숫자 열 상관계수 지도.',"sns.heatmap(df.corr(numeric_only=True), cmap='coolwarm', vmin=-1, vmax=1)"],
+ ['sns.heatmap (결측)','viz',1,'빈칸 위치 지도. M1→M3로 갈수록 늘어나는 게 보여요.',"sns.heatmap(df.sample(500, random_state=1).isna(), cbar=False)"],
+ ['sns.kdeplot','viz',1,'0과 1 그룹의 StudyIndex 밀도 곡선 겹쳐 보기.',"sns.kdeplot(data=df, x='StudyIndex_M1', hue='survived', common_norm=False)"],
+ ['sns.pairplot','viz',2,'시험 3개 M1 관계 한 번에. 꼭 sample로.',"sns.pairplot(df.sample(1000, random_state=42), vars=['Exam1_M1', 'Exam2_M1', 'Exam3_M1'], hue='survived')"],
+ ['plt.subplots','viz',1,'시험1·2·3 히스토그램을 한 줄에 나란히.',"fig, axes = plt.subplots(1, 3, figsize=(12, 3))\nfor ax, c in zip(axes, ['Exam1_M1', 'Exam2_M1', 'Exam3_M1']):\n    ax.hist(df[c].dropna(), bins=30); ax.set_title(c)"],
+ ['plt.plot','viz',2,'월(Month)별 평균 공부 지수 선 그래프.',"m = df.groupby('Month')['StudyIndex_M1'].mean()\nplt.plot(m.index, m.values)"],
+ ['sns.set_theme','viz',1,'style 다섯 가지 바꿔 보며 같은 그래프 비교.',"sns.set_theme(style='whitegrid')"],
+
+ ['stats.ttest_ind','st',1,'0 그룹과 1 그룹의 StudyIndex_M1 평균 차이가 우연인가?',"from scipy import stats\na = df.loc[df['survived'] == 0, 'StudyIndex_M1'].dropna()\nb = df.loc[df['survived'] == 1, 'StudyIndex_M1'].dropna()\nstats.ttest_ind(a, b, equal_var=False)"],
+ ['stats.mannwhitneyu','st',1,'분포가 한쪽으로 치우쳤을 때 쓰는 비교 검정. t-검정과 결론 비교.',"stats.mannwhitneyu(a, b)"],
+ ['stats.chi2_contingency','st',1,'연령대와 survived가 관련 있나? crosstab 개수 표로.',"stats.chi2_contingency(pd.crosstab(df['age_grp'], df['survived']))"],
+ ['stats.pearsonr','st',1,'Exam1_M1과 Exam1_M3의 상관계수와 p값.',"d = df[['Exam1_M1', 'Exam1_M3']].dropna()\nstats.pearsonr(d['Exam1_M1'], d['Exam1_M3'])"],
+ ['stats.spearmanr','st',1,'순위 기준 상관. 이상치에 덜 흔들려요. pearson과 비교.',"stats.spearmanr(d['Exam1_M1'], d['Exam1_M3'])"],
+ ['stats.shapiro','st',2,'정규분포 검정. 3만 행에선 거의 항상 "정규 아님"이 나와요. 왜 그런지 생각해 보기.',"stats.shapiro(df['AGE'].sample(500, random_state=42))"],
+
+ ['train_test_split','ml',1,'7:3으로 나누고 stratify로 97:3 유지. 0이 학습 608, 평가 260인지 확인.',"from sklearn.model_selection import train_test_split\ntrain, test = train_test_split(df, test_size=0.3, stratify=df['survived'], random_state=42)"],
+ ['SimpleImputer','ml',1,'시험 점수 빈칸을 중앙값으로 채우기 (학습용으로 맞추고 평가용엔 적용만).',"from sklearn.impute import SimpleImputer\nimp = SimpleImputer(strategy='median')"],
+ ['StandardScaler','ml',1,'척도가 다른 Exam1(0~100)과 Exam2·3(100 넘음)을 같은 기준으로.',"from sklearn.preprocessing import StandardScaler"],
+ ['LogisticRegression','ml',1,'첫 분류 모델. class_weight="balanced"로 97:3 보정.',"from sklearn.linear_model import LogisticRegression\nLogisticRegression(class_weight='balanced', max_iter=1000)"],
+ ['confusion_matrix','ml',1,'0을 몇 명 맞히고 몇 명 놓쳤나. "눈 감고 찍기"와 비교.',"from sklearn.metrics import confusion_matrix"],
+ ['classification_report','ml',1,'정확도 말고 0 클래스의 재현율·정밀도 보기.',"from sklearn.metrics import classification_report"],
+ ['roc_auc_score','ml',2,'불균형 데이터에서 자주 쓰는 점수.',"from sklearn.metrics import roc_auc_score"]
+];
+const SETUP="import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom scipy import stats\n\nplt.rc('font', family='Malgun Gothic')   # 한글 깨짐 방지 (Windows)\nplt.rc('axes', unicode_minus=False)     # 마이너스 기호 깨짐 방지\n\ndf = pd.read_csv('Study.공유.csv')      # 수업 때 쓴 경로 그대로";
+/* 다른 칸에서 만든 변수가 있어야 돌아가는 칸: [먼저 할 칸 이름, 그 칸이 만드는 것] */
+const NEED={'sns.lineplot':['melt','long (M1~M3를 세로로 편 긴 표)'],'pivot_table':['pd.cut','age_grp 열 (연령대)'],'pd.crosstab':['pd.cut','age_grp 열 (연령대)'],'merge':['pd.cut','age_grp 열 (연령대)'],'sns.barplot':['pd.cut','age_grp 열 (연령대)'],'stats.chi2_contingency':['pd.cut','age_grp 열 (연령대)'],'stats.mannwhitneyu':['stats.ttest_ind','a, b (0 그룹·1 그룹 점수)'],'stats.spearmanr':['stats.pearsonr','d (빈칸 뺀 두 시험 점수)']};
+const ITEMS=F.map((f,i)=>({id:'f'+String(i).padStart(3,'0')+'_'+f[0].replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40),name:f[0],g:f[1],fit:f[2],hint:f[3],code:f[4]}));
+const GC=k=>getComputedStyle(document.documentElement).getPropertyValue(GROUPS.find(g=>g.k===k).c).trim();
+const ST={todo:'아직',doing:'하는 중',done:'도장',skip:'패스'};
+
+let rec={};           // id -> {status, question, code, result, note, date}
+let selId=null, fG='all', fS='all', q='', hide3=false;
+let db=null, mode='loading', saving=false;
+
+/* ---------- storage ---------- */
+const LSK='study-stamp-local';
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LSK)||'{}');}catch(e){return {};}}
+function lsSave(){try{localStorage.setItem(LSK,JSON.stringify(rec));}catch(e){}}
+async function boot(){
+  let timer=setTimeout(()=>{ if(mode==='loading'){mode='local';rec=lsLoad();renderAll();} },10000);
+  try{ db = window.claude && window.claude.use ? await window.claude.use('db') : null; }catch(e){ db=null; }
+  if(!db){ clearTimeout(timer); mode='local'; rec=lsLoad(); renderAll(); return; }
+  db.collection('entries').onSnapshot(snap=>{
+    clearTimeout(timer);
+    const next={}; snap.docs.forEach(d=>{const v=d.data(); if(v) next[d.id]=v;});
+    rec=next; if(mode!=='readonly') mode='db'; renderAll(true);
+  },err=>{ clearTimeout(timer); if(mode==='loading'){mode='local';rec=lsLoad();renderAll();} });
+}
+async function saveEntry(id,entry){
+  rec[id]=entry;
+  if(mode==='db'){
+    saving=true; renderBench();
+    try{ await db.doc('entries/'+id).set(entry); saving=false; flash('저장했어요'); }
+    catch(e){ saving=false;
+      if(e&&e.code==='invalid_argument'){ mode='readonly'; flash('이 화면에서는 기록을 바꿀 수 없어요. 페이지 주인만 저장할 수 있어요.'); }
+      else if(e&&e.code==='unavailable'){ await new Promise(r=>setTimeout(r,400+Math.random()*600)); try{await db.doc('entries/'+id).set(entry);flash('저장했어요');}catch(e2){flash('저장하지 못했어요. 잠시 후 다시 눌러 주세요.');} }
+      else flash('저장하지 못했어요. 잠시 후 다시 눌러 주세요.');
+    }
+  } else { lsSave(); flash('이 브라우저에 저장했어요'); }
+  renderAll();
+}
+let flashMsg='', flashT=null;
+function flash(m){flashMsg=m;clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg='';const s=$('savedMsg');if(s)s.textContent='';},2600);const s=$('savedMsg');if(s)s.textContent=m;}
+
+/* ---------- render ---------- */
+const stat=id=>(rec[id]&&rec[id].status)||'todo';
+function visible(it){
+  if(fG!=='all'&&it.g!==fG) return false;
+  if(fS!=='all'&&stat(it.id)!==fS) return false;
+  if(hide3&&it.fit===3&&stat(it.id)==='todo') return false;
+  if(q){const s=(it.name+' '+it.hint+' '+it.code).toLowerCase(); if(!s.includes(q.toLowerCase())) return false;}
+  return true;
+}
+function renderProgress(){
+  const total=ITEMS.length, done=ITEMS.filter(i=>stat(i.id)==='done').length, skip=ITEMS.filter(i=>stat(i.id)==='skip').length, doing=ITEMS.filter(i=>stat(i.id)==='doing').length;
+  const r=40, C=2*Math.PI*r, pd=done/total, ps=skip/total;
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  $('ring').innerHTML=`<circle cx="48" cy="48" r="${r}" fill="none" stroke="${css('--grid')}" stroke-width="10"/>
+    <circle cx="48" cy="48" r="${r}" fill="none" stroke="${css('--skip')}" stroke-width="10" stroke-dasharray="${C*(pd+ps)} ${C}" transform="rotate(-90 48 48)"/>
+    <circle cx="48" cy="48" r="${r}" fill="none" stroke="${css('--ink')}" stroke-width="10" stroke-dasharray="${C*pd} ${C}" transform="rotate(-90 48 48)"/>
+    <text x="48" y="54" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="17" font-weight="600" fill="${css('--fg')}">${Math.round((done+skip)/total*100)}%</text>`;
+  $('doneN').textContent=done;
+  $('doneOf').textContent=`/ ${total}칸 · 패스 ${skip} · 하는 중 ${doing}`;
+  $('gbars').innerHTML=GROUPS.map(g=>{
+    const its=ITEMS.filter(i=>i.g===g.k), d=its.filter(i=>stat(i.id)==='done').length, s=its.filter(i=>stat(i.id)==='skip').length;
+    return `<div class="bar"><span>${g.n}</span><span class="tr"><i style="width:${d/its.length*100}%;background:var(${g.c})"></i><i style="width:${s/its.length*100}%;background:var(--skip);opacity:.5"></i></span><span class="n">${d+s}/${its.length}</span></div>`;
+  }).join('');
+  const now=new Date(), remain=total-done-skip;
+  const today0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const wdLeft=weekdaysBetween(today0,END), wdPassed=weekdaysBetween(START,new Date(today0.getTime()+864e5));
+  const tail = isWeekend(now) ? ' · 오늘은 주말이라 쉬는 날' : '';
+  $('pace').innerHTML = now<START ? `11월 10일 시작 · 2개월 목표 · 평일만 도장`
+    : wdLeft===0 ? `2개월이 지났어요. 남은 칸 <b>${remain}</b>개.`
+    : `평일만 도장 · 평일 ${Math.max(1,wdPassed)}일째 · 1월 10일까지 평일 <b>${wdLeft}일</b> · 남은 칸 <b>${remain}</b>개면 평일 하루 약 <b>${(remain/wdLeft).toFixed(1)}</b>칸${tail}`;
+}
+function isWeekend(d){const w=d.getDay();return w===0||w===6;}
+function weekdaysBetween(a,b){let n=0;const d=new Date(a.getFullYear(),a.getMonth(),a.getDate());while(d<b){if(!isWeekend(d))n++;d.setDate(d.getDate()+1);}return n;}
+const pad2=n=>String(n).padStart(2,'0');
+const dkey=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+/* 그날 몫: 그날 아침 기준 남은 칸 ÷ 남은 평일(그날 포함), 올림. 하루 동안 고정. */
+function dayPlan(day){
+  const key=dkey(day);
+  const finishedToday=id=>{const r=rec[id];return r&&(r.status==='done'||r.status==='skip')&&(r.updatedAt||'').slice(0,10)===key;};
+  const pool=ITEMS.filter(i=>stat(i.id)==='todo'||stat(i.id)==='doing'||finishedToday(i.id));
+  const wd=Math.max(1,weekdaysBetween(day,END));
+  const quota=Math.min(pool.length,Math.ceil(pool.length/wd));
+  const picks=[...pool].sort((a,b)=>(a.fit-b.fit)||(hashStr(a.id+key)-hashStr(b.id+key))).slice(0,quota);
+  return {picks,quota,finished:picks.filter(i=>finishedToday(i.id)).length,wd};
+}
+function renderToday(){
+  const now=new Date(), weekend=isWeekend(now);
+  const day=weekend?new Date(now.getFullYear(),now.getMonth(),now.getDate()+(now.getDay()===6?2:1)):now;
+  const plan=dayPlan(day);
+  if(!plan.picks.length){$('today').innerHTML='<span class="lab">오늘의 칸</span><span class="why">149칸을 다 채웠어요! 🎉</span>';return;}
+  const chips=plan.picks.map(i=>{const s=stat(i.id),fin=!weekend&&(s==='done'||s==='skip');
+    return `<button class="tchip ${fin?'t-'+s:''}" data-id="${i.id}"><span class="fit fit${i.fit}"></span>${fin?(s==='done'?'✓ ':'↷ '):''}${esc(i.name)}</button>`;}).join('');
+  const msg = weekend
+    ? `주말엔 도장을 찍지 않아요. 월요일 몫은 <b>${plan.quota}칸</b>이에요. 미리 보고 싶으면 눌러도 돼요.`
+    : plan.finished>=plan.quota
+      ? `오늘 몫 끝! 🎉 더 하고 싶으면 아무 칸이나 골라도 돼요. 미리 해 두면 남은 날 몫이 줄어요.`
+      : `남은 칸 ÷ 남은 평일 ${plan.wd}일 = 오늘 <b>${plan.quota}칸</b>. 자연스럽게 맞는 칸부터 골랐어요.`;
+  $('today').innerHTML=`<span class="lab">${weekend?'주말은 쉬는 날':'오늘의 칸'}</span>${weekend?'':`<span class="pick">${plan.finished} / ${plan.quota}</span>`}
+    <div class="todaychips">${chips}</div><span class="why muted" style="flex-basis:100%">${msg}</span>`;
+  $('today').querySelectorAll('.tchip').forEach(b=>b.onclick=()=>select(b.dataset.id,true));
+}
+function renderFilters(){
+  $('gfilter').innerHTML='<span class="flabel">분류</span>'+[{k:'all',n:'전체'},...GROUPS].map(g=>`<button class="chip" data-g="${g.k}" aria-pressed="${fG===g.k}">${g.c?`<span class="dot" style="background:var(${g.c})"></span>`:''}${g.n}</button>`).join('');
+  const counts={all:ITEMS.length}; Object.keys(ST).forEach(s=>counts[s]=ITEMS.filter(i=>stat(i.id)===s).length);
+  $('sfilter').innerHTML='<span class="flabel">상태</span>'+[['all','전체'],...Object.entries(ST)].map(([k,n])=>`<button class="chip" data-s="${k}" aria-pressed="${fS===k}">${n} <span class="mono" style="opacity:.7">${counts[k]}</span></button>`).join('');
+}
+function renderGrid(){
+  let html='';
+  GROUPS.forEach(g=>{
+    const its=ITEMS.filter(i=>i.g===g.k&&visible(i)); if(!its.length) return;
+    const all=ITEMS.filter(i=>i.g===g.k), d=all.filter(i=>stat(i.id)==='done').length;
+    html+=`<section aria-label="${esc(g.n)}"><div class="ghead"><h2><span class="sw" style="background:var(${g.c})"></span>${g.n}</h2><span class="small muted mono">도장 ${d} / ${all.length}</span></div><div class="grid">`+
+      its.map(it=>{const s=stat(it.id), r=rec[it.id];
+        return `<button class="cell s-${s}" data-id="${it.id}" aria-pressed="${selId===it.id}" aria-label="${esc(it.name)} · ${ST[s]}"><span class="fit fit${it.fit}"></span><span class="nm">${esc(it.name)}</span><span class="ht">${esc(it.hint)}</span>${s==='doing'||s==='skip'?`<span class="sbadge">${ST[s]}</span>`:''}${s==='done'?`<span class="stamp">완료<small>${esc((r&&r.date||'').slice(5).replace('-','.'))}</small></span>`:''}</button>`;}).join('')+'</div></section>';
+  });
+  $('groups').innerHTML=html||'<div class="empty">조건에 맞는 칸이 없어요. 필터를 바꿔 보세요.</div>';
+}
+function renderBench(){
+  const b=$('bench');
+  if(mode==='loading'){b.innerHTML='<p class="muted">기록을 불러오는 중…</p>';return;}
+  const it=ITEMS.find(i=>i.id===selId);
+  const modeNote = mode==='local'?'<div class="notice">지금은 저장 공간에 연결되지 않아 <b>이 브라우저에만</b> 저장돼요. claude.ai에서 열면 어디서나 이어서 쓸 수 있어요.</div>'
+    : mode==='readonly'?'<div class="notice">보기 전용이에요. 기록은 페이지 주인만 바꿀 수 있어요.</div>':'';
+  if(!it){
+    const last=Object.entries(rec).filter(([,v])=>v&&v.updatedAt).sort((a,b)=>b[1].updatedAt.localeCompare(a[1].updatedAt)).slice(0,4);
+    b.innerHTML=`<h2>작업대</h2><p class="small muted">왼쪽에서 칸을 하나 고르면 여기에 질문 아이디어와 시작 코드가 나와요. 내 질문·코드·결과를 적고 도장을 찍으세요.</p>${modeNote}
+      <details class="setup" open><summary>노트북 맨 위 준비 셀 · 한 번만 실행</summary><pre>${esc(SETUP)}</pre><button class="btn cpy" data-copy="setup">준비 셀 복사</button></details>
+      <div class="hint" style="border-left-color:var(--ink)"><b class="small">진행 방법</b><span class="small">① 칸 고르기 → ② 시작 코드를 노트북에 붙여 실행 → ③ 내가 알아낸 것 한 줄 → ④ 도장. 안 맞는 함수는 이유 한 줄 적고 "패스".</span></div>
+      ${last.length?'<b class="small">최근 기록</b>'+last.map(([id,v])=>{const i=ITEMS.find(x=>x.id===id);return i?`<button class="btn" style="text-align:left" data-jump="${id}"><span class="mono">${esc(i.name)}</span> · ${ST[v.status]||''}<br><span class="small muted">${esc((v.result||v.question||'').slice(0,60))}</span></button>`:'';}).join(''):'<p class="small muted">아직 기록이 없어요. "오늘의 칸"부터 시작해 보세요.</p>'}`;
+    b.querySelectorAll('[data-jump]').forEach(x=>x.onclick=()=>select(x.dataset.jump,true));
+    wireCopy(b,null);
+    return;
+  }
+  const r=rec[it.id]||{}, s=r.status||'todo', g=GROUPS.find(x=>x.k===it.g), ro=mode==='readonly';
+  const fitTxt=['','study에 자연스럽게 맞음','조금 응용 필요','억지 · 패스 후보'][it.fit];
+  b.innerHTML=`<span class="nm">${esc(it.name)}</span>
+    <div class="tags"><span class="tag" style="background:var(${g.c})">${g.n}</span><span class="tag lt"><i class="fit${it.fit}" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>${fitTxt}</span></div>
+    ${modeNote}
+    <div class="hint"><b class="small">study에서 던져 볼 질문</b><span class="small">${esc(it.hint)}</span>${it.code?`<pre>${esc(it.code)}</pre><button class="btn cpy" data-copy="code">시작 코드 복사</button>`:''}</div>
+    ${NEED[it.name]?(()=>{const [pn,what]=NEED[it.name], pi=ITEMS.find(x=>x.name===pn), ps=pi?stat(pi.id):'todo';return `<div class="notice"><b>먼저 실행할 칸: <button class="linkbtn" data-jump="${pi?pi.id:''}">${esc(pn)}</button></b> ${ps==='done'?'✓ 도장 찍음':''}<br><span class="small">이 칸 코드는 그 칸에서 만든 <code>${esc(what.split(' ')[0])}</code>을(를) 써요. ${esc(what)}이 없으면 NameError가 나요. 같은 노트북에서 그 칸 코드를 먼저 실행하세요.</span></div>`;})():''}
+    <details class="setup"><summary>노트북 맨 위 준비 셀 (아직 안 했다면)</summary><pre>${esc(SETUP)}</pre><button class="btn cpy" data-copy="setup">준비 셀 복사</button></details>
+    <div class="field"><span class="small muted mono">상태</span><div class="seg" id="sseg">${Object.entries(ST).map(([k,n])=>`<button data-s="${k}" aria-pressed="${s===k}" ${ro?'disabled':''}>${n}</button>`).join('')}</div></div>
+    <div class="field"><label for="fQ">내가 던진 질문</label><textarea id="fQ" rows="2" ${ro?'readonly':''} placeholder="예: 0 그룹과 1 그룹의 공부 지수가 다를까?">${esc(r.question||'')}</textarea></div>
+    <div class="field"><label for="fC">내 코드</label><textarea id="fC" class="code" rows="4" ${ro?'readonly':''} placeholder="실행한 코드를 붙여 넣기">${esc(r.code||'')}</textarea></div>
+    <div class="field"><label for="fR">결과 · 알아낸 것</label><textarea id="fR" rows="3" ${ro?'readonly':''} placeholder="${it.fit===3?'예: study엔 쓸 데가 없음. 이유: …':'예: StudyIndex_M1 중앙값 0 그룹 49.5, 1 그룹 63 → 0 그룹이 낮다'}">${esc(r.result||'')}</textarea></div>
+    <div class="field"><label for="fN">메모 (헷갈린 점, 다음에 할 것)</label><input id="fN" ${ro?'readonly':''} value="${esc(r.note||'')}"></div>
+    <div class="actions">${ro?'':`<button class="btn primary" id="saveBtn" ${saving?'disabled':''}>${s==='done'?'저장':'저장하기'}</button><button class="btn" id="stampBtn" ${saving?'disabled':''}>도장 찍고 저장</button>`}<span class="saved" id="savedMsg">${flashMsg}</span></div>
+    ${r.updatedAt?`<span class="small muted">마지막 저장 ${esc(r.updatedAt.slice(0,16).replace('T',' '))}</span>`:''}`;
+  let cur=s;
+  b.querySelectorAll('#sseg button').forEach(x=>x.onclick=()=>{cur=x.dataset.s;b.querySelectorAll('#sseg button').forEach(y=>y.setAttribute('aria-pressed',String(y===x)));});
+  const collect=(st)=>{const now=new Date(), pad=n=>String(n).padStart(2,'0');
+    const local=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return {status:st,question:$('fQ').value.trim(),code:$('fC').value,result:$('fR').value.trim(),note:$('fN').value.trim(),
+      date: st==='done'?(r.status==='done'&&r.date?r.date:local.slice(0,10)):(r.date||''), name:it.name, group:it.g, updatedAt:local};};
+  if(!ro){
+    $('saveBtn').onclick=()=>saveEntry(it.id,collect(cur));
+    $('stampBtn').onclick=()=>saveEntry(it.id,collect('done'));
+  }
+  b.querySelectorAll('[data-jump]').forEach(x=>{if(x.dataset.jump)x.onclick=()=>select(x.dataset.jump,true);});
+  wireCopy(b,it);
+}
+function wireCopy(b,it){
+  b.querySelectorAll('.cpy').forEach(btn=>{const label=btn.textContent;btn.onclick=async()=>{
+    const txt=btn.dataset.copy==='setup'?SETUP:(it?it.code:''), pre=btn.previousElementSibling;
+    try{await navigator.clipboard.writeText(txt);btn.textContent='복사했어요';}
+    catch(e){const rg=document.createRange();rg.selectNodeContents(pre);const sl=getSelection();sl.removeAllRanges();sl.addRange(rg);btn.textContent='선택했어요 · 복사하세요';}
+    setTimeout(()=>{btn.textContent=label;},1800);};});
+}
+function select(id,scroll){selId=id;renderGrid();renderBench();if(scroll&&window.innerWidth<=960)$('bench').scrollIntoView({behavior:'smooth',block:'start'});}
+function renderAll(fromDb){
+  renderProgress(); renderToday(); renderFilters(); renderGrid();
+  // don't clobber typing: only re-render bench from a snapshot if nothing is focused inside it
+  if(!(fromDb && $('bench').contains(document.activeElement))) renderBench();
+}
+
+/* ---------- events ---------- */
+$('gfilter').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;fG=b.dataset.g;renderFilters();renderGrid();});
+$('sfilter').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;fS=b.dataset.s;renderFilters();renderGrid();});
+$('q').addEventListener('input',e=>{q=e.target.value.trim();renderGrid();});
+$('hide3').addEventListener('change',e=>{hide3=e.target.checked;renderGrid();});
+$('groups').addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b)return;select(b.dataset.id,true);});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',renderProgress);
+
+renderAll(); boot();
+})();
+</script>
+
+</body>
+</html>
