@@ -1,0 +1,643 @@
+<title>기초통계 σ 노트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 모눈종이 실험 노트. 좁은 본문 칼럼 + 가로 스크롤 목차, 섹션마다 표·도식·인터랙션 */
+:root{
+  --paper:#F6F8FB; --card:#FFFFFF; --ink:#1B2331; --muted:#566175; --line:#D5DDE7; --grid:rgba(36,87,197,.06);
+  --accent:#2457C5; --accent-soft:rgba(36,87,197,.10); --hi:#D99A00; --hi-soft:rgba(217,154,0,.16);
+  --good:#1D8657; --good-soft:rgba(29,134,87,.12); --bad:#C0392F; --bad-soft:rgba(192,57,47,.10);
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F141C; --card:#161D28; --ink:#E5EAF2; --muted:#9AA5B7; --line:#273244; --grid:rgba(127,164,255,.05);
+  --accent:#7FA4FF; --accent-soft:rgba(127,164,255,.14); --hi:#F2C14E; --hi-soft:rgba(242,193,78,.16);
+  --good:#4CC48C; --good-soft:rgba(76,196,140,.14); --bad:#F07A73; --bad-soft:rgba(240,122,115,.14); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F141C; --card:#161D28; --ink:#E5EAF2; --muted:#9AA5B7; --line:#273244; --grid:rgba(127,164,255,.05);
+  --accent:#7FA4FF; --accent-soft:rgba(127,164,255,.14); --hi:#F2C14E; --hi-soft:rgba(242,193,78,.16);
+  --good:#4CC48C; --good-soft:rgba(76,196,140,.14); --bad:#F07A73; --bad-soft:rgba(240,122,115,.14); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.hero{padding-block:40px 24px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(40px,8vw,64px);line-height:1.05;margin:8px 0 12px;text-wrap:balance}
+h1 .sig{color:var(--accent)}
+.lede{max-width:62ch;color:var(--muted);margin:0}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:thin}
+nav.toc a{flex:0 0 auto;font-size:13px;color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent);border-color:var(--accent);outline:none}
+nav.toc a.quizlink{color:var(--card);background:var(--accent);border-color:var(--accent)}
+
+section{padding-block:40px 8px;scroll-margin-top:64px}
+h2{font-family:var(--f-display);font-weight:400;font-size:32px;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2 small{font-family:var(--f-mono);font-size:13px;color:var(--accent);display:block;letter-spacing:.06em;margin-bottom:2px}
+h3{font-size:18px;margin:28px 0 8px;font-weight:700}
+p{margin:0 0 12px;max-width:68ch}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+p code,li code,td code{background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+mark{background:var(--hi-soft);color:inherit;padding:0 3px;border-radius:3px}
+ul{padding-left:20px;margin:0 0 12px}
+
+.tbl{overflow-x:auto;margin:10px 0 16px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted);font-weight:500;background:var(--accent-soft);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-family:var(--f-mono)}
+
+pre{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;font-family:var(--f-mono);font-size:13.5px;line-height:1.6;margin:10px 0 16px}
+.note{border:1px dashed var(--hi);background:var(--hi-soft);border-radius:10px;padding:12px 14px;margin:12px 0 16px;max-width:68ch}
+.note b{color:var(--ink)}
+.formula{font-family:var(--f-mono);font-size:17px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:10px 0 16px;display:inline-block;max-width:100%;overflow-x:auto}
+
+/* flow strip */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow span{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px}
+.flow i{font-style:normal;color:var(--accent);font-family:var(--f-mono)}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0 16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.step .k{font-family:var(--f-mono);font-size:12px;color:var(--accent)}
+.step .t{font-weight:700;margin:2px 0 4px}
+.step .v{font-family:var(--f-mono);font-size:13.5px;color:var(--muted)}
+
+/* bell */
+.figure{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0 16px;overflow-x:auto}
+.figure svg{display:block;width:100%;min-width:480px;height:auto}
+.cap{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* calculator */
+.calc{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:16px;margin:14px 0 18px}
+.calc .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.calc label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+.calc input{font-family:var(--f-mono);font-size:16px;width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.calc input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font-family:var(--f-body);font-size:14px;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--card);border-color:var(--accent)}
+.btn.primary:hover{color:var(--card);filter:brightness(1.08)}
+.calc .out{margin-top:14px;display:grid;gap:10px}
+.calc .zbig{font-family:var(--f-display);font-size:30px;line-height:1.2}
+.calc .zbig b{color:var(--accent);font-weight:400}
+
+/* distributions */
+.dists{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:14px 0 18px}
+.dist{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0;scroll-margin-top:72px}
+.dist.flash{border-color:var(--hi);box-shadow:0 0 0 3px var(--hi-soft)}
+.dist .head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dist .nm{font-family:var(--f-display);font-size:22px}
+.dist .tag{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.dist svg{width:100%;height:64px;display:block}
+.dist .one{font-weight:500}
+.dist dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px}
+.dist dt{color:var(--muted);font-size:12.5px;padding-top:2px}
+.dist dd{margin:0}
+
+/* finder */
+.finder{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0 18px}
+.finder .q{font-family:var(--f-display);font-size:22px;margin-bottom:10px}
+.finder .opts{display:flex;flex-wrap:wrap;gap:8px}
+.finder .path{font-size:13px;color:var(--muted);margin-bottom:8px;font-family:var(--f-mono)}
+.finder .res{font-size:15px}
+.finder .res b{font-family:var(--f-display);font-size:26px;color:var(--accent);font-weight:400}
+
+/* quiz */
+#quiz{padding-bottom:64px}
+.qbox{background:var(--card);border:2px solid var(--accent);border-radius:14px;padding:18px;margin-top:12px}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:999px;margin:8px 0 14px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.qtext{font-family:var(--f-display);font-size:24px;line-height:1.35;margin-bottom:14px;text-wrap:balance}
+.choices{display:grid;gap:8px}
+.choice{text-align:left;font-family:var(--f-body);font-size:15.5px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.choice:hover:not(:disabled){border-color:var(--accent)}
+.choice:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.choice .ltr{font-family:var(--f-mono);color:var(--muted);flex:0 0 auto}
+.choice.right{border-color:var(--good);background:var(--good-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice:disabled{cursor:default}
+.explain{margin-top:12px;padding:12px 14px;border-radius:10px;font-size:15px}
+.explain.ok{background:var(--good-soft)}
+.explain.no{background:var(--bad-soft)}
+.explain b{display:block;margin-bottom:2px}
+.qnav{display:flex;justify-content:flex-end;margin-top:14px}
+.final{text-align:center;padding-block:10px}
+.final .score{font-family:var(--f-display);font-size:56px;color:var(--accent);line-height:1}
+.final ul{text-align:left;max-width:60ch;margin:14px auto}
+footer{padding-block:24px 48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Data Science Lv1 · 기초통계 · 2026.11.11</div>
+  <h1>기초통계 <span class="sig">σ</span> 노트</h1>
+  <p class="lede">통계값으로 요약하고, 그림으로 확인하고, 단위를 맞추고, 확률로 넘어간 하루. 수업 슬라이드와 실습 노트북, 수업 중에 나온 질문들을 한 장에 모았어요. 맨 아래에 퀴즈 16문제가 있어요.</p>
+</div></header>
+
+<nav class="toc" aria-label="목차"><div class="wrap">
+  <a href="#flow">흐름</a><a href="#values">통계값</a><a href="#spread">분산·표준편차</a><a href="#greek">그리스 문자</a>
+  <a href="#normal">정규분포·σ</a><a href="#z">Z-score</a><a href="#outlier">이상치</a><a href="#clt">중심극한정리</a>
+  <a href="#prob">확률</a><a href="#dist">분포 9종</a><a href="#scale">스케일링·모델</a><a href="#notebook">실습 노트</a>
+  <a href="#quiz" class="quizlink">퀴즈 →</a>
+</div></nav>
+
+<main class="wrap">
+
+<section id="flow">
+  <h2><small>00 · 큰 그림</small>오늘의 흐름</h2>
+  <div class="flow">
+    <span>질문</span><i>→</i><span>맞는 통계값</span><i>→</i><span>시각화로 확인</span><i>→</i><span>단위 맞추기 (스케일링)</span><i>→</i><span>확률·분포</span>
+  </div>
+  <p>통계(Statistics)는 데이터를 수집·분석·해석·표현하는 학문이고, 크게 둘로 나뉘어요.</p>
+  <div class="tbl"><table>
+    <tr><th>구분</th><th>하는 일</th><th>오늘 나온 예</th></tr>
+    <tr><td>기술통계</td><td>요약, 정리, 시각화</td><td>평균, 분산, 히스토그램</td></tr>
+    <tr><td>추론통계</td><td>표본으로 모집단 추정, 가설 검정</td><td>정규성 검정, 중심극한정리</td></tr>
+  </table></div>
+  <p>AI 시대에도 통계가 필요한 이유는 간단해요. 머신러닝·딥러닝은 통계적 요약과 판단 위에서 범위를 넓힌 것이라, 서로 대체가 아니라 <mark>상호 보완</mark>이에요. 문제와 데이터에 맞는 방법을 고르는 게 핵심이에요.</p>
+</section>
+
+<section id="values">
+  <h2><small>01 · 튜터님 강조</small>통계'값'과 시각화</h2>
+  <p>통계값은 데이터를 <b>숫자 하나로 요약</b>한 거예요. 그림은 같은 정보를 <b>모양</b>으로 보여 줘요. 둘을 짝지어 두면 헷갈리지 않아요.</p>
+  <div class="tbl"><table>
+    <tr><th>알고 싶은 것</th><th>통계값 (숫자)</th><th>시각화 (그림)</th></tr>
+    <tr><td>어디에 모여 있나 (중심)</td><td>평균, 중앙값, 최빈값</td><td>히스토그램의 봉우리</td></tr>
+    <tr><td>얼마나 퍼져 있나</td><td><b>분산</b>, 표준편차, 범위, IQR</td><td>히스토그램 폭, 박스플롯 상자 길이</td></tr>
+    <tr><td>어느 쪽으로 치우쳤나</td><td>왜도</td><td>히스토그램 꼬리 방향</td></tr>
+    <tr><td>얼마나 뾰족한가</td><td>첨도</td><td>봉우리 모양</td></tr>
+    <tr><td>정규분포에 가까운가</td><td>검정통계량, p-value</td><td>Q-Q plot</td></tr>
+    <tr><td>전체에서 어디쯤인가</td><td>Z-score, 백분위수</td><td>분포 위 위치 표시</td></tr>
+  </table></div>
+  <div class="note"><b>오늘의 함정</b> 문제에 "지표", "값", "통계량"이 나오면 <b>숫자</b>로 답해요. "확인 방법", "시각적으로"가 나오면 <b>그림</b>으로 답해요. 히스토그램은 퍼짐을 보여 주지만 통계 지표는 아니에요.</div>
+  <h3>값 하나로는 부족하다</h3>
+  <div class="tbl"><table>
+    <tr><th>집단</th><th>데이터</th><th>평균</th><th>범위</th></tr>
+    <tr><td>A</td><td class="mono">70, 72, 71</td><td class="num">71</td><td class="num">2</td></tr>
+    <tr><td>B</td><td class="mono">45, 73, 95</td><td class="num">71</td><td class="num">50</td></tr>
+  </table></div>
+  <p>평균이 같아도 A는 평균 근처에 모여 있고 B는 넓게 퍼져 있어요. 그래서 <mark>중심 값과 퍼짐 값은 항상 같이</mark> 봐요.</p>
+  <h3>정규분포에서는 셋이 같다</h3>
+  <div class="tbl"><table>
+    <tr><th>분포</th><th>순서</th><th>예</th></tr>
+    <tr><td>오른쪽 꼬리 (양의 왜도)</td><td>최빈값 &lt; 중앙값 &lt; 평균</td><td>연봉, 집값, 타이타닉 운임</td></tr>
+    <tr><td>대칭 (정규분포)</td><td>최빈값 = 중앙값 = 평균</td><td>키, 시험 점수</td></tr>
+    <tr><td>왼쪽 꼬리 (음의 왜도)</td><td>평균 &lt; 중앙값 &lt; 최빈값</td><td>쉬운 시험 점수</td></tr>
+  </table></div>
+  <p class="muted">평균은 꼬리 쪽으로 끌려가요. 치우친 데이터의 대푯값은 중앙값이 더 정확해요.</p>
+</section>
+
+<section id="spread">
+  <h2><small>02 · 평균 → 빼기 → 제곱 → 평균 → 루트</small>분산과 표준편차</h2>
+  <p>슬라이드 연습 문제 <code>[2, 4, 6]</code>으로 한 단계씩 해 봐요.</p>
+  <div class="steps">
+    <div class="step"><div class="k">STEP 1</div><div class="t">평균</div><div class="v">(2+4+6)/3 = 4</div></div>
+    <div class="step"><div class="k">STEP 2</div><div class="t">편차 (값−평균)</div><div class="v">−2, 0, 2<br>합은 항상 0</div></div>
+    <div class="step"><div class="k">STEP 3</div><div class="t">편차 제곱</div><div class="v">4, 0, 4</div></div>
+    <div class="step"><div class="k">STEP 4</div><div class="t">분산 = 제곱의 평균</div><div class="v">8/3 ≈ 2.67</div></div>
+    <div class="step"><div class="k">STEP 5</div><div class="t">표준편차 = √분산</div><div class="v">√2.67 ≈ 1.63</div></div>
+  </div>
+  <h3>왜 제곱하나: 음수 × 음수 = 양수</h3>
+  <p>편차를 그냥 더하면 0이 돼서 퍼짐을 알 수 없어요. 제곱하면 <code>(−2)×(−2) = 4</code>처럼 방향은 사라지고 "얼마나 떨어졌나"만 남아요. 부호가 같으면 양수, 다르면 음수예요.</p>
+  <h3>왜 루트를 씌우나: 단위 되돌리기</h3>
+  <div class="tbl"><table>
+    <tr><th>데이터</th><th>분산 단위</th><th>표준편차 단위</th></tr>
+    <tr><td>키</td><td>cm²</td><td>cm</td></tr>
+    <tr><td>나이</td><td>세²</td><td>세</td></tr>
+    <tr><td>운임</td><td>달러²</td><td>달러</td></tr>
+  </table></div>
+  <h3>n으로 나눌까, n−1로 나눌까: 자유도</h3>
+  <p><b>자유도</b>는 자유롭게 움직일 수 있는 값의 개수예요. 평균 4를 쓰는 순간 편차 합이 0이라는 제약이 생겨서, 편차 −2와 0을 알면 마지막 값은 자동으로 2가 돼요. 값 3개 중 자유로운 건 2개, 즉 <mark>n − 1</mark>이에요.</p>
+  <p>표본 평균 x̄는 그 표본에 딱 맞춰 계산된 값이라 편차 제곱합이 실제보다 작게 나와요. 그래서 n−1로 나눠 보정해요. 이걸 불편추정량이라고 불러요.</p>
+  <div class="tbl"><table>
+    <tr><th>코드</th><th>ddof</th><th>나누는 수</th><th>setosa 꽃받침 길이 (50개)</th></tr>
+    <tr><td><code>np.std(data)</code></td><td class="num">0 (기본)</td><td>n</td><td class="num">0.3489</td></tr>
+    <tr><td><code>np.std(data, ddof=1)</code></td><td class="num">1</td><td>n − 1</td><td class="num">≈ 0.3525</td></tr>
+    <tr><td><code>series.std()</code> (pandas)</td><td class="num">1 (기본)</td><td>n − 1</td><td class="num">≈ 0.3525</td></tr>
+  </table></div>
+  <div class="note"><b>한 줄 규칙</b> 추정에 쓴 값 하나당 자유도가 하나씩 줄어요. <code>ddof</code>는 delta degrees of freedom의 약자예요. t-검정, 회귀, 카이제곱에서도 같은 원리로 다시 나와요.</div>
+</section>
+
+<section id="greek">
+  <h2><small>03 · 그리스 = 모집단, 알파벳 = 표본</small>앞으로 자주 만날 그리스 문자</h2>
+  <p>그리스 문자는 모집단의 진짜 값(모수), 알파벳은 내가 뽑은 표본에서 계산한 값(통계량)이에요. 위에 ^(햇)이 붙으면 "추정값"이에요.</p>
+  <div class="tbl"><table>
+    <tr><th>의미</th><th>모집단</th><th>표본</th></tr>
+    <tr><td>평균</td><td>μ</td><td>x̄</td></tr>
+    <tr><td>표준편차</td><td>σ</td><td>s</td></tr>
+    <tr><td>분산</td><td>σ²</td><td>s²</td></tr>
+    <tr><td>상관계수</td><td>ρ</td><td>r</td></tr>
+    <tr><td>회귀계수</td><td>β</td><td>b, β̂</td></tr>
+  </table></div>
+  <div class="note"><b>μ는 이데아, x̄는 동굴 벽의 그림자</b> μ는 분명히 존재하지만 직접 볼 수 없는 값이고, x̄는 우리가 관찰할 수 있는 근사값이에요. 표본을 다시 뽑으면 그림자(x̄)는 흔들리지만 실체(μ)는 그대로예요. 이데아와 다른 점은 μ가 현실에 실제로 있는 숫자라는 것뿐이에요. 그래서 <code>x̄ ≈ μ</code>, 같다가 아니라 추정해요.</div>
+  <div class="tbl"><table>
+    <tr><th>기호</th><th>읽는 법</th><th>쓰는 곳</th><th>왜 이 글자</th></tr>
+    <tr><td>μ</td><td>뮤 (mu)</td><td>모집단 평균</td><td>m(mean)</td></tr>
+    <tr><td>σ</td><td>시그마</td><td>모집단 표준편차, σ²는 분산</td><td>s(standard deviation)</td></tr>
+    <tr><td>Σ</td><td>시그마 (대문자)</td><td>모두 더하기</td><td>S(sum)</td></tr>
+    <tr><td>ρ</td><td>로 (rho)</td><td>모집단 상관계수</td><td>r(relation)</td></tr>
+    <tr><td>β</td><td>베타</td><td>회귀계수 (기울기)</td><td>계수를 α, β 순으로 붙이는 관례</td></tr>
+    <tr><td>α</td><td>알파</td><td>유의수준(0.05), 학습률</td><td>첫 글자라 기준값에 자주 씀</td></tr>
+    <tr><td>ε</td><td>엡실론</td><td>오차항, 아주 작은 값</td><td>e(error)</td></tr>
+    <tr><td>λ</td><td>람다</td><td>포아송 발생률, 규제 강도</td><td>비율·강도 파라미터 관례</td></tr>
+    <tr><td>θ</td><td>세타</td><td>모델 파라미터 전체</td><td>"어떤 모수"를 일반적으로</td></tr>
+    <tr><td>χ²</td><td>카이제곱</td><td>범주형 데이터 검정</td><td>분포 이름</td></tr>
+    <tr><td>γ</td><td>감마</td><td>SVM RBF 커널 파라미터</td><td>관례</td></tr>
+    <tr><td>η</td><td>에타</td><td>신경망 학습률</td><td>관례</td></tr>
+    <tr><td>Δ</td><td>델타</td><td>변화량</td><td>d(difference)</td></tr>
+  </table></div>
+  <p>오늘 공식을 기호로 읽으면 <code>σ = √( Σ(xᵢ − μ)² / n )</code>, 표본 버전은 <code>s = √( Σ(xᵢ − x̄)² / (n − 1) )</code>이에요.</p>
+</section>
+
+<section id="normal">
+  <h2><small>04 · 종 모양 위의 눈금</small>정규분포와 σ 1, 2, 3</h2>
+  <p>정규분포는 평균을 중심으로 좌우 대칭인 종 모양 분포예요. σ 범위는 <code>평균 ± k × 표준편차</code>로 구해요.</p>
+  <div class="figure" role="img" aria-label="정규분포 위에 1, 2, 3 시그마 범위를 표시한 그림"><svg id="bell" viewBox="0 0 640 230"></svg>
+    <div class="cap">68-95-99.7 규칙은 반올림한 어림값(more or less)이에요. 정확히는 68.27%, 95.45%, 99.73%이고, 정확히 95%를 감싸는 범위는 ±1.96σ예요.</div></div>
+  <div class="tbl"><table>
+    <tr><th>범위</th><th>평균 170, σ 5</th><th>타이타닉 나이 (29.70, 14.53)</th></tr>
+    <tr><td>±1σ (68%)</td><td class="num">165 ~ 175</td><td class="num">15.17 ~ 44.23</td></tr>
+    <tr><td>±2σ (95%)</td><td class="num">160 ~ 180</td><td class="num">0.65 ~ 58.75</td></tr>
+    <tr><td>±3σ (99.7%)</td><td class="num">155 ~ 185</td><td class="num"><b>−13.88</b> ~ 73.28</td></tr>
+  </table></div>
+  <p>나이 3σ 하한이 음수로 나와요. 나이가 완벽한 정규분포가 아니라는 신호예요. 공식은 기계적이지만 해석은 분포 모양을 보고 해요.</p>
+<pre>age = df["age"].dropna()
+mean, std = age.mean(), age.std()
+for k in [1, 2, 3]:
+    lo, hi = mean - k*std, mean + k*std
+    ratio = age.between(lo, hi).mean() * 100   # 실제로 범위 안에 든 비율
+    print(f"{k}σ: {lo:.2f} ~ {hi:.2f} → 실제 {ratio:.1f}%")</pre>
+  <div class="note"><b>식스 시그마 ㅋㅋ</b> 모토로라가 시작하고 GE가 유명하게 만든 품질 관리 슬로건이에요. 목표는 100만 개 중 3.4개 불량인데, 이론상 ±6σ 밖은 10억 개 중 약 2개예요. 공정 평균이 1.5σ쯤 흔들린다고 미리 감안해서 숫자가 달라요. σ가 3에서 6으로 두 배가 될 뿐인데 불량률은 1,000개 중 2.7개에서 100만 개 중 3.4개로 줄어요. 정규분포의 꼬리가 바깥으로 갈수록 급격히 얇아지기 때문이에요.</div>
+  <h3>정규성 확인: 그림 + 숫자</h3>
+  <div class="tbl"><table>
+    <tr><th>방법</th><th>보는 것</th><th>코드</th></tr>
+    <tr><td>히스토그램</td><td>대체로 좌우 대칭 종 모양인가</td><td><code>sns.histplot(data, kde=True)</code></td></tr>
+    <tr><td>Q-Q plot</td><td>점이 기준 직선 근처에 놓이나</td><td><code>stats.probplot(data, dist="norm", plot=plt)</code></td></tr>
+    <tr><td>Shapiro-Wilk</td><td>작은 표본에 정확, W는 1에 가까울수록 정규</td><td><code>stats.shapiro(data)</code></td></tr>
+    <tr><td>D'Agostino K²</td><td>왜도와 첨도를 합쳐 판단</td><td><code>stats.normaltest(data)</code></td></tr>
+    <tr><td>Anderson-Darling</td><td>꼬리를 더 민감하게</td><td><code>stats.anderson(data)</code></td></tr>
+    <tr><td>Kolmogorov-Smirnov</td><td>정규분포와의 차이, 큰 표본</td><td><code>stats.kstest(...)</code></td></tr>
+  </table></div>
+  <p>setosa 꽃받침 길이 결과는 검정통계량 0.9777, p-value 0.4595였어요. p &gt; 0.05라서 <b>정규분포 가정을 기각할 근거가 없다</b>예요. "정규분포다"라고 증명한 건 아니고, 틀렸다는 증거가 없을 뿐이에요. p-value 0.4595는 "정규분포일 확률 45.95%"도 아니에요.</p>
+  <div class="note"><b>검정도 표본 크기에 휘둘려요</b> 표본이 수만 개면 아주 조금만 달라도 기각되고, 수십 개 이하면 꽤 달라도 못 잡아요. 그래서 그래프로 모양을 보고, 검정으로 숫자를 확인하고, 둘을 같이 판단해요. pandas <code>.kurt()</code>는 정규분포를 0으로 맞춘 값이라 슬라이드의 k = 3 기준과 3만큼 차이 나요.</div>
+</section>
+
+<section id="z">
+  <h2><small>05 · 값에 의미를 주는 작업</small>Z-score</h2>
+  <div class="formula">z = (값 − 평균) / 표준편차</div>
+  <p>σ 범위 계산을 거꾸로 뒤집은 거예요. σ 범위는 "k배 떨어진 값은?"이고, Z-score는 "이 값은 몇 배 떨어졌나?"예요. 원래 단위를 떼어 내고 <mark>표준편차 몇 개만큼</mark>이라는 공통 단위로 바꿔서, 서로 다른 집단의 값을 비교할 수 있게 해요.</p>
+  <div class="calc">
+    <div class="row">
+      <label for="cMean">평균<input id="cMean" type="number" step="any" value="29.70"></label>
+      <label for="cSd">표준편차<input id="cSd" type="number" step="any" value="14.53"></label>
+      <label for="cX">내 값<input id="cX" type="number" step="any" value="38"></label>
+      <button class="btn" type="button" data-preset="titanic">타이타닉 나이</button>
+      <button class="btn" type="button" data-preset="height">키 170·5</button>
+      <button class="btn" type="button" data-preset="math">수학 80점</button>
+    </div>
+    <div class="out" id="cOut" aria-live="polite"></div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>과목</th><th>내 점수</th><th>평균</th><th>표준편차</th><th>Z-score</th></tr>
+    <tr><td>수학</td><td class="num">80</td><td class="num">70</td><td class="num">5</td><td class="num"><b>2.0</b></td></tr>
+    <tr><td>영어</td><td class="num">90</td><td class="num">85</td><td class="num">10</td><td class="num">0.5</td></tr>
+  </table></div>
+  <p>점수는 영어가 높지만, 반 안에서의 상대적 위치는 수학이 훨씬 좋아요.</p>
+  <h3>같은 38세, 다른 의미</h3>
+  <div class="tbl"><table>
+    <tr><th>집단</th><th>평균</th><th>표준편차</th><th>38세의 z</th><th>의미</th></tr>
+    <tr><td>타이타닉 승객</td><td class="num">29.7</td><td class="num">14.5</td><td class="num">+0.57</td><td>평균보다 조금 많음 (하위 약 71.6%)</td></tr>
+    <tr><td>대학 신입생</td><td class="num">20</td><td class="num">2</td><td class="num">+9.0</td><td>극단적인 이상치</td></tr>
+    <tr><td>은퇴자 모임</td><td class="num">68</td><td class="num">6</td><td class="num">−5.0</td><td>극단적으로 젊음</td></tr>
+  </table></div>
+  <h3>단위 문제를 푸는 세 가지 도구</h3>
+  <p>"표준편차 15"만 봐서는 큰지 작은지 알 수 없어요. 시험 점수에선 크고, 원 단위 연봉에선 사실상 0이에요.</p>
+  <div class="tbl"><table>
+    <tr><th>비교하고 싶은 것</th><th>도구</th><th>식</th></tr>
+    <tr><td>다른 집단에 속한 값의 상대적 위치</td><td>Z-score</td><td><code>(x − 평균) / σ</code></td></tr>
+    <tr><td>단위가 다른 집단의 퍼짐 정도</td><td>변동계수 CV</td><td><code>σ / 평균</code> (키 2.9% vs 몸무게 15.4%)</td></tr>
+    <tr><td>모델에 넣기 전 변수 크기 맞추기</td><td>스케일링</td><td>표준화, Min-Max, Robust</td></tr>
+  </table></div>
+  <p>Z-score로 백분위를 구할 땐 <code>norm.cdf(z) * 100</code>을 써요. z = −0.53이면 약 29.8%(하위 30%)예요. 단, 정규분포 전제가 있을 때만 정확해요.</p>
+</section>
+
+<section id="outlier">
+  <h2><small>06 · 평균 기준 vs 순서 기준</small>이상치: IQR과 Z-score</h2>
+  <div class="tbl"><table>
+    <tr><th>구분</th><th>Z-score 방법</th><th>IQR 방법</th></tr>
+    <tr><td>기준 통계값</td><td>평균, 표준편차</td><td>중앙값, Q1, Q3</td></tr>
+    <tr><td>이상치 기준</td><td>|z| &gt; 3 (또는 2)</td><td>Q1 − 1.5×IQR 미만, Q3 + 1.5×IQR 초과</td></tr>
+    <tr><td>전제</td><td>정규분포에 가까울 때</td><td>분포 모양 상관없음</td></tr>
+    <tr><td>이상치 영향</td><td>크게 받음 (가리기 효과)</td><td>거의 안 받음</td></tr>
+    <tr><td>짝꿍 그래프</td><td>히스토그램</td><td>박스플롯</td></tr>
+    <tr><td>잘 맞는 데이터</td><td>키, 시험 점수</td><td>운임, 연봉</td></tr>
+  </table></div>
+  <p><code>IQR = Q3 − Q1</code>은 가운데 50% 데이터가 퍼진 폭이에요. 정규분포에서 1.5×IQR 경계는 평균에서 약 2.7σ 지점이라, 데이터가 정규분포면 두 방법 결과가 비슷해요.</p>
+  <div class="note"><b>가리기 효과</b> 이상치가 평균을 끌고 표준편차를 키우면, 기준선이 넓어져서 정작 이상치의 |z|가 작게 나와요. 운임처럼 치우친 데이터에서는 IQR이 더 많이 잡아요. 그래도 1등석 운임이 비싼 건 오류가 아니라 사실이라, 결과는 도메인 지식으로 한 번 더 판단해요.</div>
+<pre>q1, q3 = fare.quantile(0.25), fare.quantile(0.75)
+iqr = q3 - q1
+iqr_out = fare[(fare &lt; q1 - 1.5*iqr) | (fare &gt; q3 + 1.5*iqr)]
+z = (fare - fare.mean()) / fare.std()
+z_out = fare[z.abs() &gt; 3]</pre>
+</section>
+
+<section id="clt">
+  <h2><small>07 · 표본평균은 결국 종 모양</small>중심극한정리</h2>
+  <p>원래 분포가 어떤 모양이든, 표본 크기가 충분히 크면 <mark>표본평균들의 분포</mark>가 정규분포에 가까워져요. 경험 법칙은 n ≥ 30이에요.</p>
+  <div class="tbl"><table>
+    <tr><th>원래 분포</th><th>필요한 표본 크기</th></tr>
+    <tr><td>이미 정규분포에 가까움</td><td>10개 이하도 충분</td></tr>
+    <tr><td>약간 치우침</td><td>30개 정도</td></tr>
+    <tr><td>심하게 치우침 (운임, 연봉)</td><td>50 ~ 100개 이상</td></tr>
+  </table></div>
+  <ul>
+    <li>정규분포가 되는 건 원래 데이터가 아니라 <b>표본평균들</b>이에요.</li>
+    <li>표본평균들의 퍼짐은 <b>표준오차</b> <code>σ / √n</code>이에요. n이 4배면 절반으로 줄어요.</li>
+    <li>그래서 원래 데이터가 정규분포가 아니어도 평균에 대한 신뢰구간, t-검정을 할 수 있어요.</li>
+  </ul>
+  <h3>실습 코드에서 짚을 것</h3>
+  <div class="tbl"><table>
+    <tr><th>코드</th><th>뜻</th></tr>
+    <tr><td><code>np.random.exponential(scale=2, size=10000)</code></td><td>평균 2인 지수분포 1만 개. 일부러 비정규분포로 시작해야 CLT를 보여 줄 수 있어요.</td></tr>
+    <tr><td><code>np.random.choice(population, size=n, replace=False)</code></td><td>비복원 추출로 n개 뽑기, 1,000번 반복</td></tr>
+    <tr><td><code>for _ in range(1000)</code></td><td>_는 "반복은 하지만 그 숫자는 안 쓴다"는 관례</td></tr>
+    <tr><td><code>enumerate(sample_sizes, 1)</code></td><td>인덱스를 1부터 시작</td></tr>
+    <tr><td><code>plt.subplot(2, 3, i)</code></td><td>2행 3열 중 i번째 칸. MATLAB 방식이라 <b>1부터</b> 세고 0은 에러. <code>plt.subplots</code>의 <code>axes[0, 0]</code>은 0부터.</td></tr>
+  </table></div>
+  <h3>seed와 random_state</h3>
+  <div class="tbl"><table>
+    <tr><th>구분</th><th><code>np.random.seed(42)</code></th><th><code>random_state=42</code></th></tr>
+    <tr><td>형태</td><td>따로 실행하는 함수</td><td>함수 안 매개변수</td></tr>
+    <tr><td>범위</td><td>이후 numpy 난수 <b>전체</b></td><td>그 호출 <b>하나</b>만</td></tr>
+    <tr><td>비유</td><td>모두가 공용 난수 줄 하나를 나눠 씀</td><td>작업마다 자기 줄을 가짐</td></tr>
+    <tr><td>약점·강점</td><td>코드 한 줄 끼우면 뒤 결과가 전부 밀림</td><td>순서가 바뀌어도 안전</td></tr>
+  </table></div>
+  <p>요즘 numpy 권장은 <code>rng = np.random.default_rng(42)</code>로 개인 난수 생성기를 만드는 방식이에요. 컴퓨터 난수는 정해진 공식으로 만든 의사난수라서, seed는 그 줄의 시작점이에요. 42에는 특별한 의미가 없어요.</p>
+</section>
+
+<section id="prob">
+  <h2><small>08 · 드디어</small>확률</h2>
+  <div class="formula">P(A) = A가 일어나는 경우의 수 / 모든 경우의 수</div>
+  <p>동전 2개: 모든 경우 4가지(앞앞, 앞뒤, 뒤앞, 뒤뒤), 같은 면 2가지라서 2/4 = 0.5. 경우의 수는 전체를 넘을 수 없으니 확률은 항상 0 ~ 1이에요. 주사위 확률분포는 1부터 6까지 각각 1/6이고, 모두 더하면 1이에요.</p>
+  <h3>배달 시간 문제</h3>
+  <div class="tbl"><table>
+    <tr><th>질문</th><th>계산</th><th>답</th></tr>
+    <tr><td>가장 가능성 큰 시간대</td><td>최대 확률</td><td>30 ~ 40분 (40%)</td></tr>
+    <tr><td>30분 미만</td><td>10% + 25%</td><td>35%</td></tr>
+    <tr><td>40분 이상</td><td>20% + 5%</td><td>25%</td></tr>
+  </table></div>
+  <p>평균 35분인 두 업체 중 중요한 약속이면 <b>업체 A</b>(대부분 30~40분). 업체 B는 10분 아니면 60분이라 지각 위험이 커요. 확률 파트에서도 결국 <mark>평균과 퍼짐을 같이</mark> 봐요.</p>
+  <div class="note"><b>야구 승률 0%의 진짜 뜻</b> 중계 화면의 승리 확률은 과거 같은 상황(이닝, 점수 차, 아웃, 주자)에서 실제로 몇 번 이겼는지로 만든 경험적 확률이에요. 0%는 "불가능"이 아니라 "기록상 뒤집은 사례가 없었다"예요. 반올림으로 0%가 되는 경우도 많아요. 관찰되지 않음과 불가능은 달라요(블랙 스완). 과거 데이터는 동굴 벽의 그림자예요.</div>
+  <h3>이산 vs 연속</h3>
+  <div class="tbl"><table>
+    <tr><th>구분</th><th>값의 성격</th><th>예</th></tr>
+    <tr><td>이산 확률분포</td><td>하나씩 셀 수 있음</td><td>주사위 눈, 구매 고객 수</td></tr>
+    <tr><td>연속 확률분포</td><td>범위 안에서 연속적으로 잼</td><td>키, 배달 시간</td></tr>
+  </table></div>
+  <p class="muted">이산·연속은 값의 종류, 균등·이항·정규·포아송은 확률을 배분하는 방식이에요. 주사위 한 번은 이산 균등분포, 10번 던져 6이 나온 횟수는 이항분포예요.</p>
+</section>
+
+<section id="dist">
+  <h2><small>09 · 실험에서 무엇을 기록하나</small>분포 9종 도감</h2>
+  <p>먼저 아래 질문을 따라가서 분포를 찾아보고, 도감 카드로 내려가서 확인해 보세요.</p>
+  <div class="finder" id="finder"></div>
+  <div class="dists" id="dists"></div>
+  <div class="note"><b>짝꿍 분포</b> 같은 현상을 다르게 기록하면 분포가 바뀌어요. 한 시간 동안 버스가 몇 대 오나는 포아송, 다음 버스까지 몇 분 기다리나는 지수. 10번 중 성공 횟수는 이항, 첫 성공까지 몇 번은 기하. 결과가 둘이면 베르누이·이항, 여럿이면 범주형·다항이에요.</div>
+</section>
+
+<section id="scale">
+  <h2><small>10 · 큰 단위가 독차지한다</small>스케일링과 모델</h2>
+  <p>그래프는 숫자의 크기를 그려서, 단위가 크면 중요해 보이고 작으면 묻혀요. 나이(0~80)와 연봉(0~1억)을 한 그래프에 그리면 나이의 퍼짐은 바닥에 납작하게 사라져요. cm와 m가 섞인 키는 가짜 봉우리를 만들어요.</p>
+  <div class="tbl"><table>
+    <tr><th>방법</th><th>계산</th><th>결과</th><th>언제</th></tr>
+    <tr><td>표준화 StandardScaler</td><td><code>(x − 평균) / σ</code></td><td>평균 0, σ 1</td><td>기본. Z-score와 같아요</td></tr>
+    <tr><td>정규화 MinMaxScaler</td><td><code>(x − min) / (max − min)</code></td><td>0 ~ 1</td><td>범위를 딱 맞출 때. 이상치에 약함</td></tr>
+    <tr><td>로버스트 RobustScaler</td><td><code>(x − 중앙값) / IQR</code></td><td>중앙값 0 기준</td><td>이상치가 많을 때</td></tr>
+  </table></div>
+  <ul>
+    <li><b>표준화는 스케일링의 한 종류</b>예요. 포함 관계예요.</li>
+    <li>스케일링에서 "정규화"는 보통 Min-Max이고, 정규분포와는 관계없어요.</li>
+    <li>세 방법 모두 눈금만 바꾸는 선형 변환이라 <b>분포 모양은 그대로</b>예요. 치우침을 펴려면 <code>np.log1p</code> 같은 변환이 필요해요.</li>
+    <li>모델을 만들 땐 평균·σ를 학습 데이터로만 <code>fit</code> 해요. 테스트 데이터까지 쓰면 데이터 누수예요.</li>
+  </ul>
+  <h3>뉴런이 놀라는 이유</h3>
+  <p>뉴런 입력은 <code>z = w₁×나이 + w₂×연봉 + b</code>. 가중치 0.01로 시작하면 나이는 0.35, 연봉은 500,000이 들어가요.</p>
+  <div class="tbl"><table>
+    <tr><th>현상</th><th>무슨 일</th></tr>
+    <tr><td>입력 쏠림</td><td>출력을 연봉이 혼자 결정</td></tr>
+    <tr><td>활성화 포화</td><td>sigmoid·tanh가 1에 붙어 기울기 ≈ 0, 학습 정지 (기울기 소실)</td></tr>
+    <tr><td>업데이트 불균형</td><td>학습률을 크게 잡으면 연봉 가중치가 튕기고, 작게 잡으면 나이 가중치가 안 움직임</td></tr>
+  </table></div>
+  <h3>어떤 모델에 스케일링이 필요한가</h3>
+  <div class="tbl"><table>
+    <tr><th>모델</th><th>계산하는 것</th><th>스케일링 안 하면</th></tr>
+    <tr><td>K-means, 계층적 클러스터링</td><td>점 사이 거리</td><td>연봉 축으로만 군집이 나뉨</td></tr>
+    <tr><td>DBSCAN</td><td>반경 eps 안 이웃</td><td>eps 하나로 두 단위를 못 맞춤</td></tr>
+    <tr><td>KNN</td><td>가까운 k개 이웃</td><td>이웃 = 연봉 비슷한 사람</td></tr>
+    <tr><td>SVM</td><td>마진(거리), RBF 커널</td><td>사실상 1차원 분류</td></tr>
+    <tr><td>PCA</td><td>분산이 큰 방향</td><td>연봉이 첫 주성분 독차지</td></tr>
+    <tr><td>신경망</td><td>가중치 × 입력</td><td>뉴런이 놀람</td></tr>
+    <tr><td>Ridge, Lasso</td><td>가중치 크기 벌점</td><td>작은 단위 변수가 부당하게 벌점</td></tr>
+    <tr><td><b>트리 계열, 나이브 베이즈</b></td><td>순서로 나누기, 변수별 확률</td><td>영향 거의 없음</td></tr>
+  </table></div>
+  <p class="muted">한 줄 판별: 거리, 내적, 분산, 경사하강법 중 하나라도 쓰면 스케일링, 순서로 나누기만 하면 안 해도 돼요.</p>
+  <h3>분류 모델의 오차: 교차 엔트로피</h3>
+  <p>출력층 노드는 클래스 수만큼 있고, 소프트맥스로 각 클래스 확률(합 1)을 내보내요. 정답은 <b>원-핫 인코딩</b>으로 같은 모양으로 바꿔서 비교해요.</p>
+  <div class="tbl"><table>
+    <tr><th>정답</th><th>원-핫</th><th>모델 예측</th><th>손실 = −log(정답 확률)</th></tr>
+    <tr><td>setosa</td><td class="mono">[1, 0, 0]</td><td class="mono">[0.9, 0.07, 0.03]</td><td class="num">0.11</td></tr>
+    <tr><td>setosa</td><td class="mono">[1, 0, 0]</td><td class="mono">[0.7, 0.2, 0.1]</td><td class="num">0.36</td></tr>
+    <tr><td>setosa</td><td class="mono">[1, 0, 0]</td><td class="mono">[0.1, 0.6, 0.3]</td><td class="num">2.30</td></tr>
+  </table></div>
+  <ul>
+    <li>자신 있게 틀릴수록 손실이 급격히 커져요.</li>
+    <li>2개 분류는 Binary Cross-Entropy(베르누이), 3개 이상은 Categorical Cross-Entropy(범주형).</li>
+    <li>회귀의 MSE는 분산과 같은 구조(빼기 → 제곱 → 평균)이고 정규분포 오차를 가정해요. 가정한 분포가 오차 함수를 정해요.</li>
+    <li>0, 1, 2로 번호를 붙이는 레이블 인코딩은 없는 순서·크기를 만들 수 있어서, 원-핫으로 모든 클래스를 동등하게 둬요.</li>
+  </ul>
+</section>
+
+<section id="notebook">
+  <h2><small>11 · Lv1.기초통계분석.ipynb</small>실습 노트 포인트</h2>
+  <div class="tbl"><table>
+    <tr><th>셀</th><th>결과</th><th>짚을 점</th></tr>
+    <tr><td>Shapiro-Wilk</td><td>0.9777 / 0.4595</td><td><code># 즉 정규분포</code> 주석은 "정규분포로 봐도 무리 없음"으로 고쳐 읽기</td></tr>
+    <tr><td><code>np.std(data)</code></td><td>0.3489</td><td>n으로 나눈 모집단 표준편차</td></tr>
+    <tr><td>타이타닉 age</td><td>평균 29.70, 표준편차 14.53</td><td>z_score의 표준편차 0.9999… → 표준화 성공</td></tr>
+    <tr><td>888번 행</td><td>age NaN → z_score NaN</td><td>결측치는 변환 전에 처리</td></tr>
+    <tr><td>fare 바이올린</td><td>대부분 100 미만, 최대 512</td><td>오른쪽 꼬리. 평균 &gt; 중앙값, IQR·RobustScaler·로그 변환 후보</td></tr>
+    <tr><td>생존별 fare</td><td>분포 모양이 다름</td><td>평균만 비교하지 말고 모양을 같이</td></tr>
+  </table></div>
+  <h3>파생변수 만들기</h3>
+  <p>기존 변수를 계산하거나 변형해서 새로 만든 변수예요. CRISP-DM의 Data Preparation → Construct Data 단계예요.</p>
+<pre>df["z_score"]         = (df["age"] - df["age"].mean()) / df["age"].std()   # 표준화
+df["family_size"]     = df["sibsp"] + df["parch"] + 1                     # 결합
+df["is_alone"]        = (df["family_size"] == 1).astype(int)               # 조건
+df["fare_per_person"] = df["fare"] / df["family_size"]                     # 비율
+df["age_group"]       = pd.cut(df["age"], bins=[0,12,19,39,59,100],
+                               labels=["아동","청소년","청년","중년","노년"])  # 구간화
+df["log_fare"]        = np.log1p(df["fare"])                               # 변환</pre>
+  <p class="muted">원래 변수의 결측치는 파생변수에도 그대로 따라와요.</p>
+</section>
+
+<section id="quiz">
+  <h2><small>12 · 16문제, 쉽고 가볍게</small>오늘의 퀴즈</h2>
+  <p class="muted">틀려도 해설이 바로 나와요. 오늘 실제로 걸렸던 함정 문제도 하나 들어 있어요.</p>
+  <div class="qbox" id="qbox"></div>
+</section>
+
+</main>
+<footer><div class="wrap">Data Science Lv1 기초통계 · 다음 자료: 상관·회귀, 샘플링, 스케일링</div></footer>
+
+<script>
+(function(){
+/* ---------- bell curve ---------- */
+const svg=document.getElementById('bell');
+const W=640,H=230,base=180,top=24,x0=40,x1=600;
+const pdf=z=>Math.exp(-z*z/2);
+const X=z=>x0+(z+3.6)/7.2*(x1-x0), Y=p=>base-p*(base-top);
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e}
+function area(a,b){let d=`M${X(a)},${base}`;for(let z=a;z<=b+1e-9;z+=0.02)d+=` L${X(z).toFixed(1)},${Y(pdf(z)).toFixed(1)}`;return d+` L${X(b)},${base} Z`}
+[[3,.10],[2,.16],[1,.26]].forEach(([k,o])=>el('path',{d:area(-k,k),style:`fill:var(--accent);fill-opacity:${o}`}));
+let d='';for(let z=-3.6;z<=3.6;z+=0.02)d+=(d?' L':'M')+X(z).toFixed(1)+','+Y(pdf(z)).toFixed(1);
+el('path',{d,style:'fill:none;stroke:var(--accent);stroke-width:2.4'});
+el('line',{x1:x0,y1:base,x2:x1,y2:base,style:'stroke:var(--line);stroke-width:1.5'});
+for(let k=-3;k<=3;k++){
+  el('line',{x1:X(k),y1:base,x2:X(k),y2:base+6,style:'stroke:var(--muted)'});
+  const t=el('text',{x:X(k),y:base+22,'text-anchor':'middle',style:'fill:var(--muted);font:12px var(--f-mono)'});t.textContent=k===0?'μ':(k>0?'+':'−')+Math.abs(k)+'σ';
+}
+const labels=[[1,'68%',Y(pdf(0))+44],[2,'95%',Y(pdf(1.5))-6],[3,'99.7%',Y(pdf(2.5))-6]];
+labels.forEach(([k,txt,y],i)=>{
+  if(i===0){const t=el('text',{x:X(0),y,'text-anchor':'middle',style:'fill:var(--ink);font:600 15px var(--f-body)'});t.textContent='±1σ · 68%';return}
+  [-1,1].forEach(s=>{const zz=s*(k-0.5);const t=el('text',{x:X(zz),y:Y(pdf(zz))-8,'text-anchor':'middle',style:'fill:var(--ink);font:12px var(--f-mono)'});if(s>0)t.textContent=`±${k}σ ${txt}`;});
+});
+
+/* ---------- z calculator ---------- */
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y}
+const cdf=z=>0.5*(1+erf(z/Math.SQRT2));
+const m=document.getElementById('cMean'),s=document.getElementById('cSd'),xv=document.getElementById('cX'),out=document.getElementById('cOut');
+const f=n=>Number.isFinite(n)?(Math.round(n*100)/100).toLocaleString('ko-KR',{maximumFractionDigits:2}):'–';
+function calc(){
+  const mu=parseFloat(m.value),sd=parseFloat(s.value),x=parseFloat(xv.value);
+  if(!(sd>0)||!Number.isFinite(mu)||!Number.isFinite(x)){out.innerHTML='<p class="muted">평균과 값은 숫자로, 표준편차는 0보다 크게 넣어 주세요.</p>';return}
+  const z=(x-mu)/sd,p=cdf(z)*100;
+  const dir=Math.abs(z)<0.05?'평균과 거의 같아요':(z>0?`평균보다 <b>${f(Math.abs(z))}σ 위</b>예요`:`평균보다 <b>${f(Math.abs(z))}σ 아래</b>예요`);
+  const flag=Math.abs(z)>3?' <mark>|z| &gt; 3, 이상치 후보</mark>':(Math.abs(z)>2?' <mark>2σ 밖</mark>':'');
+  out.innerHTML=`<div class="zbig">z = <b>${z>=0?'+':''}${f(z)}</b></div>
+  <p style="margin:0">${dir}. 정규분포라고 가정하면 하위 약 <b>${f(p)}%</b> 지점이에요.${flag}</p>
+  <div class="tbl" style="margin:0"><table><tr><th>범위</th><th>하한</th><th>상한</th></tr>
+  ${[1,2,3].map(k=>`<tr><td>±${k}σ</td><td class="num">${f(mu-k*sd)}</td><td class="num">${f(mu+k*sd)}</td></tr>`).join('')}</table></div>`;
+}
+[m,s,xv].forEach(i=>i.addEventListener('input',calc));
+const presets={titanic:[29.70,14.53,38],height:[170,5,180],math:[70,5,80]};
+document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>{const p=presets[b.dataset.preset];m.value=p[0];s.value=p[1];xv.value=p[2];calc()}));
+calc();
+
+/* ---------- distributions ---------- */
+const D=[
+ {id:'bernoulli',nm:'베르누이',en:'Bernoulli',kind:'이산',bars:[0.4,0.6],labels:['0','1'],
+  one:'결과가 둘(성공/실패), 딱 한 번',life:'동전 한 번, 오늘 우산 챙겼나',work:'타이타닉 survived, 광고 클릭 여부, 이진 분류 손실(BCE)'},
+ {id:'binomial',nm:'이항',en:'Binomial',kind:'이산',bars:[1,8,28,56,70,56,28,8,1],
+  one:'성공확률 p로 n번 해서 성공한 횟수',life:'자유투 10개 중 몇 개 들어갔나',work:'광고 100명 노출 중 클릭 수, A/B 테스트 전환 수'},
+ {id:'geometric',nm:'기하',en:'Geometric',kind:'이산',bars:[.4,.24,.144,.086,.052,.031],
+  one:'첫 성공까지 시도한 횟수',life:'뽑기에서 원하는 카드 나올 때까지 몇 번',work:'첫 구매까지 방문 수, 몇 번째 영업 콜에 계약'},
+ {id:'poisson',nm:'포아송',en:'Poisson',kind:'이산',bars:[.05,.149,.224,.224,.168,.1,.05,.022],
+  one:'정해진 시간·공간 안에서 드문 사건이 일어난 횟수 (평균 = 분산 = λ)',life:'한 시간에 오는 카톡 수',work:'시간당 고객센터 전화 수, 하루 서버 장애 건수'},
+ {id:'categorical',nm:'범주형',en:'Categorical',kind:'이산',bars:[.3,.5,.2],
+  one:'여러 범주 중 딱 하나, 한 번',life:'점심 메뉴 하나 고르기',work:'iris 품종 3분류, embarked(S·C·Q), 다중 분류 손실(CCE)'},
+ {id:'multinomial',nm:'다항',en:'Multinomial',kind:'이산',bars:[.15,.25,.4,.2],
+  one:'여러 범주 각각이 몇 번 나왔나, 여러 번',life:'주사위 60번 던져 눈별 횟수',work:'100송이 품종별 개수, 리뷰 별점 1~5 개수'},
+ {id:'uniform',nm:'균등',en:'Uniform',kind:'이산·연속',bars:[1,1,1,1,1,1],
+  one:'가능한 모든 값의 확률이 같음',life:'주사위 한 번',work:'무작위 샘플링, A/B 실험 무작위 배정, 가중치 초기화'},
+ {id:'exponential',nm:'지수',en:'Exponential',kind:'연속',fn:x=>Math.exp(-x),range:[0,5],
+  one:'다음 사건까지 기다리는 시간 (오른쪽 꼬리)',life:'다음 버스까지 몇 분',work:'고객 도착 간격, 장비 고장까지 시간, 오늘 CLT 실습 모집단'},
+ {id:'normal',nm:'정규',en:'Normal',kind:'연속',fn:x=>Math.exp(-x*x/2),range:[-3.2,3.2],
+  one:'평균 중심 좌우 대칭 종 모양',life:'키, 시험 점수',work:'측정 오차, Z-score 이상치 기준, 회귀 MSE 가정, 표본평균(CLT)'}
+];
+const grid=document.getElementById('dists');
+function mini(o){
+  const w=240,h=64,p=4;let inner='';
+  if(o.bars){const mx=Math.max(...o.bars),n=o.bars.length,bw=(w-2*p)/n;
+    o.bars.forEach((v,i)=>{const bh=v/mx*(h-12);inner+=`<rect x="${(p+i*bw+bw*.15).toFixed(1)}" y="${(h-4-bh).toFixed(1)}" width="${(bw*.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" style="fill:var(--accent);fill-opacity:.75"></rect>`})}
+  else{const [a,b]=o.range;let dd='',ar='';for(let i=0;i<=80;i++){const x=a+(b-a)*i/80,px=p+(w-2*p)*i/80,py=h-4-o.fn(x)*(h-12);dd+=(i?' L':'M')+px.toFixed(1)+','+py.toFixed(1)}
+    ar=dd+` L${w-p},${h-4} L${p},${h-4} Z`;inner=`<path d="${ar}" style="fill:var(--accent);fill-opacity:.15"></path><path d="${dd}" style="fill:none;stroke:var(--accent);stroke-width:2"></path>`}
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="${h-4}" x2="${w}" y2="${h-4}" style="stroke:var(--line)"></line>${inner}</svg>`;
+}
+grid.innerHTML=D.map(o=>`<article class="dist" id="d-${o.id}"><div class="head"><span class="nm">${o.nm}</span><span class="tag">${o.en} · ${o.kind}</span></div>${mini(o)}<div class="one">${o.one}</div><dl><dt>생활</dt><dd>${o.life}</dd><dt>실무</dt><dd>${o.work}</dd></dl></article>`).join('');
+
+/* ---------- distribution finder ---------- */
+const T={
+ start:{q:'기록하는 값은 셀 수 있나요, 잴 수 있나요?',o:[['셀 수 있어요 (개수, 횟수, 결과)','count'],['잴 수 있어요 (키, 시간, 길이)','measure']]},
+ measure:{q:'모양이 어떤가요?',o:[['평균 중심 좌우 대칭 종 모양','=normal'],['다음 사건까지 기다리는 시간','=exponential'],['범위 안 어디든 똑같이 나옴','=uniform']]},
+ count:{q:'결과가 몇 종류예요?',o:[['둘 (성공/실패, 예/아니오)','two'],['셋 이상의 범주','many'],['정해진 시간 동안 사건이 몇 번','=poisson'],['모든 결과 확률이 같음 (주사위)','=uniform']]},
+ two:{q:'무엇을 기록하나요?',o:[['딱 한 번의 결과','=bernoulli'],['n번 중 성공한 횟수','=binomial'],['첫 성공까지 시도 횟수','=geometric']]},
+ many:{q:'몇 번 관찰하나요?',o:[['한 번, 하나의 라벨','=categorical'],['여러 번, 범주별 개수','=multinomial']]}
+};
+const fb=document.getElementById('finder');let path=[];
+function renderFinder(node){
+  if(node.startsWith('=')){const o=D.find(x=>x.id===node.slice(1));
+    fb.innerHTML=`<div class="path">${path.join(' → ')}</div><div class="res">정답은 <b>${o.nm} 분포</b><br>${o.one}</div><div class="opts" style="margin-top:12px"><button class="btn primary" type="button" id="fGo">도감에서 보기</button><button class="btn" type="button" id="fRe">처음부터</button></div>`;
+    document.getElementById('fGo').onclick=()=>{const c=document.getElementById('d-'+o.id);c.scrollIntoView({block:'center'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1600)};
+    document.getElementById('fRe').onclick=()=>{path=[];renderFinder('start')};return}
+  const n=T[node];
+  fb.innerHTML=`${path.length?`<div class="path">${path.join(' → ')}</div>`:'<div class="path">분포 찾기</div>'}<div class="q">${n.q}</div><div class="opts">${n.o.map((x,i)=>`<button class="btn" type="button" data-i="${i}">${x[0]}</button>`).join('')}</div>`;
+  fb.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const x=n.o[b.dataset.i];path.push(x[0].split(' (')[0]);renderFinder(x[1])});
+}
+renderFinder('start');
+
+/* ---------- quiz ---------- */
+const Q=[
+ {q:'친구가 "우리 반 평균 71점!"이라고 자랑해요. 점수가 얼마나 퍼져 있는지 알려면 뭘 물어봐야 할까요?',c:['최빈값','표준편차','평균 한 번 더','반 학생 이름'],a:1,e:'평균이 같아도 70·72·71인 반과 45·73·95인 반은 완전히 달라요. 퍼짐은 표준편차(또는 분산, 범위)로 봐요.'},
+ {q:'오늘의 함정 문제. 다음 중 "통계 지표"가 아닌 것은?',c:['분산','표준편차','히스토그램','IQR'],a:2,e:'히스토그램은 퍼짐을 보여 주는 그림이지 숫자가 아니에요. 지표·값·통계량을 물으면 숫자로 답해요.'},
+ {q:'[2, 4, 6]의 분산(n으로 나눔)은?',c:['4','8','약 2.67','약 1.63'],a:2,e:'평균 4, 편차 −2·0·2, 제곱 4·0·4, 합 8을 3으로 나눠 약 2.67. 1.63은 거기에 루트를 씌운 표준편차예요.'},
+ {q:'표본 분산을 n−1로 나누는 이유는?',c:['계산이 빨라서','평균을 쓰는 순간 자유도가 하나 줄어서','표본이 항상 30개 이상이라서','pandas가 그렇게 정해서'],a:1,e:'평균을 쓰면 편차 합이 0이라는 제약이 생겨서 자유롭게 움직이는 값이 n−1개예요. 그래서 n−1로 나눠 과소추정을 보정해요.'},
+ {q:'x̄와 μ의 관계로 맞는 것은?',c:['항상 같은 값이다','x̄는 표본평균이고 μ를 추정한다','μ는 표본에서 계산한다','x̄는 그리스 문자다'],a:1,e:'μ는 동굴 밖 실체(모집단 평균), x̄는 벽의 그림자(표본평균)예요. x̄ ≈ μ, 같다가 아니라 추정해요.'},
+ {q:'평균 키 170cm, 표준편차 5cm. 가운데 약 95% 학생의 키 범위는?',c:['165 ~ 175','160 ~ 180','155 ~ 185','150 ~ 190'],a:1,e:'95%는 ±2σ. 170 ± 10이라 160 ~ 180cm예요. 정확히 95%가 필요하면 ±1.96σ를 써요.'},
+ {q:'수학 80점(평균 70, σ 5), 영어 90점(평균 85, σ 10). 반에서 상대적으로 더 잘한 과목은?',c:['영어, 점수가 더 높으니까','수학, z = 2.0','둘이 똑같다','알 수 없다'],a:1,e:'수학 z = (80−70)/5 = 2.0, 영어 z = (90−85)/10 = 0.5. Z-score는 값에 집단 안 위치라는 의미를 붙여 줘요.'},
+ {q:'타이타닉 운임처럼 오른쪽 꼬리가 긴 데이터에서 이상치를 찾을 때 더 믿을 만한 방법은?',c:['Z-score, |z| > 3','IQR, 1.5 × IQR 밖','평균에서 10 이상','최댓값만 삭제'],a:1,e:'큰 값들이 평균과 표준편차를 끌어서 Z-score 기준이 느슨해져요(가리기 효과). 중앙값·사분위수 기반 IQR이 덜 흔들려요.'},
+ {q:'중심극한정리에서 정규분포에 가까워지는 것은?',c:['원래 데이터 자체','표본평균들의 분포','최댓값들의 분포','모집단의 모양'],a:1,e:'원래 데이터는 계속 치우쳐 있어요. 표본을 여러 번 뽑아 낸 평균들이 종 모양이 돼요. n ≥ 30은 어림값이에요.'},
+ {q:'오른쪽으로 치우친 분포(연봉 등)에서 평균과 중앙값은?',c:['평균 > 중앙값','평균 < 중앙값','항상 같다','중앙값이 꼬리로 끌려간다'],a:0,e:'평균은 극단값까지 다 더하니까 꼬리 쪽으로 끌려가요. 그래서 이런 데이터의 대푯값은 중앙값이 더 정확해요.'},
+ {q:'나이와 연봉을 스케일링하지 않아도 결과가 거의 안 바뀌는 모델은?',c:['KNN','K-means','랜덤포레스트','SVM'],a:2,e:'트리 계열은 "연봉이 5천보다 큰가?"처럼 순서로 나누기만 해서 단위 영향을 거의 안 받아요. 나머지는 거리를 계산해요.'},
+ {q:'하루 동안 고객센터에 걸려 오는 전화 수는 어떤 분포가 잘 맞을까요?',c:['정규','지수','포아송','베르누이'],a:2,e:'정해진 시간 안에 사건이 몇 번 일어났나는 포아송이에요. 다음 전화까지 기다리는 시간을 기록하면 지수분포가 돼요.'},
+ {q:'정답이 setosa인데 모델 A는 setosa에 0.9, 모델 B는 0.1을 줬어요. 손실이 더 큰 쪽은?',c:['A','B','같다','손실은 정답과 무관하다'],a:1,e:'교차 엔트로피 = −log(정답 확률). A는 0.11, B는 2.30. 자신 있게 틀릴수록 크게 벌받아요.'},
+ {q:'np.random.seed(42)와 random_state=42의 차이로 맞는 것은?',c:['완전히 같다','seed는 이후 numpy 난수 전체, random_state는 그 함수 하나만 고정','random_state는 numpy 전용','seed는 scikit-learn 전용'],a:1,e:'seed는 모두가 나눠 쓰는 공용 난수 줄의 시작점이라 코드 한 줄 끼우면 뒤 결과가 밀려요. random_state는 작업마다 자기 줄을 가져요.'},
+ {q:'plt.subplot(2, 3, i)에서 첫 번째 칸의 i는?',c:['0','1','(0, 0)','6'],a:1,e:'subplot은 MATLAB 방식을 따라 1부터 세요. 그래서 enumerate(..., 1)로 i를 1부터 시작했어요. plt.subplots의 axes[0, 0]은 0부터예요.'},
+ {q:'야구 중계에 "승리 확률 0%"가 떴어요. 가장 정확한 해석은?',c:['절대 이길 수 없다','과거 같은 상황에서 뒤집은 기록이 없었다(또는 반올림)','심판이 정했다','상대 팀 확률이 100%를 넘었다'],a:1,e:'경험적 확률이라 관찰되지 않음일 뿐 불가능은 아니에요. 0.3%를 정수로 표시하면 0%가 되기도 해요.'}
+];
+const box=document.getElementById('qbox');let qi=0,score=0,wrong=[];
+const L='ABCD';
+function renderQ(){
+  if(qi>=Q.length){
+    const msg=score===Q.length?'만점! 오늘 σ 마스터예요.':score>=12?'아주 잘했어요. 틀린 것만 한 번 더 보면 끝.':score>=8?'절반 넘게 맞췄어요. 아래 개념만 다시 보면 돼요.':'괜찮아요. 위 노트를 한 번 훑고 다시 풀어 봐요.';
+    box.innerHTML=`<div class="final"><div class="eyebrow">결과</div><div class="score">${score} / ${Q.length}</div><p style="margin:10px auto">${msg}</p>${wrong.length?`<ul>${wrong.map(i=>`<li><b>Q${i+1}.</b> ${Q[i].e}</li>`).join('')}</ul>`:''}<button class="btn primary" type="button" id="qRe">다시 풀기</button></div>`;
+    document.getElementById('qRe').onclick=()=>{qi=0;score=0;wrong=[];renderQ()};return}
+  const it=Q[qi];
+  box.innerHTML=`<div class="qtop"><span>Q${qi+1} / ${Q.length}</span><span>점수 ${score}</span></div><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div>
+  <div class="qtext">${it.q}</div><div class="choices">${it.c.map((c,i)=>`<button class="choice" type="button" data-i="${i}"><span class="ltr">${L[i]}</span><span>${c}</span></button>`).join('')}</div><div id="qx"></div>`;
+  box.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{
+    const pick=+b.dataset.i,ok=pick===it.a;if(ok)score++;else wrong.push(qi);
+    box.querySelectorAll('.choice').forEach((c,i)=>{c.disabled=true;if(i===it.a)c.classList.add('right');else if(i===pick)c.classList.add('wrong')});
+    document.getElementById('qx').innerHTML=`<div class="explain ${ok?'ok':'no'}"><b>${ok?'정답!':'아쉬워요. 정답은 '+L[it.a]}</b>${it.e}</div><div class="qnav"><button class="btn primary" type="button" id="qNext">${qi===Q.length-1?'결과 보기':'다음 문제'}</button></div>`;
+    box.querySelector('.qtop span:last-child').textContent='점수 '+score;
+    const n=document.getElementById('qNext');n.onclick=()=>{qi++;renderQ()};n.focus();
+  });
+}
+renderQ();
+})();
+</script>
