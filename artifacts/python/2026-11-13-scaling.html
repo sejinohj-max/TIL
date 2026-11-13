@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스케일링 놀이터: 표준화부터 벡터 정규화까지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF8EC; --ink:#2B2A33; --soft:#6B6878; --card:#FFFFFF;
+    --orange:#FF8A3D; --teal:#1FA59A; --yellow:#FFD23F; --pink:#F2557A; --blue:#5B7CFA; --purple:#9B6BDF; --line:#EADFCB;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;line-height:1.75;font-size:17px}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 18px 80px}
+  h1,h2,h3{font-family:'Jua',sans-serif;font-weight:400;line-height:1.3;margin:0 0 .4em}
+  h1{font-size:clamp(34px,6vw,52px)}
+  h2{font-size:clamp(25px,4.4vw,33px);margin-top:0}
+  h3{font-size:21px;margin-top:6px}
+  .hero{text-align:center;padding:20px 0 4px}
+  .hero .emoji{font-size:58px;line-height:1}
+  .hero p{color:var(--soft);max-width:580px;margin:8px auto 0}
+  nav{position:sticky;top:0;z-index:5;background:rgba(255,248,236,.94);backdrop-filter:blur(6px);padding:10px 0;margin:10px 0 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav a{flex:none;font-family:'Jua';font-size:15px;text-decoration:none;color:var(--ink);background:#fff;border:2px solid var(--line);border-radius:99px;padding:4px 12px}
+  nav a:hover{background:var(--yellow)}
+  .step{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:24px 22px;margin:26px 0;box-shadow:0 6px 0 var(--line);scroll-margin-top:64px}
+  .tag{display:inline-block;font-family:'Jua';font-size:15px;background:var(--yellow);padding:2px 12px;border-radius:99px;margin-bottom:8px}
+  .big{font-family:'Jua';font-size:22px}
+  .box{background:#FFF3DF;border-radius:14px;padding:14px 18px;margin:14px 0}
+  .box.teal{background:#E3F6F3}
+  .box.pink{background:#FDE7EC}
+  .box.blue{background:#E9EEFF}
+  .box.purple{background:#F2EAFC}
+  .math{font-family:'Jua';font-size:21px;text-align:center;background:#F5F1FF;border-radius:14px;padding:12px;margin:14px 0;overflow-x:auto}
+  .o{color:var(--orange);font-weight:700}
+  .t{color:var(--teal);font-weight:700}
+  .p{color:var(--pink);font-weight:700}
+  .b{color:var(--blue);font-weight:700}
+  .pu{color:var(--purple);font-weight:700}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+  pre{background:#2B2A33;color:#F5F1E8;border-radius:12px;padding:14px 16px;overflow-x:auto;line-height:1.6}
+  pre .c{color:#9C98A8}
+  pre .ok{color:#7FE0D3}
+  pre .bad{color:#FF9BB0}
+  p code,li code,td code{background:#F3EEE4;padding:1px 6px;border-radius:6px}
+  svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}
+  .stage{background:#FFFDF8;border:2px dashed var(--line);border-radius:16px;margin:14px 0;overflow:hidden}
+  .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+  .readout div{background:#FAF6EE;border-radius:12px;padding:10px 12px;text-align:center}
+  .readout b{display:block;font-family:'Jua';font-size:23px;font-weight:400}
+  .readout small{color:var(--soft)}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  button{font-family:'Jua';font-size:16px;border:none;border-radius:12px;padding:9px 15px;cursor:pointer;background:#EFE8DA;color:var(--ink);transition:transform .08s}
+  button:active{transform:scale(.96)}
+  button.sel{background:var(--ink);color:#fff}
+  button.go{background:var(--orange);color:#fff;font-size:18px;box-shadow:0 4px 0 #D9681F}
+  button.go.on{background:var(--teal);box-shadow:0 4px 0 #157A71}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:600px){.two{grid-template-columns:1fr}}
+  .cup{background:#FAF6EE;border-radius:16px;padding:14px}
+  label{display:flex;align-items:center;gap:10px;font-size:15px;margin:6px 0}
+  label span{width:78px}
+  input[type=range]{flex:1;accent-color:var(--orange)}
+  input[type=text]{font-family:inherit;font-size:16px;padding:9px 12px;border:2px solid var(--line);border-radius:10px;width:100%;background:#fff}
+  .verdict{font-family:'Jua';font-size:22px;text-align:center;padding:12px;border-radius:14px;margin-top:12px;transition:background .2s}
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:16px}
+  th,td{padding:9px 10px;border-bottom:2px solid var(--line);text-align:left;vertical-align:top}
+  th{font-family:'Jua';font-weight:400;font-size:17px}
+  table.grid td,table.grid th{text-align:center;border:2px solid var(--line);font-variant-numeric:tabular-nums;transition:background .25s}
+  table.grid th{background:#FAF6EE}
+  .hl-col{background:#FFE7D3 !important}
+  .hl-row{background:#D9F3EF !important}
+  .scaler{background:#FAF6EE;border-radius:16px;padding:14px 16px;margin:12px 0}
+  .scaler .head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .scaler .formula{font-family:'Jua';font-size:16px;color:var(--soft)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{font-family:ui-monospace,monospace;font-size:13px;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:2px 7px}
+  .chip.zero{border-color:var(--teal);background:#E3F6F3}
+  .chip.lost{border-color:var(--pink);background:#FDE7EC}
+  .badge{font-family:'Jua';font-size:14px;padding:2px 10px;border-radius:99px;background:#fff}
+  .sq{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:10px 0}
+  .sq div{background:#FAF6EE;border-radius:12px;padding:8px;text-align:center;font-family:'Jua';font-size:18px}
+  .sq small{display:block;font-family:'Noto Sans KR';font-size:12px;color:var(--soft)}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-family:'Jua';font-size:18px;margin:10px 0}
+  .flow span.n{background:#fff;border:2px solid var(--line);border-radius:10px;padding:4px 10px}
+  .flow span.arr{color:var(--soft)}
+  details{background:#FAF6EE;border-radius:12px;padding:10px 14px;margin:10px 0}
+  summary{font-family:'Jua';font-size:17px;cursor:pointer}
+  .q{margin:18px 0;padding-bottom:14px;border-bottom:2px dashed var(--line)}
+  .q p{margin:0 0 6px;font-weight:700}
+  .q .fb{margin-top:6px;font-size:15px;min-height:1.4em}
+  .q button.right{background:#BFEDE6}
+  .q button.wrong{background:#F9C9D3}
+  .score{font-family:'Jua';font-size:22px;text-align:center;margin-top:10px}
+  .end{text-align:center;color:var(--soft);margin-top:36px}
+  .note{font-size:14px;color:var(--soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="emoji">📏🍋🧭</div>
+    <h1>스케일링 놀이터</h1>
+    <p>키는 cm, 연봉은 원, 성적은 100점 만점… 서로 다른 잣대를 하나로 맞추는 법. 표준화부터 벡터 정규화, L2 노름, 데이터 누수까지 직접 만져 보며 이해해 봐요.</p>
+  </header>
+
+  <nav>
+    <a href="#why">① 왜 필요해?</a>
+    <a href="#fs">② 열 vs 행</a>
+    <a href="#lab">③ 스케일러 실험실</a>
+    <a href="#l2">④ L2 노름</a>
+    <a href="#norm">⑤ 벡터 정규화</a>
+    <a href="#lemon">⑥ 레모네이드</a>
+    <a href="#words">⑥½ 단어 벡터</a>
+    <a href="#dist">⑦ 거리 3형제</a>
+    <a href="#prob">⑧ 슬라이드 문제</a>
+    <a href="#leak">⑨ 데이터 누수</a>
+    <a href="#when">⑩ 언제 뭘 써?</a>
+    <a href="#quiz">🧠 퀴즈</a>
+  </nav>
+
+  <!-- 1 WHY -->
+  <section class="step" id="why">
+    <div class="tag">1단계</div>
+    <h2>스케일링이 왜 필요해? 🤔</h2>
+    <p><b>스케일링</b>은 데이터의 숫자 크기를 <b>같은 기준에 맞게 조정</b>하는 전처리예요. 한마디로 <b>서로 다른 잣대를 하나의 잣대로 바꾸는 것</b>이에요.</p>
+
+    <h3>🏫 예시 1: 등수 정하기</h3>
+    <p>수학은 100점 만점, 학점은 4.5점 만점이에요. 두 점수를 그냥 더해서 등수를 정하면 어떻게 될까요?</p>
+    <div class="btns">
+      <button id="gradeRaw" class="sel">그냥 더하기</button>
+      <button id="gradeZ">표준 점수로 바꿔서 더하기</button>
+    </div>
+    <div class="tblwrap"><table class="grid" id="gradeTbl"></table></div>
+    <div class="verdict" id="gradeVerdict"></div>
+    <p class="note">반 평균: 수학 70점(표준편차 10), 학점 3.5(표준편차 0.5)라고 가정했어요. 표준 점수 = (내 점수 − 평균) ÷ 표준편차.</p>
+    <div class="box">💡 그냥 더하면 숫자가 큰 수학이 결과를 <b>혼자 좌우</b>해요. 학점 1점 차이는 거의 티도 안 나죠. 스케일링은 이런 <b>숫자 크기 차이</b>를 없애 줘요. 어떤 과목을 더 중요하게 볼지는 스케일링이 아니라 <b>가중치</b>로 따로 정해요.</div>
+
+    <h3>📍 예시 2: 나랑 가장 비슷한 사람은? (거리 계산)</h3>
+    <p>키(cm)와 연봉(원)으로 "나와 가장 가까운 사람"을 찾아볼게요. KNN이나 클러스터링이 실제로 하는 일이에요.</p>
+    <div class="btns">
+      <button id="knnRaw" class="sel">스케일링 전</button>
+      <button id="knnZ">스케일링 후</button>
+    </div>
+    <div class="tblwrap"><table class="grid" id="knnTbl"></table></div>
+    <div class="verdict" id="knnVerdict"></div>
+    <p class="note">스케일링 후: 키 표준편차 10cm, 연봉 표준편차 1,000만 원으로 나눴다고 가정했어요.</p>
+
+    <h3>🤖 어떤 모델이 스케일링을 꼭 필요로 할까?</h3>
+    <div class="tblwrap"><table>
+      <tr><th>모델</th><th>필요?</th><th>이유</th></tr>
+      <tr><td>KNN, 클러스터링(K-means), SVM</td><td class="p">꼭 필요</td><td><b>거리</b>로 판단하는 모델이라, 숫자가 큰 속성이 거리를 독차지해요.</td></tr>
+      <tr><td>선형 모델, 신경망</td><td class="o">권장</td><td>학습이 더 <b>안정적이고 빨라져요</b>.</td></tr>
+      <tr><td>의사결정나무</td><td class="t">거의 불필요</td><td>"연봉 &gt; 2,000?"처럼 <b>속성 하나씩 기준값으로 자르기만</b> 해요. 단위가 바뀌면 기준값만 같이 바뀌고 결과는 똑같아요.</td></tr>
+    </table></div>
+  </section>
+
+  <!-- 2 FEATURE vs SAMPLE -->
+  <section class="step" id="fs">
+    <div class="tag">2단계</div>
+    <h2>스케일러 5형제, 두 가족으로 나뉜다 👨‍👩‍👧‍👦</h2>
+    <p>스케일러는 <b>어느 방향으로 계산하느냐</b>에 따라 두 가족으로 나뉘어요.</p>
+    <div class="two">
+      <div class="box" style="margin:0">
+        <h3>⬇️ feature-wise (열 단위)</h3>
+        <p style="margin:0">나이, 연봉 같은 <b>속성(열) 하나씩</b> 평균·표준편차·최댓값·최솟값을 구해서 조정해요. 모든 피처를 <b>비슷한 범위로 맞추는 것</b>, 우리가 흔히 말하는 "스케일링"이에요.</p>
+        <p style="margin:8px 0 0">👉 표준화, Min-Max, Robust, MaxAbs</p>
+      </div>
+      <div class="box teal" style="margin:0">
+        <h3>➡️ sample-wise (행 단위)</h3>
+        <p style="margin:0"><b>데이터 한 줄(행) 전체</b>를 하나의 화살표(벡터)로 보고, 그 길이를 1로 맞춰요. <b>크기는 뭉개지고 방향(비율 패턴)만</b> 남아요.</p>
+        <p style="margin:8px 0 0">👉 벡터 정규화 (Normalizer)</p>
+      </div>
+    </div>
+
+    <p style="margin-top:16px">아래 표에서 버튼을 눌러 <b>계산 방향</b>을 비교해 보세요.</p>
+    <div class="btns">
+      <button data-fs="raw" class="sel">원본</button>
+      <button data-fs="col">⬇️ 열 단위 (Min-Max)</button>
+      <button data-fs="row">➡️ 행 단위 (L2 정규화)</button>
+    </div>
+    <div class="tblwrap"><table class="grid" id="fsTbl"></table></div>
+    <div class="box" id="fsExplain"></div>
+  </section>
+
+  <!-- 3 LAB -->
+  <section class="step" id="lab">
+    <div class="tag">3단계</div>
+    <h2>스케일러 실험실 🧪 (feature-wise 4형제)</h2>
+    <p>열 하나에 들어 있는 숫자들을 4가지 스케일러로 동시에 바꿔 볼게요. 숫자를 직접 고치거나 버튼으로 골라 보세요.</p>
+    <input type="text" id="labIn" value="1, 2, 3, 4, 5, 6, 7" aria-label="숫자 목록 (쉼표로 구분)">
+    <div class="btns">
+      <button data-lab="1, 2, 3, 4, 5, 6, 7">😇 평범한 열</button>
+      <button data-lab="1, 2, 3, 4, 5, 6, 100">😈 이상치 100 등장</button>
+      <button data-lab="-10, 5, 15">➖ 음수 포함 (슬라이드 예시)</button>
+      <button data-lab="0, 0, 0, 3, 0, -2, 0, 6">🕳️ 0이 대부분 (희소)</button>
+    </div>
+    <div id="labOut"></div>
+
+    <div class="box pink">😈 <b>이상치 버튼을 눌러 보세요.</b> Min-Max와 MaxAbs는 100 하나 때문에 나머지가 전부 0 근처로 <b>찌그러져요</b>. 표준화도 꽤 휘둘리고요. Robust만 비교적 멀쩡하죠? 중앙값과 IQR은 이상치에 거의 안 흔들리기 때문이에요.</div>
+    <div class="box teal">🕳️ <b>희소 버튼을 눌러 보세요.</b> 표준화는 평균을, Min-Max는 최솟값을 <b>빼기</b> 때문에 원래 0이던 칸이 0이 아닌 값으로 변해요(빨간 칸). Robust도 중앙값이 0이 아니면 마찬가지고요. MaxAbs는 <b>나누기만</b> 하니까 0 ÷ 6 = 0, 언제나 0이 그대로 남아요(초록 칸). 부호(+/−)도 유지돼요. 그래서 텍스트 단어 빈도표처럼 <b>0이 대부분인 희소 행렬</b>에 MaxAbs를 써요. 0이 사라지면 표 전체가 숫자로 꽉 차서 메모리가 폭발하거든요.</div>
+
+    <details>
+      <summary>🔎 슬라이드의 IQR 계산과 숫자가 다르다면?</summary>
+      <p>슬라이드는 1,2,3,4,5,6,100에서 IQR = 6 − 2 = 4라고 계산했어요. 그런데 사분위수는 <b>계산 방식이 여러 가지</b>예요. sklearn의 RobustScaler는 <code>np.percentile</code>(선형 보간)을 쓰기 때문에 Q1 = 2.5, Q3 = 5.5, <b>IQR = 3</b>이 나와요. 이 실험실도 sklearn 방식으로 계산해요. 개념(중앙값을 0, IQR을 1로 맞춘다)은 똑같아요.</p>
+    </details>
+  </section>
+
+  <!-- 4 L2 -->
+  <section class="step" id="l2">
+    <div class="tag">4단계</div>
+    <h2>L2 노름(norm)이 뭐야? 📏</h2>
+    <p><b>노름(norm)</b>은 어려운 말 같지만 사실 <b>"화살표(벡터)의 길이를 재는 자"</b>예요. 자를 어떻게 만드느냐에 따라 L1, L2 같은 종류가 있어요.</p>
+
+    <div class="two">
+      <div class="box blue" style="margin:0">
+        <h3>📐 L2 노름 = 직선 길이</h3>
+        <p style="margin:0">각 숫자를 <b>제곱 → 전부 더하기 → 루트</b>. 피타고라스 정리 그대로예요. <b>원점에서 점까지의 직선 거리</b>(유클리드 길이)예요.</p>
+        <div class="math" style="font-size:18px">‖x‖₂ = √(x₁² + x₂² + … + xₙ²)</div>
+      </div>
+      <div class="box" style="margin:0">
+        <h3>🚕 L1 노름 = 블록 길이</h3>
+        <p style="margin:0">각 숫자의 <b>절댓값을 그냥 더하기</b>. 바둑판 길을 따라 걷는 거리, 즉 <b>맨해튼 거리</b>예요.</p>
+        <div class="math" style="font-size:18px">‖x‖₁ = |x₁| + |x₂| + … + |xₙ|</div>
+      </div>
+    </div>
+
+    <div class="box purple">
+      🔤 <b>기호 해독하기:</b> <span class="big">‖x‖₂</span><br>
+      · <b>x</b> = 벡터 (데이터 한 줄, 예: (3, 4))<br>
+      · <b>‖ ‖</b> (두 줄 막대) = "길이를 재라"<br>
+      · <b>₂</b> (아래 2) = "L2 방식, 즉 제곱해서 재라"<br>
+      → 읽는 법: "x의 L2 노름" = "x의 유클리드 길이" = "원점에서 x까지의 거리"
+    </div>
+
+    <h3>🧮 L2 계산기: 한 단계씩 따라가기</h3>
+    <p>숫자를 쉼표로 넣어 보세요. 2개면 평면, 3개면 공간, 더 많아도 계산법은 똑같아요!</p>
+    <input type="text" id="l2In" value="3, 4" aria-label="벡터 성분 (쉼표로 구분)">
+    <div class="btns">
+      <button data-l2="3, 4">(3, 4)</button>
+      <button data-l2="6, 8">(6, 8)</button>
+      <button data-l2="80, 182">(몸무게 80, 키 182)</button>
+      <button data-l2="1, 10, 100, 1000">슬라이드 1행</button>
+    </div>
+    <div id="l2Out"></div>
+    <div class="box">💡 <b>왜 제곱을 할까?</b> 음수가 있어도 길이는 항상 양수여야 하니까요. (−3)² = 9처럼 제곱하면 부호가 사라져요. 마지막에 루트를 씌워서 원래 단위의 길이로 돌려놓는 거예요.</div>
+  </section>
+
+  <!-- 5 NORMALIZE -->
+  <section class="step" id="norm">
+    <div class="tag">5단계</div>
+    <h2>벡터 정규화 = 길이를 1로 줄이기 🔫</h2>
+    <p>이제 L2 노름을 알았으니 정규화는 쉬워요. <b>각 숫자를 L2 노름으로 나누기</b>, 끝!</p>
+    <div class="math">정규화된 x = x ÷ ‖x‖₂</div>
+    <p>그러면 <b>방향은 그대로, 길이만 1</b>이 돼요. 아래 <b>주황색 점을 끌어 보고</b>, 정규화 광선을 쏴 보세요.</p>
+
+    <div class="stage"><svg id="plane" viewBox="0 0 480 480" aria-label="벡터를 끌어 볼 수 있는 좌표평면"></svg></div>
+    <div class="readout">
+      <div><small>점의 위치</small><b id="rPos">(3, 4)</b></div>
+      <div><small>📏 L2 노름 (길이)</small><b id="rLen" class="o">5.00</b></div>
+      <div><small>정규화하면</small><b id="rNorm" class="t">(0.60, 0.80)</b></div>
+    </div>
+    <div class="btns">
+      <button class="go" id="ray">🔫 정규화 광선 발사!</button>
+      <button data-p="3,4">(3, 4)</button>
+      <button data-p="1.5,2">(1.5, 2)</button>
+      <button data-p="6,8">(6, 8)</button>
+      <button data-p="-4,2">(-4, 2)</button>
+    </div>
+
+    <h3>📝 슬라이드 예제: X1 = (3, 4), X2 = (6, 8)</h3>
+    <p>빈칸을 먼저 머릿속으로 채워 보고 버튼을 눌러 확인하세요.</p>
+    <div class="btns"><button id="exBtn">정답 보기 👀</button></div>
+    <div class="tblwrap"><table class="grid" id="exTbl">
+      <tr><th></th><th>유클리드 길이 (L2 노름)</th><th>Normalizer 적용 후</th></tr>
+      <tr><th>X1 = (3, 4)</th><td data-a="√(9+16) = 5">?</td><td data-a="(3/5, 4/5) = (0.6, 0.8)">?</td></tr>
+      <tr><th>X2 = (6, 8)</th><td data-a="√(36+64) = 10">?</td><td data-a="(6/10, 8/10) = (0.6, 0.8)">?</td></tr>
+    </table></div>
+    <div class="box teal">🎯 X1과 X2는 길이가 2배 차이 나지만, 정규화하면 <b>똑같은 점 (0.6, 0.8)</b>이 돼요! 둘 다 3:4 비율, 즉 <b>같은 방향</b>이니까요. 정규화된 점은 모두 <b>반지름 1인 원</b>(그림의 초록 점선) 위에 모여요. 3개 숫자라면 반지름 1인 공 표면 위에요. 슬라이드의 (0.6, 0.6, 0.529)도 0.6² + 0.6² + 0.529² ≈ 1이라 공 표면 위의 점이에요.</div>
+    <pre><span class="c"># 수업 코드 (2.06.스케일링.Normalizer.ipynb) 핵심만</span>
+from sklearn.preprocessing import Normalizer
+X = np.array([[3, 4], [6, 8]])
+X_normalized = Normalizer(norm='l2').transform(X)
+<span class="ok"># → [[0.6, 0.8], [0.6, 0.8]]</span></pre>
+
+    <h3>❌ 사라지는 것 vs ✅ 남는 것</h3>
+    <div class="tblwrap"><table>
+      <tr><th></th><th>❌ 사라지는 것</th><th>✅ 남는 것</th></tr>
+      <tr><td><b>한마디로</b></td><td><span class="o">크기</span> (얼마나 많이·크게)</td><td><span class="t">방향</span> (속성 간 비율 패턴)</td></tr>
+      <tr><td>📄 글</td><td>글의 길이</td><td>주제 (어떤 단어가 많은지)</td></tr>
+      <tr><td>🛒 쇼핑</td><td>얼마나 많이 샀나</td><td>어떤 물건을 주로 사나</td></tr>
+    </table></div>
+    <div class="box pink">⚠️ <b>헷갈리기 쉬운 점:</b> "속성끼리의 차이"는 사라지지 않아요! (3, 4) → (0.6, 0.8)에서도 비율 3:4는 그대로예요. 사라지는 건 <b>화살표 전체의 길이</b>뿐이에요.</div>
+  </section>
+
+  <!-- 6 LEMON -->
+  <section class="step" id="lemon">
+    <div class="tag">6단계</div>
+    <h2>레모네이드로 이해하는 코사인 유사도 🍋</h2>
+    <p>레모네이드 한 잔을 벡터 <span class="big">(레몬, 설탕)</span>으로 써 봐요. 작은 컵 (1, 2)와 대형 물통 (5, 10)은 양은 5배 차이지만 <b>맛은 똑같아요</b>. 비율이 1:2로 같으니까요.</p>
+    <div class="box">🥤 <span class="o">크기</span> = 얼마나 많이 만들었나 (양) &nbsp;·&nbsp; 😋 <span class="t">방향</span> = 레몬:설탕 비율 (맛)</div>
+
+    <div class="two">
+      <div class="cup">
+        <h3>🥤 컵 A</h3>
+        <label><span>🍋 레몬 <b id="la">1</b></span><input type="range" min="0" max="10" step="1" value="1" id="L1"></label>
+        <label><span>🍬 설탕 <b id="sa">2</b></span><input type="range" min="0" max="10" step="1" value="2" id="S1"></label>
+      </div>
+      <div class="cup">
+        <h3>🪣 컵 B</h3>
+        <label><span>🍋 레몬 <b id="lb">5</b></span><input type="range" min="0" max="10" step="1" value="5" id="L2"></label>
+        <label><span>🍬 설탕 <b id="sb">10</b></span><input type="range" min="0" max="10" step="1" value="10" id="S2"></label>
+      </div>
+    </div>
+    <div class="stage"><svg id="lemonSvg" viewBox="0 0 480 320" aria-label="두 레모네이드 벡터 비교"></svg></div>
+    <div class="readout">
+      <div><small>📏 양 차이 (유클리드 거리)</small><b id="dEu">4.47</b></div>
+      <div><small>😋 맛 일치도 (코사인 유사도)</small><b id="dCos" class="t">100%</b></div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+
+    <div class="box teal" style="margin-top:16px">
+      📄 <b>텍스트 분석에서는 방향(코사인)이 더 유용해요.</b> 문서를 단어 빈도 벡터로 바꾸면, 긴 글은 모든 숫자가 커져서 화살표가 길어질 뿐이에요. 글이 길든 짧든 <b>어떤 단어 위주인지(비율 패턴)</b>가 같으면 같은 주제죠. 그래서 TF-IDF, 문서 유사도, 검색, 추천에서는 정규화 후 코사인 유사도로 비교해요.
+    </div>
+  </section>
+
+  <!-- 6.5 WORDS -->
+  <section class="step" id="words">
+    <div class="tag">6½단계</div>
+    <h2>단어도 벡터로 바꿔야 해요 🔤➡️🔢</h2>
+    <p>컴퓨터는 글자를 이해하지 못하고 <b>숫자만 계산</b>할 수 있어요. 그래서 단어나 글자도 <b>벡터(숫자 묶음)로 바꿔야</b> 모델링을 할 수 있어요.</p>
+
+    <h3>📖 1. 먼저 단어장(vocabulary)을 정한다</h3>
+    <p>언어 모델이 가장 먼저 정의하는 것이 <b>vocabulary</b>, 즉 "우리 모델이 아는 단어 목록"이에요. 단어장에 A, B, C 세 단어만 있다고 해 봐요.</p>
+
+    <h3>☝️ 2. 원-핫 인코딩: 자기 자리만 1</h3>
+    <div class="tblwrap"><table class="grid" style="max-width:420px">
+      <tr><th>단어</th><th>A 자리</th><th>B 자리</th><th>C 자리</th></tr>
+      <tr><th>A</th><td class="hl-row">1</td><td>0</td><td>0</td></tr>
+      <tr><th>B</th><td>0</td><td class="hl-row">1</td><td>0</td></tr>
+      <tr><th>C</th><td>0</td><td>0</td><td class="hl-row">1</td></tr>
+    </table></div>
+    <div class="box purple">🔤 <b>용어 구분:</b> 여기서 숫자의 개수(3개)는 벡터의 <b>차원</b>이에요. 단어장 크기 = 벡터 차원이죠. 앞에서 배운 벡터의 <b>크기(길이, L2 노름)</b>와는 다른 말이에요. 원-핫 벡터는 차원이 몇이든 길이는 항상 √1 = 1이에요.</div>
+
+    <p>문제는 단어장이 커질 때예요. 슬라이더를 움직여 보세요.</p>
+    <label><span>단어장 크기</span><input type="range" min="1" max="5" step="1" value="1" id="vocab"></label>
+    <div class="readout">
+      <div><small>단어 하나의 벡터 차원</small><b id="vDim" class="o">3</b></div>
+      <div><small>그중 1의 개수</small><b class="t">1</b></div>
+      <div><small>0의 비율</small><b id="vZero" class="p">66.7%</b></div>
+    </div>
+    <div class="box pink">🕳️ 단어장이 5만 개면 단어 하나를 숫자 5만 개로 쓰는데, 그중 49,999개가 0이에요. 이렇게 <b>0이 대부분인 행렬을 희소 행렬(sparse matrix)</b>이라고 해요. 3단계의 MaxAbsScaler가 아끼던 바로 그 희소 행렬이에요! 자원 낭비가 심하고, 모든 단어 사이의 각도가 90°라 코사인 유사도가 전부 0이에요. "고양이"와 "강아지"가 비슷하다는 걸 전혀 표현하지 못해요.</div>
+
+    <h3>🗜️ 3. 임베딩 벡터: 짧고 꽉 찬 숫자로 압축</h3>
+    <p><b>임베딩(embedding)</b>은 단어를 수백 차원 정도의 <b>짧고 0이 거의 없는(dense) 벡터</b>로 압축해요. 학습을 통해 <b>뜻이 비슷한 단어끼리 비슷한 방향</b>을 가리키게 만들어요.</p>
+    <p>아래는 이해를 돕기 위한 <b>가짜 2차원 임베딩</b>이에요 (실제로는 수백 차원). 두 단어를 골라 코사인 유사도를 비교해 보세요.</p>
+    <div class="btns" id="embBtns"></div>
+    <div class="stage"><svg id="embSvg" viewBox="0 0 440 330" aria-label="단어 임베딩 예시"></svg></div>
+    <div class="verdict" id="embVerdict"></div>
+    <div class="tblwrap"><table>
+      <tr><th></th><th>원-핫</th><th>임베딩</th></tr>
+      <tr><td>차원</td><td>단어장 크기 (수만)</td><td>수백 정도로 압축</td></tr>
+      <tr><td>0의 비율</td><td>거의 전부 (희소)</td><td>거의 없음 (dense)</td></tr>
+      <tr><td>뜻이 비슷한 단어</td><td>표현 못 함 (모두 90°)</td><td>비슷한 방향 → 코사인으로 비교</td></tr>
+    </table></div>
+  </section>
+
+  <!-- 7 DIST -->
+  <section class="step" id="dist">
+    <div class="tag">7단계</div>
+    <h2>거리 3형제: 유클리드 · 맨해튼 · 코사인 🐦🚕🧭</h2>
+    <p>두 점 <span class="b">A</span>와 <span class="p">B</span>를 끌어서 세 가지 "거리"가 어떻게 다른지 비교해 보세요.</p>
+    <div class="stage"><svg id="distSvg" viewBox="0 0 440 440" aria-label="두 점 사이 거리 비교"></svg></div>
+    <div class="readout">
+      <div><small>🐦 유클리드 (L2, 직선)</small><b id="dL2" class="b">—</b></div>
+      <div><small>🚕 맨해튼 (L1, 블록)</small><b id="dL1" class="o">—</b></div>
+      <div><small>🧭 코사인 유사도 (방향)</small><b id="dC" class="t">—</b></div>
+    </div>
+    <div class="tblwrap"><table>
+      <tr><th>이름</th><th>계산</th><th>비유</th><th>잘 맞는 곳</th></tr>
+      <tr><td class="b">유클리드</td><td>√(가로² + 세로²)</td><td>새가 날아가는 직선</td><td>저차원 수치 데이터, KNN, K-means</td></tr>
+      <tr><td class="o">맨해튼</td><td>|가로| + |세로|</td><td>택시가 블록 따라 가기</td><td>이상치에 덜 민감, 격자 이동</td></tr>
+      <tr><td class="t">코사인</td><td>두 화살표 사이 각도</td><td>나침반 방향 비교</td><td>텍스트, 추천, 임베딩</td></tr>
+    </table></div>
+    <p class="note">코사인 유사도는 1에 가까울수록 비슷해요. "코사인 거리"로 쓰고 싶으면 1 − 코사인 유사도로 바꿔요.</p>
+  </section>
+
+  <!-- 8 PROBLEM -->
+  <section class="step" id="prob">
+    <div class="tag">8단계</div>
+    <h2>슬라이드 문제 풀어보기 ✏️</h2>
+    <p>Q. 아래 데이터에 각 스케일러를 적용하면 값이 어떻게 바뀔까요? 종이에 먼저 풀어 보고 버튼을 눌러 확인하세요.</p>
+    <div class="tblwrap"><table class="grid" style="max-width:360px">
+      <tr><th></th><th>1열</th><th>2열</th><th>3열</th></tr>
+      <tr><th>1행</th><td>1</td><td>10</td><td>100</td></tr>
+      <tr><th>2행</th><td>5</td><td>9</td><td>20</td></tr>
+    </table></div>
+    <div class="btns">
+      <button data-prob="std">StandardScaler</button>
+      <button data-prob="mm">MinMaxScaler</button>
+      <button data-prob="rob">RobustScaler</button>
+      <button data-prob="ma">MaxAbsScaler</button>
+      <button data-prob="l2">➕ 보너스: Normalizer</button>
+    </div>
+    <div id="probOut"><p class="note">👆 스케일러를 골라 주세요.</p></div>
+  </section>
+
+  <!-- 9 LEAK -->
+  <section class="step" id="leak">
+    <div class="tag">9단계</div>
+    <h2>데이터 누수 조심! fit과 transform 🚰</h2>
+    <p><b>데이터 누수(Data Leakage)</b>란 실제 예측할 때는 알 수 없는 정보, 특히 <b>평가(test) 데이터의 정보</b>가 학습이나 전처리에 몰래 섞여 들어가는 거예요.</p>
+    <div class="two">
+      <div class="box" style="margin:0">
+        <h3>📐 fit = 자(규칙) 만들기</h3>
+        <p style="margin:0">데이터를 보고 평균, 표준편차, 최솟값·최댓값 같은 <b>기준을 계산해서 저장</b>해요.</p>
+      </div>
+      <div class="box teal" style="margin:0">
+        <h3>📏 transform = 그 자로 재기</h3>
+        <p style="margin:0">이미 만든 기준으로 <b>값을 변환</b>만 해요. 새로 계산하지 않아요.</p>
+      </div>
+    </div>
+    <div class="box pink" style="margin-top:14px">🎒 <b>비유:</b> 시험 전에 기말고사 문제를 미리 보고 공부하면 점수는 잘 나오지만, 진짜 실력은 아니죠? test 데이터로 fit하는 것도 똑같아요. test의 평균을 미리 알아 버리면 모델 성능이 <b>실제보다 좋게 부풀려져요</b>.</div>
+    <pre><span class="c"># ✅ 올바른 방법: train으로 자를 만들고, test는 그 자로 재기만</span>
+scaler = StandardScaler()
+X_train_scaled = scaler.<span class="ok">fit_transform</span>(X_train)
+X_test_scaled  = scaler.<span class="ok">transform</span>(X_test)
+
+<span class="c"># ❌ 누수: test로 자를 또 만들어 버림</span>
+X_test_scaled  = scaler.<span class="bad">fit_transform</span>(X_test)</pre>
+    <div class="tblwrap"><table>
+      <tr><th>스케일러</th><th>fit할 때 저장하는 것 (자의 눈금)</th></tr>
+      <tr><td>StandardScaler</td><td><code>mean_</code> (평균), <code>scale_</code> (표준편차)</td></tr>
+      <tr><td>MinMaxScaler</td><td><code>data_min_</code>, <code>data_max_</code></td></tr>
+      <tr><td>RobustScaler</td><td><code>center_</code> (중앙값), <code>scale_</code> (IQR)</td></tr>
+    </table></div>
+    <p class="note">참고로 Normalizer는 행마다 자기 길이로 나누기만 해서 저장할 기준이 없어요. 그래서 누수 걱정이 거의 없어요.</p>
+  </section>
+
+  <!-- 10 WHEN -->
+  <section class="step" id="when">
+    <div class="tag">10단계</div>
+    <h2>한눈에 정리: 언제 뭘 써? 🗺️</h2>
+    <div class="tblwrap"><table>
+      <tr><th>스케일러</th><th>방향</th><th>하는 일</th><th>이상치</th><th>주 사용처</th></tr>
+      <tr><td><b>StandardScaler</b></td><td>⬇️ 열</td><td>평균 0, 표준편차 1</td><td class="o">민감한 편</td><td>대부분의 기본값 (선형 모델, SVM, 신경망)</td></tr>
+      <tr><td><b>MinMaxScaler</b></td><td>⬇️ 열</td><td>0~1 범위</td><td class="p">취약</td><td>범위를 고정하고 싶을 때, 이미지 픽셀</td></tr>
+      <tr><td><b>RobustScaler</b></td><td>⬇️ 열</td><td>중앙값 0, IQR 1</td><td class="t">강함</td><td>이상치가 많을 때</td></tr>
+      <tr><td><b>MaxAbsScaler</b></td><td>⬇️ 열</td><td>−1~1, 0과 부호 유지</td><td class="p">민감</td><td>희소 행렬 (0이 많은 데이터)</td></tr>
+      <tr><td><b>Normalizer</b></td><td>➡️ 행</td><td>각 행의 L2 노름을 1로</td><td>—</td><td>코사인 유사도, TF-IDF, 텍스트 마이닝</td></tr>
+    </table></div>
+    <div class="box">🧭 <b>판단 질문 두 개:</b><br>
+      1. 속성마다 단위가 달라서 맞춰야 해? → <b>열 단위</b> 스케일러 (이상치 많으면 Robust, 0이 많으면 MaxAbs)<br>
+      2. 크기는 상관없고 비율 패턴(방향)만 비교하고 싶어? → <b>행 단위</b> Normalizer + 코사인</div>
+    <div class="box blue">🧪 <b>오늘 실습 TASK:</b> StandardScaler 외 4개 스케일러로 스케일링 전과 후의 모델 정확도를 비교해 보기 (2.03.Scaling.ipynb). 다른 데이터셋에서도 스케일러에 따라 성능 차이가 나는지 확인하기 (2.03.Scaling_2.ipynb).</div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="step" id="quiz">
+    <div class="tag">보너스</div>
+    <h2>3초 퀴즈 🧠</h2>
+    <div id="quizBox"></div>
+    <div class="score" id="score"></div>
+  </section>
+
+  <p class="end">한 줄 요약: <b>열 단위는 잣대 맞추기, 행 단위는 양은 잊고 맛(방향)만 남기기</b> 📏🍋</p>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const el=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;};
+  const r2=n=>{const v=Math.round(n*100)/100;return Object.is(v,-0)?0:v;};
+  const f2=n=>r2(n).toFixed(2);
+  const fmt=n=>r2(n).toString();
+  const $=id=>document.getElementById(id);
+  const selGroup=(btns,active)=>btns.forEach(b=>b.classList.toggle('sel',b===active));
+
+  /* ---------- math helpers ---------- */
+  const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const stdPop=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length);};
+  const pct=(a,q)=>{const s=[...a].sort((x,y)=>x-y);const pos=(s.length-1)*q;const lo=Math.floor(pos),hi=Math.ceil(pos);return s[lo]+(s[hi]-s[lo])*(pos-lo);};
+  const safe=(num,den)=>den===0?0:num/den;
+  const SC={
+    std:{name:'StandardScaler (표준화)',formula:'(x − 평균) ÷ 표준편차',run:a=>{const m=mean(a),s=stdPop(a);return {out:a.map(v=>safe(v-m,s)),stat:`평균 μ=${fmt(m)}, 표준편차 σ=${fmt(s)}`};}},
+    mm:{name:'MinMaxScaler',formula:'(x − 최솟값) ÷ (최댓값 − 최솟값)',run:a=>{const mn=Math.min(...a),mx=Math.max(...a);return {out:a.map(v=>safe(v-mn,mx-mn)),stat:`min=${fmt(mn)}, max=${fmt(mx)}`};}},
+    rob:{name:'RobustScaler',formula:'(x − 중앙값) ÷ IQR',run:a=>{const md=pct(a,.5),iqr=pct(a,.75)-pct(a,.25);return {out:a.map(v=>safe(v-md,iqr)),stat:`중앙값=${fmt(md)}, IQR=${fmt(iqr)} (Q3 ${fmt(pct(a,.75))} − Q1 ${fmt(pct(a,.25))})`};}},
+    ma:{name:'MaxAbsScaler',formula:'x ÷ (최대 절댓값)',run:a=>{const m=Math.max(...a.map(Math.abs));return {out:a.map(v=>safe(v,m)),stat:`최대 절댓값=${fmt(m)}`};}}
+  };
+  const l2=a=>Math.sqrt(a.reduce((s,v)=>s+v*v,0));
+
+  /* ---------- 1. grades ---------- */
+  const students=[{n:'갑',m:90,g:3.0},{n:'을',m:80,g:4.5}];
+  function grade(z){
+    const rows=students.map(s=>{
+      const a=z?(s.m-70)/10:s.m, b=z?(s.g-3.5)/0.5:s.g;
+      return {n:s.n,a,b,t:a+b};
+    });
+    $('gradeTbl').innerHTML=`<tr><th>학생</th><th>수학${z?' (표준 점수)':' (100점)'}</th><th>학점${z?' (표준 점수)':' (4.5점)'}</th><th>총점</th></tr>`+
+      rows.map(r=>`<tr><th>${r.n}</th><td>${z?f2(r.a):r.a}</td><td>${z?f2(r.b):r.b.toFixed(1)}</td><td><b>${z?f2(r.t):r.t.toFixed(1)}</b></td></tr>`).join('');
+    const w=rows[0].t>rows[1].t?rows[0]:rows[1];
+    $('gradeVerdict').textContent=z?`🥇 ${w.n} 1등! 학점 4.5(반 최상위)가 제대로 반영됐어요`:`🥇 ${w.n} 1등? 학점 1.5점 차이는 거의 묻혀 버렸어요 😵`;
+    $('gradeVerdict').style.background=z?'#BFEDE6':'#FFF0C9';
+  }
+  $('gradeRaw').onclick=e=>{selGroup([$('gradeRaw'),$('gradeZ')],e.target);grade(false);};
+  $('gradeZ').onclick=e=>{selGroup([$('gradeRaw'),$('gradeZ')],e.target);grade(true);};
+  grade(false);
+
+  /* ---------- 1. knn ---------- */
+  const me={h:170,s:40000000};
+  const fr=[{n:'친구 A',h:171,s:45000000},{n:'친구 B',h:190,s:40100000}];
+  const won=v=>(v/10000).toLocaleString('ko-KR')+'만 원';
+  function knn(z){
+    const rows=fr.map(f=>{
+      const dh=f.h-me.h, ds=f.s-me.s;
+      const a=z?dh/10:dh, b=z?ds/10000000:ds;
+      return {...f,dh,ds,a,b,d:Math.hypot(a,b)};
+    });
+    $('knnTbl').innerHTML=`<tr><th></th><th>키</th><th>연봉</th><th>키 차이${z?' (스케일)':''}</th><th>연봉 차이${z?' (스케일)':''}</th><th>거리</th></tr>`+
+      `<tr><th>🙋 나</th><td>${me.h}cm</td><td>${won(me.s)}</td><td>—</td><td>—</td><td>—</td></tr>`+
+      rows.map(r=>`<tr><th>${r.n}</th><td>${r.h}cm</td><td>${won(r.s)}</td><td>${z?f2(r.a):r.dh+'cm'}</td><td>${z?f2(r.b):r.ds.toLocaleString('ko-KR')+'원'}</td><td><b>${z?f2(r.d):Math.round(r.d).toLocaleString('ko-KR')}</b></td></tr>`).join('');
+    const near=rows[0].d<rows[1].d?rows[0]:rows[1];
+    $('knnVerdict').textContent=z?`👯 가장 가까운 사람: ${near.n}. 키도 연봉도 고르게 반영됐어요`:`👯 가장 가까운 사람: ${near.n}?! 키가 20cm나 차이 나는데… 연봉 1원 = 키 1cm 취급이라서 그래요 😵`;
+    $('knnVerdict').style.background=z?'#BFEDE6':'#FFF0C9';
+  }
+  $('knnRaw').onclick=e=>{selGroup([$('knnRaw'),$('knnZ')],e.target);knn(false);};
+  $('knnZ').onclick=e=>{selGroup([$('knnRaw'),$('knnZ')],e.target);knn(true);};
+  knn(false);
+
+  /* ---------- 2. feature vs sample ---------- */
+  const FS=[[1,10,100,1000],[2,20,200,1000],[3,30,300,1000]];
+  const fsBtns=[...document.querySelectorAll('[data-fs]')];
+  function fs(mode){
+    let M=FS.map(r=>[...r]);
+    if(mode==='col'){for(let j=0;j<4;j++){const col=FS.map(r=>r[j]);const o=SC.mm.run(col).out;o.forEach((v,i)=>M[i][j]=v);}}
+    if(mode==='row'){M=FS.map(r=>{const n=l2(r);return r.map(v=>v/n);});}
+    const show=v=>mode==='raw'?v:(mode==='row'?v.toFixed(4):f2(v));
+    let h='<tr><th></th>'+[1,2,3,4].map(j=>`<th class="${mode==='col'?'hl-col':''}">${j}열 ${mode==='col'?'⬇️':''}</th>`).join('')+(mode==='row'?'<th class="hl-row">L2 노름</th>':'')+'</tr>';
+    M.forEach((r,i)=>{h+=`<tr><th class="${mode==='row'?'hl-row':''}">${i+1}행 ${mode==='row'?'➡️':''}</th>`+r.map(v=>`<td class="${mode==='col'?'hl-col':mode==='row'?'hl-row':''}">${show(v)}</td>`).join('')+(mode==='row'?`<td><b>${l2(FS[i]).toFixed(1)}</b></td>`:'')+'</tr>';});
+    $('fsTbl').innerHTML=h;
+    const ex={
+      raw:'👀 1열은 1~3, 4열은 1000이에요. 열마다 숫자 크기가 완전히 달라요.',
+      col:'⬇️ <b>열마다 따로</b> 최솟값→0, 최댓값→1로 맞췄어요. 이제 1~3열 모두 0, 0.5, 1로 같은 범위예요. 4열은 값이 전부 1000으로 같아서(최댓값−최솟값=0) 모두 0이 돼요.',
+      row:'➡️ <b>행마다 따로</b> 자기 L2 노름으로 나눴어요. 각 행의 길이가 1이 됐지만, 4열의 1000이 압도적으로 커서 모든 행에서 4열이 0.99 근처예요. 행 단위 정규화는 열끼리 범위를 맞춰 주지 <b>않아요</b>. 대신 각 행 안의 <b>비율 패턴(방향)</b>을 비교하기 쉽게 만들어요.'
+    };
+    $('fsExplain').innerHTML=ex[mode];
+  }
+  fsBtns.forEach(b=>b.onclick=()=>{selGroup(fsBtns,b);fs(b.dataset.fs);});
+  fs('raw');
+
+  /* ---------- 3. scaler lab ---------- */
+  const parse=s=>s.split(/[,\s]+/).map(Number).filter(v=>!isNaN(v)&&isFinite(v));
+  function strip(vals,color){
+    const W=440,H=54,P=22;
+    let mn=Math.min(...vals,0),mx=Math.max(...vals,0);
+    if(mx-mn<1e-9){mn-=1;mx+=1;}
+    const X=v=>P+(v-mn)/(mx-mn)*(W-2*P);
+    let s=`<svg viewBox="0 0 ${W} ${H}"><line x1="${P}" y1="28" x2="${W-P}" y2="28" stroke="#D8CDB8" stroke-width="2"/>`;
+    s+=`<line x1="${X(0)}" y1="16" x2="${X(0)}" y2="40" stroke="#9C98A8" stroke-width="1.5" stroke-dasharray="3 3"/><text x="${X(0)}" y="52" font-size="11" fill="#9C98A8" text-anchor="middle">0</text>`;
+    s+=`<text x="${P}" y="12" font-size="11" fill="#9C98A8">${fmt(mn)}</text><text x="${W-P}" y="12" font-size="11" fill="#9C98A8" text-anchor="end">${fmt(mx)}</text>`;
+    vals.forEach(v=>{s+=`<circle cx="${X(v)}" cy="28" r="7" fill="${color}" fill-opacity=".55" stroke="#fff" stroke-width="1.5"/>`;});
+    return s+'</svg>';
+  }
+  const labColors={std:'#5B7CFA',mm:'#FF8A3D',rob:'#1FA59A',ma:'#9B6BDF'};
+  function lab(){
+    const a=parse($('labIn').value);
+    if(a.length<2){$('labOut').innerHTML='<p class="note">숫자를 2개 이상 넣어 주세요.</p>';return;}
+    const zeros=a.filter(v=>v===0).length;
+    let h=`<div class="scaler"><div class="head"><h3 style="margin:0">📦 원본</h3></div>${strip(a,'#2B2A33')}<div class="chips">${a.map(v=>`<span class="chip ${v===0?'zero':''}">${fmt(v)}</span>`).join('')}</div></div>`;
+    for(const k of ['std','mm','rob','ma']){
+      const {out,stat}=SC[k].run(a);
+      const kept=a.filter((v,i)=>v===0&&Math.abs(out[i])<1e-9).length;
+      const badge=zeros?`<span class="badge" style="color:${kept===zeros?'#157A71':'#C23A5C'}">0 유지 ${kept}/${zeros}</span>`:'';
+      h+=`<div class="scaler"><div class="head"><h3 style="margin:0;color:${labColors[k]}">${SC[k].name}</h3>${badge}</div><div class="formula">${SC[k].formula} · ${stat}</div>${strip(out,labColors[k])}<div class="chips">${out.map((v,i)=>{let c='';if(a[i]===0)c=Math.abs(v)<1e-9?'zero':'lost';return `<span class="chip ${c}">${f2(v)}</span>`;}).join('')}</div></div>`;
+    }
+    $('labOut').innerHTML=h;
+  }
+  $('labIn').addEventListener('input',lab);
+  document.querySelectorAll('[data-lab]').forEach(b=>b.onclick=()=>{$('labIn').value=b.dataset.lab;lab();});
+  lab();
+
+  /* ---------- 4. L2 calculator ---------- */
+  function l2calc(){
+    const a=parse($('l2In').value);
+    if(!a.length){$('l2Out').innerHTML='<p class="note">숫자를 넣어 주세요.</p>';return;}
+    const sq=a.map(v=>v*v), sum=sq.reduce((s,v)=>s+v,0), n=Math.sqrt(sum), l1=a.reduce((s,v)=>s+Math.abs(v),0);
+    const nice=v=>Number.isInteger(v)?v.toLocaleString('ko-KR'):fmt(v);
+    const dp=n&&Math.abs(n)>100?4:3;
+    let h=`<div class="flow"><span>① 제곱</span></div><div class="sq">${a.map((v,i)=>`<div>${nice(v)}² = ${nice(sq[i])}<small>성분 ${i+1}</small></div>`).join('')}</div>`;
+    h+=`<div class="flow"><span>② 전부 더하기</span><span class="arr">→</span><span class="n">${sq.map(nice).join(' + ')} = ${nice(sum)}</span></div>`;
+    h+=`<div class="flow"><span>③ 루트</span><span class="arr">→</span><span class="n">√${nice(sum)} = <span class="b">${fmt(n)}</span></span><span class="note">← 이게 L2 노름(길이)!</span></div>`;
+    if(n){
+      const nv=a.map(v=>v/n);
+      h+=`<div class="flow"><span>④ 각 성분 ÷ ${fmt(n)}</span><span class="arr">→</span><span class="n t">(${nv.map(v=>v.toFixed(dp)).join(', ')})</span><span class="note">← 정규화 결과</span></div>`;
+      h+=`<div class="flow"><span>✅ 확인</span><span class="arr">→</span><span class="n">${nv.map(v=>v.toFixed(dp)+'²').join(' + ')} ≈ ${nv.reduce((s,v)=>s+v*v,0).toFixed(3)}</span></div>`;
+    }
+    h+=`<p class="note">참고: 같은 벡터의 L1 노름(절댓값 합, 맨해튼)은 ${nice(l1)}이에요. L2보다 항상 크거나 같아요.</p>`;
+    $('l2Out').innerHTML=h;
+  }
+  $('l2In').addEventListener('input',l2calc);
+  document.querySelectorAll('[data-l2]').forEach(b=>b.onclick=()=>{$('l2In').value=b.dataset.l2;l2calc();});
+  l2calc();
+
+  /* ---------- drag helper ---------- */
+  function toLocal(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+
+  /* ---------- 5. plane ---------- */
+  const svg=$('plane');
+  const C=240,S=36;
+  const X=x=>C+x*S, Y=y=>C-y*S;
+  const defs=el('defs',{},svg);
+  [['ahO','#FF8A3D'],['ahT','#1FA59A'],['ahB','#5B7CFA'],['ahP','#F2557A'],['ahG','#B9B3C4']].forEach(([id,c])=>{
+    const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);
+    el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);
+  });
+  for(let i=-6;i<=6;i++){
+    el('line',{x1:X(i),y1:0,x2:X(i),y2:480,stroke:'#F0E8D8'},svg);
+    el('line',{x1:0,y1:Y(i),x2:480,y2:Y(i),stroke:'#F0E8D8'},svg);
+    if(i){el('text',{x:X(i),y:C+16,'font-size':11,fill:'#A8A2B2','text-anchor':'middle'},svg).textContent=i;
+      el('text',{x:C-8,y:Y(i)+4,'font-size':11,fill:'#A8A2B2','text-anchor':'end'},svg).textContent=i;}
+  }
+  el('line',{x1:0,y1:C,x2:480,y2:C,stroke:'#BDB5C6','stroke-width':1.5},svg);
+  el('line',{x1:C,y1:0,x2:C,y2:480,stroke:'#BDB5C6','stroke-width':1.5},svg);
+  el('circle',{cx:C,cy:C,r:S,fill:'rgba(31,165,154,.08)',stroke:'#1FA59A','stroke-width':2,'stroke-dasharray':'5 4'},svg);
+  el('text',{x:C+S*0.72,y:C-S*0.72-6,'font-size':12,fill:'#1FA59A','font-family':'Jua'},svg).textContent='길이 1인 원';
+  const legX=el('line',{stroke:'#5B7CFA','stroke-width':2,'stroke-dasharray':'4 4'},svg);
+  const legY=el('line',{stroke:'#5B7CFA','stroke-width':2,'stroke-dasharray':'4 4'},svg);
+  const legXT=el('text',{'font-size':13,fill:'#5B7CFA','text-anchor':'middle','font-family':'Jua'},svg);
+  const legYT=el('text',{'font-size':13,fill:'#5B7CFA','font-family':'Jua'},svg);
+  const arrow=el('line',{stroke:'#FF8A3D','stroke-width':4,'stroke-linecap':'round','marker-end':'url(#ahO)'},svg);
+  const lenT=el('text',{'font-size':15,fill:'#FF8A3D','font-family':'Jua','text-anchor':'middle'},svg);
+  const ghost=el('line',{stroke:'#1FA59A','stroke-width':5,'stroke-linecap':'round','marker-end':'url(#ahT)',opacity:0},svg);
+  const ghostDot=el('circle',{r:6,fill:'#1FA59A',opacity:0},svg);
+  const dot=el('circle',{r:13,fill:'#FF8A3D',stroke:'#fff','stroke-width':3,style:'cursor:grab'},svg);
+  el('circle',{cx:C,cy:C,r:4,fill:'#2B2A33'},svg);
+  let px=3,py=4,normOn=false,anim=0;
+  const ray=$('ray');
+  function draw(){
+    const L=Math.hypot(px,py);
+    const sh=L?Math.max(0,(L*S-14)/(L*S)):0;
+    arrow.setAttribute('x1',C);arrow.setAttribute('y1',C);arrow.setAttribute('x2',C+(X(px)-C)*sh);arrow.setAttribute('y2',C+(Y(py)-C)*sh);
+    arrow.setAttribute('opacity',normOn?0.35:1);
+    dot.setAttribute('cx',X(px));dot.setAttribute('cy',Y(py));
+    legX.setAttribute('x1',C);legX.setAttribute('y1',C);legX.setAttribute('x2',X(px));legX.setAttribute('y2',C);
+    legY.setAttribute('x1',X(px));legY.setAttribute('y1',C);legY.setAttribute('x2',X(px));legY.setAttribute('y2',Y(py));
+    legXT.setAttribute('x',(C+X(px))/2);legXT.setAttribute('y',C+(py>=0?18:-8));legXT.textContent=Math.abs(px)>0.3?fmt(Math.abs(px)):'';
+    legYT.setAttribute('x',X(px)+(px>=0?8:-8));legYT.setAttribute('y',(C+Y(py))/2+4);legYT.setAttribute('text-anchor',px>=0?'start':'end');legYT.textContent=Math.abs(py)>0.3?fmt(Math.abs(py)):'';
+    lenT.setAttribute('x',(C+X(px))/2-py*10/(L||1));lenT.setAttribute('y',(C+Y(py))/2-px*10/(L||1));
+    lenT.textContent=L>0.5?'길이 '+fmt(L):'';
+    const nx=L?px/L:0, ny=L?py/L:0;
+    const gx=px+(nx-px)*anim, gy=py+(ny-py)*anim;
+    ghost.setAttribute('x1',C);ghost.setAttribute('y1',C);ghost.setAttribute('x2',X(gx));ghost.setAttribute('y2',Y(gy));
+    ghost.setAttribute('opacity',normOn?1:0);
+    ghostDot.setAttribute('cx',X(gx));ghostDot.setAttribute('cy',Y(gy));ghostDot.setAttribute('opacity',normOn?1:0);
+    $('rPos').textContent='('+fmt(px)+', '+fmt(py)+')';
+    $('rLen').textContent=L.toFixed(2);
+    $('rNorm').textContent=L?'('+nx.toFixed(2)+', '+ny.toFixed(2)+')':'—';
+  }
+  function runRay(){
+    normOn=true;ray.classList.add('on');ray.textContent='↩️ 원래대로';
+    const t0=performance.now();
+    const step=now=>{const t=Math.min(1,(now-t0)/700);anim=1-Math.pow(1-t,3);draw();if(t<1)requestAnimationFrame(step);};
+    requestAnimationFrame(step);
+  }
+  function reset(){normOn=false;anim=0;ray.classList.remove('on');ray.textContent='🔫 정규화 광선 발사!';draw();}
+  ray.onclick=()=>normOn?reset():runRay();
+  document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{[px,py]=b.dataset.p.split(',').map(Number);reset();});
+  let drag=false;
+  svg.addEventListener('pointerdown',e=>{drag=true;svg.setPointerCapture(e.pointerId);mv(e);});
+  svg.addEventListener('pointermove',e=>{if(drag)mv(e);});
+  svg.addEventListener('pointerup',()=>drag=false);
+  svg.addEventListener('pointercancel',()=>drag=false);
+  function mv(e){
+    const p=toLocal(svg,e);
+    let x=Math.max(-6.5,Math.min(6.5,Math.round((p.x-C)/S*2)/2));
+    let y=Math.max(-6.5,Math.min(6.5,Math.round((C-p.y)/S*2)/2));
+    if(!x&&!y)return;
+    px=x;py=y;if(normOn)anim=1;draw();
+  }
+  draw();
+
+  $('exBtn').onclick=()=>document.querySelectorAll('#exTbl td[data-a]').forEach(td=>{td.textContent=td.dataset.a;td.style.background='#E3F6F3';});
+
+  /* ---------- 6. lemonade ---------- */
+  const ls=$('lemonSvg');
+  const OX=50,OY=290,K=22;
+  const LX=v=>OX+v*K, LY=v=>OY-v*K;
+  const d2=el('defs',{},ls);
+  [['laO','#FF8A3D'],['laP','#F2557A']].forEach(([id,c])=>{const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},d2);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);});
+  for(let i=0;i<=10;i++){
+    el('line',{x1:LX(i),y1:LY(0),x2:LX(i),y2:LY(10),stroke:'#F0E8D8'},ls);
+    el('line',{x1:LX(0),y1:LY(i),x2:LX(10),y2:LY(i),stroke:'#F0E8D8'},ls);
+    if(i%2===0){el('text',{x:LX(i),y:OY+16,'font-size':11,fill:'#A8A2B2','text-anchor':'middle'},ls).textContent=i;
+      if(i)el('text',{x:OX-8,y:LY(i)+4,'font-size':11,fill:'#A8A2B2','text-anchor':'end'},ls).textContent=i;}
+  }
+  el('text',{x:LX(10),y:OY+30,'font-size':13,fill:'#6B6878','text-anchor':'end','font-family':'Jua'},ls).textContent='🍋 레몬 →';
+  el('text',{x:OX-30,y:LY(10)-10,'font-size':13,fill:'#6B6878','font-family':'Jua'},ls).textContent='🍬 설탕 ↑';
+  const R=3;
+  el('path',{d:`M${LX(R)},${LY(0)} A${R*K},${R*K} 0 0 0 ${LX(0)},${LY(R)}`,fill:'none',stroke:'#1FA59A','stroke-width':2,'stroke-dasharray':'5 4'},ls);
+  el('text',{x:LX(2.3)+4,y:LY(2.3)-4,'font-size':11,fill:'#1FA59A','font-family':'Jua'},ls).textContent='맛 원 (정규화)';
+  const arc=el('path',{fill:'rgba(31,165,154,.18)'},ls);
+  const aA=el('line',{stroke:'#FF8A3D','stroke-width':4,'stroke-linecap':'round','marker-end':'url(#laO)'},ls);
+  const aB=el('line',{stroke:'#F2557A','stroke-width':4,'stroke-linecap':'round','marker-end':'url(#laP)'},ls);
+  const tA=el('text',{'font-size':14,fill:'#FF8A3D','font-family':'Jua'},ls);
+  const tB=el('text',{'font-size':14,fill:'#F2557A','font-family':'Jua'},ls);
+  const nA=el('circle',{r:6,fill:'#FF8A3D',stroke:'#fff','stroke-width':2},ls);
+  const nB=el('circle',{r:6,fill:'#F2557A',stroke:'#fff','stroke-width':2},ls);
+  const angT=el('text',{'font-size':13,fill:'#157A71','font-family':'Jua'},ls);
+  const ids=['L1','S1','L2','S2'].map($);
+  const lab2={L1:'la',S1:'sa',L2:'lb',S2:'sb'};
+  function lemon(){
+    const [a1,b1,a2,b2]=ids.map(i=>+i.value);
+    ids.forEach(i=>$(lab2[i.id]).textContent=i.value);
+    const setA=(line,txt,x,y,name)=>{
+      const L=Math.hypot(x,y),sh=L?Math.max(0,(L*K-8)/(L*K)):0;
+      line.setAttribute('x1',OX);line.setAttribute('y1',OY);line.setAttribute('x2',OX+(LX(x)-OX)*sh);line.setAttribute('y2',OY+(LY(y)-OY)*sh);
+      line.setAttribute('opacity',L?1:0);
+      txt.setAttribute('x',LX(x)+6);txt.setAttribute('y',LY(y)-6);txt.textContent=L?name:'';
+    };
+    setA(aA,tA,a1,b1,'A');setA(aB,tB,a2,b2,'B');
+    const LA=Math.hypot(a1,b1),LB=Math.hypot(a2,b2);
+    const putN=(c,x,y,L)=>{if(!L){c.setAttribute('opacity',0);return;}c.setAttribute('opacity',1);c.setAttribute('cx',LX(R*x/L));c.setAttribute('cy',LY(R*y/L));};
+    putN(nA,a1,b1,LA);putN(nB,a2,b2,LB);
+    $('dEu').textContent=Math.hypot(a1-a2,b1-b2).toFixed(2);
+    const v=$('verdict');
+    if(!LA||!LB){$('dCos').textContent='—';v.textContent='빈 컵이 있어요! 재료를 넣어 주세요 🥛';v.style.background='#F3EEE4';arc.setAttribute('d','');angT.textContent='';return;}
+    const c=Math.max(-1,Math.min(1,(a1*a2+b1*b2)/(LA*LB)));
+    $('dCos').textContent=Math.round(c*100)+'%';
+    const th1=Math.atan2(b1,a1),th2=Math.atan2(b2,a2),lo=Math.min(th1,th2),hi=Math.max(th1,th2),rr=1.6;
+    if(hi-lo>0.01){
+      arc.setAttribute('d',`M${OX},${OY} L${LX(rr*Math.cos(lo))},${LY(rr*Math.sin(lo))} A${rr*K},${rr*K} 0 0 0 ${LX(rr*Math.cos(hi))},${LY(rr*Math.sin(hi))} Z`);
+      const mid=(lo+hi)/2;angT.setAttribute('x',LX(2*Math.cos(mid))+2);angT.setAttribute('y',LY(2*Math.sin(mid))+4);angT.textContent=Math.round(Math.acos(c)*180/Math.PI)+'°';
+    } else {arc.setAttribute('d','');angT.textContent='';}
+    let msg,bg;
+    if(c>0.995){msg=(a1===a2&&b1===b2)?'완전히 똑같은 컵! 👯':'같은 맛! 양만 다를 뿐 😋';bg='#BFEDE6';}
+    else if(c>0.95){msg='거의 같은 맛! 아주 살짝 달라요 🙂';bg='#D7F2EC';}
+    else if(c>0.8){msg='비슷하긴 한데… 맛이 좀 달라요 🤔';bg='#FFF0C9';}
+    else {msg='완전 다른 맛! 😵';bg='#F9C9D3';}
+    v.textContent=msg;v.style.background=bg;
+  }
+  ids.forEach(i=>i.addEventListener('input',lemon));
+  lemon();
+
+  /* ---------- 6.5 words ---------- */
+  const VOC=[3,100,10000,50000,100000];
+  function vocab(){const n=VOC[+$('vocab').value-1];$('vDim').textContent=n.toLocaleString('ko-KR');$('vZero').textContent=((n-1)/n*100).toFixed(n>1000?3:1)+'%';}
+  $('vocab').value=1;$('vocab').addEventListener('input',vocab);vocab();
+
+  const EMB={'고양이':[4.2,3.6],'강아지':[4.8,3.0],'호랑이':[3.4,4.4],'자동차':[5.4,-0.6],'버스':[4.6,-1.2]};
+  const es=$('embSvg');const EO=[50,250],EK=48;
+  const EX=v=>EO[0]+v*EK, EY=v=>EO[1]-v*EK*0.36;
+  const ed=el('defs',{},es);
+  [['eG','#C9C2D3'],['eS','#1FA59A']].forEach(([id,c])=>{const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},ed);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);});
+  el('line',{x1:20,y1:EO[1],x2:420,y2:EO[1],stroke:'#D8CDB8'},es);
+  el('line',{x1:EO[0],y1:20,x2:EO[0],y2:320,stroke:'#D8CDB8'},es);
+  const eArrows={};
+  Object.entries(EMB).forEach(([w,[x,y]])=>{
+    eArrows[w]=el('line',{x1:EO[0],y1:EO[1],x2:EX(x),y2:EY(y),stroke:'#C9C2D3','stroke-width':3,'marker-end':'url(#eG)'},es);
+    el('text',{x:EX(x)+6,y:EY(y)+(y<0?14:-4),'font-size':14,'font-family':'Jua',fill:'#2B2A33'},es).textContent=w;
+  });
+  let embSel=['고양이','강아지'];
+  const eb=$('embBtns');
+  Object.keys(EMB).forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{embSel=[embSel[1],w];emb();};eb.appendChild(b);});
+  function emb(){
+    [...eb.children].forEach(b=>b.classList.toggle('sel',embSel.includes(b.textContent)));
+    Object.entries(eArrows).forEach(([w,a])=>{const on=embSel.includes(w);a.setAttribute('stroke',on?'#1FA59A':'#C9C2D3');a.setAttribute('marker-end',on?'url(#eS)':'url(#eG)');a.setAttribute('stroke-width',on?5:3);});
+    const [a,b]=embSel.map(w=>EMB[w]);
+    const c=(a[0]*b[0]+a[1]*b[1])/(Math.hypot(...a)*Math.hypot(...b));
+    const v=$('embVerdict');
+    if(embSel[0]===embSel[1]){v.textContent=`${embSel[0]} vs ${embSel[0]}: 같은 단어예요 (코사인 1.00)`;v.style.background='#E3F6F3';return;}
+    v.textContent=`${embSel[0]} vs ${embSel[1]}: 코사인 유사도 ${c.toFixed(2)} ${c>0.9?'→ 뜻이 비슷해요 🐾':'→ 뜻이 꽤 달라요'}`;
+    v.style.background=c>0.9?'#BFEDE6':'#FFF0C9';
+  }
+  emb();
+
+  /* ---------- 7. distance ---------- */
+  const ds=$('distSvg');
+  const DP=30,DS=47.5; // 0..8
+  const DX=v=>DP+v*DS, DY=v=>440-DP-v*DS;
+  const dd=el('defs',{},ds);
+  [['dG','#C9C2D3'],['dBl','#5B7CFA']].forEach(([id,c])=>{const m=el('marker',{id,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},dd);el('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);});
+  for(let i=0;i<=8;i++){
+    el('line',{x1:DX(i),y1:DY(0),x2:DX(i),y2:DY(8),stroke:'#F0E8D8'},ds);
+    el('line',{x1:DX(0),y1:DY(i),x2:DX(8),y2:DY(i),stroke:'#F0E8D8'},ds);
+    el('text',{x:DX(i),y:DY(0)+16,'font-size':11,fill:'#A8A2B2','text-anchor':'middle'},ds).textContent=i;
+    if(i)el('text',{x:DX(0)-8,y:DY(i)+4,'font-size':11,fill:'#A8A2B2','text-anchor':'end'},ds).textContent=i;
+  }
+  const dArc=el('path',{fill:'rgba(31,165,154,.18)'},ds);
+  const oA=el('line',{stroke:'#C9C2D3','stroke-width':2,'stroke-dasharray':'5 4'},ds);
+  const oB=el('line',{stroke:'#C9C2D3','stroke-width':2,'stroke-dasharray':'5 4'},ds);
+  const pathL1=el('polyline',{fill:'none',stroke:'#FF8A3D','stroke-width':4,'stroke-linejoin':'round','stroke-linecap':'round'},ds);
+  const lineL2=el('line',{stroke:'#5B7CFA','stroke-width':4,'stroke-linecap':'round'},ds);
+  const dAng=el('text',{'font-size':13,fill:'#157A71','font-family':'Jua'},ds);
+  const pA=el('circle',{r:13,fill:'#5B7CFA',stroke:'#fff','stroke-width':3,style:'cursor:grab'},ds);
+  const pB=el('circle',{r:13,fill:'#F2557A',stroke:'#fff','stroke-width':3,style:'cursor:grab'},ds);
+  const lA=el('text',{'font-size':15,fill:'#5B7CFA','font-family':'Jua'},ds);
+  const lB=el('text',{'font-size':15,fill:'#F2557A','font-family':'Jua'},ds);
+  el('circle',{cx:DX(0),cy:DY(0),r:4,fill:'#2B2A33'},ds);
+  const P={A:[1,3],B:[6,5]};
+  function dist(){
+    const [ax,ay]=P.A,[bx,by]=P.B;
+    pA.setAttribute('cx',DX(ax));pA.setAttribute('cy',DY(ay));pB.setAttribute('cx',DX(bx));pB.setAttribute('cy',DY(by));
+    lA.setAttribute('x',DX(ax)+14);lA.setAttribute('y',DY(ay)-12);lA.textContent=`A(${ax},${ay})`;
+    lB.setAttribute('x',DX(bx)+14);lB.setAttribute('y',DY(by)-12);lB.textContent=`B(${bx},${by})`;
+    oA.setAttribute('x1',DX(0));oA.setAttribute('y1',DY(0));oA.setAttribute('x2',DX(ax));oA.setAttribute('y2',DY(ay));
+    oB.setAttribute('x1',DX(0));oB.setAttribute('y1',DY(0));oB.setAttribute('x2',DX(bx));oB.setAttribute('y2',DY(by));
+    lineL2.setAttribute('x1',DX(ax));lineL2.setAttribute('y1',DY(ay));lineL2.setAttribute('x2',DX(bx));lineL2.setAttribute('y2',DY(by));
+    pathL1.setAttribute('points',`${DX(ax)},${DY(ay)} ${DX(bx)},${DY(ay)} ${DX(bx)},${DY(by)}`);
+    $('dL2').textContent=Math.hypot(bx-ax,by-ay).toFixed(2);
+    $('dL1').textContent=(Math.abs(bx-ax)+Math.abs(by-ay)).toString();
+    const LA=Math.hypot(ax,ay),LB=Math.hypot(bx,by);
+    if(LA&&LB){
+      const c=(ax*bx+ay*by)/(LA*LB);$('dC').textContent=c.toFixed(2);
+      const t1=Math.atan2(ay,ax),t2=Math.atan2(by,bx),lo=Math.min(t1,t2),hi=Math.max(t1,t2),rr=1.3;
+      if(hi-lo>0.01){dArc.setAttribute('d',`M${DX(0)},${DY(0)} L${DX(rr*Math.cos(lo))},${DY(rr*Math.sin(lo))} A${rr*DS},${rr*DS} 0 0 0 ${DX(rr*Math.cos(hi))},${DY(rr*Math.sin(hi))} Z`);
+        const m=(lo+hi)/2;dAng.setAttribute('x',DX(1.7*Math.cos(m)));dAng.setAttribute('y',DY(1.7*Math.sin(m))+4);dAng.textContent=Math.round(Math.acos(Math.min(1,c))*180/Math.PI)+'°';}
+      else{dArc.setAttribute('d','');dAng.textContent='';}
+    } else {$('dC').textContent='—';dArc.setAttribute('d','');dAng.textContent='';}
+  }
+  let dragP=null;
+  ds.addEventListener('pointerdown',e=>{
+    const p=toLocal(ds,e);
+    const dA=Math.hypot(p.x-DX(P.A[0]),p.y-DY(P.A[1])),dB=Math.hypot(p.x-DX(P.B[0]),p.y-DY(P.B[1]));
+    dragP=dA<dB?'A':'B';ds.setPointerCapture(e.pointerId);dmv(e);
+  });
+  ds.addEventListener('pointermove',e=>{if(dragP)dmv(e);});
+  ds.addEventListener('pointerup',()=>dragP=null);
+  ds.addEventListener('pointercancel',()=>dragP=null);
+  function dmv(e){
+    const p=toLocal(ds,e);
+    const x=Math.max(0,Math.min(8,Math.round((p.x-DP)/DS))), y=Math.max(0,Math.min(8,Math.round((440-DP-p.y)/DS)));
+    P[dragP]=[x,y];dist();
+  }
+  dist();
+
+  /* ---------- 8. slide problem ---------- */
+  const PR=[[1,10,100],[5,9,20]];
+  const probBtns=[...document.querySelectorAll('[data-prob]')];
+  function prob(k){
+    let M=[[0,0,0],[0,0,0]],stats=[];
+    if(k==='l2'){
+      M=PR.map(r=>{const n=l2(r);stats.push(`${PR.indexOf(r)+1}행 L2 노름 = √(${r.map(v=>v+'²').join('+')}) = ${n.toFixed(2)}`);return r.map(v=>v/n);});
+    } else {
+      for(let j=0;j<3;j++){const col=PR.map(r=>r[j]);const {out,stat}=SC[k].run(col);out.forEach((v,i)=>M[i][j]=v);stats.push(`${j+1}열: ${stat}`);}
+    }
+    const nm=k==='l2'?'Normalizer (행 단위!)':SC[k].name;
+    let h=`<h3>${nm}</h3><p class="note">${k==='l2'?'':SC[k].formula+'<br>'}${stats.join('<br>')}</p>`;
+    h+=`<div class="tblwrap"><table class="grid" style="max-width:420px"><tr><th></th><th>1열</th><th>2열</th><th>3열</th></tr>`;
+    M.forEach((r,i)=>h+=`<tr><th>${i+1}행</th>${r.map(v=>`<td class="${k==='l2'?'hl-row':'hl-col'}">${k==='l2'?v.toFixed(3):f2(v)}</td>`).join('')}</tr>`);
+    h+='</table></div>';
+    const tips={
+      std:'💡 행이 2개뿐이라 각 열에서 하나는 평균보다 작고(−1), 하나는 커요(+1). 표준편차는 sklearn처럼 모집단 공식(n으로 나눔)이에요.',
+      mm:'💡 각 열의 최솟값은 0, 최댓값은 1이 됐어요.',
+      rob:'💡 데이터가 2개면 중앙값=평균, IQR=2×표준편차가 돼서 결과가 StandardScaler와 똑같아요. 데이터가 많고 이상치가 있으면 달라져요!',
+      ma:'💡 각 열의 최대 절댓값으로 나눴어요. 최댓값을 가진 칸은 1이 돼요. 음수가 없어서 Min-Max와 비슷해 보이지만, 0을 기준으로 나누기만 해서 값이 다르죠?',
+      l2:'💡 슬라이드에는 없는 보너스! 이번엔 <b>행마다</b> 계산했어요. 각 행의 길이가 1이 되고, 1행은 3열(100)이 압도적이라 0.995, 2행은 비율이 고른 편이에요.'
+    };
+    h+=`<div class="box">${tips[k]}</div>`;
+    $('probOut').innerHTML=h;
+  }
+  probBtns.forEach(b=>b.onclick=()=>{selGroup(probBtns,b);prob(b.dataset.prob);});
+
+  /* ---------- quiz ---------- */
+  const QZ=[
+    ['스케일링이 거의 필요 없는 모델은?',['KNN','SVM','의사결정나무'],2,'의사결정나무는 속성 하나씩 기준값으로 자르기만 해서 단위 영향을 안 받아요.'],
+    ['이상치가 많은 데이터에 가장 적합한 스케일러는?',['MinMaxScaler','RobustScaler','MaxAbsScaler'],1,'중앙값과 IQR은 이상치에 잘 안 흔들려요.'],
+    ['행(row) 단위로 계산하는 스케일러는?',['StandardScaler','Normalizer','RobustScaler'],1,'Normalizer만 sample-wise예요. 나머지 4개는 열(feature) 단위!'],
+    ['벡터 (6, 8)의 L2 노름은?',['14','10','48'],1,'√(36 + 64) = √100 = 10. 14는 L1 노름(맨해튼)이에요.'],
+    ['(6, 8)을 L2 정규화하면?',['(0.6, 0.8)','(1, 1)','(0.43, 0.57)'],0,'10으로 나누면 (0.6, 0.8). (3, 4)와 같은 점이에요.'],
+    ['MinMaxScaler로 [10, 20, 30]을 바꾸면 20은?',['0.2','0.5','0.67'],1,'(20 − 10) ÷ (30 − 10) = 0.5'],
+    ['MaxAbsScaler로 [−10, 5, 15]를 바꾸면 −10은?',['−0.67','0','−1'],0,'최대 절댓값 15로 나눠서 −10/15 ≈ −0.67. 부호가 그대로 남아요.'],
+    ['0이 대부분인 희소 행렬에서 0을 그대로 지켜 주는 스케일러는?',['StandardScaler','MinMaxScaler','MaxAbsScaler'],2,'빼기 없이 나누기만 해서 0 ÷ 무엇 = 0이에요.'],
+    ['정규화하면 사라지는 것은?',['방향','속성 간 비율','벡터 전체의 크기(길이)'],2,'길이만 1로 바뀌고, 방향 = 비율 패턴은 그대로예요.'],
+    ['test 데이터에는 스케일러를 어떻게 적용해야 할까?',['fit_transform','transform만','fit만'],1,'train으로 만든 자(규칙)로 재기만! test로 fit하면 데이터 누수예요.'],
+    ['단어장에 단어가 5만 개일 때 원-핫 벡터 하나의 차원은?',['1','300','50,000'],2,'단어장 크기 = 차원이에요. 그중 1은 딱 하나라 희소 행렬이 되고, 그래서 임베딩으로 압축해요.'],
+    ['텍스트 문서끼리 주제가 비슷한지 비교할 때 주로 쓰는 것은?',['맨해튼 거리','코사인 유사도','MinMaxScaler'],1,'글 길이(크기)는 무시하고 단어 비율(방향)만 보는 게 텍스트에 잘 맞아요.']
+  ];
+  let score=0,answered=0;
+  $('quizBox').innerHTML=QZ.map((q,i)=>`<div class="q" data-i="${i}"><p>Q${i+1}. ${q[0]}</p><div class="btns">${q[1].map((o,j)=>`<button data-j="${j}">${o}</button>`).join('')}</div><div class="fb"></div></div>`).join('');
+  document.querySelectorAll('.q').forEach(qd=>{
+    const q=QZ[+qd.dataset.i];let done=false,tried=false;const fb=qd.querySelector('.fb');
+    qd.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if(done)return;
+      if(+b.dataset.j===q[2]){b.classList.add('right');fb.textContent='⭕ 정답! '+q[3];done=true;if(!tried)score++;answered++;
+        if(answered===QZ.length)$('score').textContent=`🎉 첫 시도 정답 ${score}/${QZ.length}! ${score===QZ.length?'스케일링 마스터 👑':'틀린 문제는 위로 올라가 다시 보기!'}`;}
+      else{b.classList.add('wrong');fb.textContent='❌ 다시 생각해 봐요!';tried=true;}
+    });
+  });
+})();
+</script>
+</body>
+</html>
